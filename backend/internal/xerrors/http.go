@@ -39,6 +39,9 @@ func NotFoundError(entity string, args map[string]string) HTTPError {
 	for k, v := range args {
 		parts = append(parts, fmt.Sprintf("%s=%s", k, v))
 	}
+	if len(parts) == 0 {
+		return NewHTTPError(http.StatusNotFound, fmt.Errorf("%s not found", entity))
+	}
 	return NewHTTPError(http.StatusNotFound, fmt.Errorf("%s with %s not found", entity, strings.Join(parts, ", ")))
 }
 

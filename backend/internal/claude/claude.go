@@ -97,8 +97,8 @@ func (c *AnthropicClient) Evaluate(ctx context.Context, problem models.Problem, 
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		io.Copy(io.Discard, resp.Body)
-		return EvaluateResponse{}, fmt.Errorf("claude API returned status %d", resp.StatusCode)
+		body, _ := io.ReadAll(resp.Body)
+		return EvaluateResponse{}, fmt.Errorf("claude API returned status %d: %s", resp.StatusCode, string(body))
 	}
 
 	var apiResp struct {
