@@ -2,6 +2,7 @@ package postgres
 
 import (
 	"context"
+	"errors"
 
 	"leetgame/internal/models"
 	"leetgame/internal/utils"
@@ -25,6 +26,11 @@ func (p *Postgres) GetRandomProblem(ctx context.Context) (models.Problem, error)
 		}
 		problem, err := pgx.CollectOneRow(rows, pgx.RowToStructByName[models.Problem])
 		if err != nil {
+			if errors.Is(err, pgx.ErrNoRows) {
+				return models.Problem{}, utils.CreateNonRetryableError(
+					xerrors.NotFoundError("problem", map[string]string{}),
+				)
+			}
 			return models.Problem{}, err
 		}
 		return problem, nil
@@ -44,7 +50,7 @@ func (p *Postgres) GetProblemByID(ctx context.Context, id uuid.UUID) (models.Pro
 		}
 		problem, err := pgx.CollectOneRow(rows, pgx.RowToStructByName[models.Problem])
 		if err != nil {
-			if err == pgx.ErrNoRows {
+			if errors.Is(err, pgx.ErrNoRows) {
 				return models.Problem{}, utils.CreateNonRetryableError(
 					xerrors.NotFoundError("problem", map[string]string{"id": id.String()}),
 				)
