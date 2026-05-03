@@ -1,6 +1,7 @@
 package types
 
 import (
+	"fmt"
 	"strings"
 
 	"github.com/google/uuid"
@@ -29,6 +30,12 @@ func (r ChatRequest) Validate() map[string]string {
 	validStages := map[string]bool{"algorithm": true, "complexity": true}
 	if !validStages[r.Stage] {
 		errs["stage"] = "must be 'algorithm' or 'complexity'"
+	}
+	validRoles := map[string]bool{"user": true, "assistant": true}
+	for i, msg := range r.History {
+		if !validRoles[msg.Role] {
+			errs[fmt.Sprintf("history[%d].role", i)] = "must be 'user' or 'assistant'"
+		}
 	}
 	return errs
 }
