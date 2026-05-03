@@ -6,7 +6,7 @@ CREATE TABLE IF NOT EXISTS problems (
   slug        TEXT        UNIQUE NOT NULL,
   title       TEXT        NOT NULL,
   description TEXT        NOT NULL,
-  difficulty  TEXT        NOT NULL,
+  difficulty  TEXT        NOT NULL CHECK (difficulty IN ('Easy', 'Medium', 'Hard')),
   topic_tags  TEXT[]      NOT NULL DEFAULT '{}',
   created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
