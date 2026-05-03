@@ -6,6 +6,7 @@ import (
 	"os/signal"
 	"syscall"
 
+	"leetgame/internal/claude"
 	"leetgame/internal/server"
 	"leetgame/internal/settings"
 	"leetgame/internal/storage/postgres"
@@ -29,15 +30,18 @@ func main() {
 		Level: utils.MustParseSlogLevel(settings.Log.Level),
 	})))
 
-	postgres := postgres.New(&postgres.Config{
+	pg := postgres.New(&postgres.Config{
 		DbUrl: settings.Storage.DbUrl,
 	})
 
+	claudeClient := claude.New(settings.Claude.APIKey, settings.Claude.Model)
+
 	app := server.New(&server.Config{
-		Storage:   postgres,
+		Storage: pg,
 		Logger: slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{
 			Level: utils.MustParseSlogLevel(settings.Server.LogLevel),
 		})),
+		ClaudeClient: claudeClient,
 	})
 
 	go func() {

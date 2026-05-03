@@ -15,5 +15,12 @@ func (hs *HandlerService) RegisterRoutes(app *fiber.App) {
 
 			return c.SendStatus(http.StatusOK)
 		})
+
+		api.Route("/problems", func(problems fiber.Router) {
+			problems.Get("/random", hs.GetRandomProblem)
+		})
+
+		// chat route added in Task 7
+		// api.Post("/chat", hs.Chat)
 	})
 }

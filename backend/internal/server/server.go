@@ -4,12 +4,12 @@ import (
 	"log/slog"
 	"net/http"
 
+	"leetgame/internal/claude"
 	"leetgame/internal/handlers"
 	"leetgame/internal/storage"
 	"leetgame/internal/xerrors"
 
 	go_json "github.com/goccy/go-json"
-
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/gofiber/fiber/v2/middleware/logger"
@@ -17,10 +17,9 @@ import (
 )
 
 type Config struct {
-	Storage          storage.Storage
-	JwtSecret        string
-	Logger           *slog.Logger
-	FiberStorage     fiber.Storage
+	Storage      storage.Storage
+	Logger       *slog.Logger
+	ClaudeClient claude.Client
 }
 
 func New(cfg *Config) *fiber.App {
@@ -28,8 +27,9 @@ func New(cfg *Config) *fiber.App {
 	setupStatic(app)
 
 	service := handlers.NewService(&handlers.HandlerServiceConfig{
-		Storage:          cfg.Storage,
-		Logger:           cfg.Logger,
+		Storage:      cfg.Storage,
+		Logger:       cfg.Logger,
+		ClaudeClient: cfg.ClaudeClient,
 	})
 	setupMiddleware(app)
 	service.RegisterRoutes(app)
