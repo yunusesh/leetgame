@@ -22,8 +22,7 @@ export function ChatView({ history, stage, loading, error, onSubmit }: Props) {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [history])
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
+  const handleSubmit = () => {
     const trimmed = input.trim()
     if (!trimmed || loading) return
     setInput('')
@@ -45,7 +44,7 @@ export function ChatView({ history, stage, loading, error, onSubmit }: Props) {
 
       <div style={{ flex: 1, overflowY: 'auto', padding: '20px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
         {history.map((msg, i) => (
-          <div key={i} style={{
+          <div key={`${i}-${msg.role}`} style={{
             alignSelf: msg.role === 'user' ? 'flex-end' : 'flex-start',
             maxWidth: '80%',
             padding: '10px 14px',
@@ -72,7 +71,7 @@ export function ChatView({ history, stage, loading, error, onSubmit }: Props) {
         <div ref={bottomRef} />
       </div>
 
-      <form onSubmit={handleSubmit} style={{
+      <form onSubmit={e => { e.preventDefault(); handleSubmit() }} style={{
         padding: '16px',
         borderTop: '1px solid #e0e0e0',
         display: 'flex',
@@ -81,7 +80,7 @@ export function ChatView({ history, stage, loading, error, onSubmit }: Props) {
         <textarea
           value={input}
           onChange={e => setInput(e.target.value)}
-          onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSubmit(e as any) } }}
+          onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSubmit() } }}
           placeholder="Describe your approach..."
           disabled={loading}
           rows={3}
