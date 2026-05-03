@@ -5,7 +5,9 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
+	"time"
 
 	"leetgame/internal/models"
 )
@@ -46,12 +48,17 @@ type Client interface {
 }
 
 type AnthropicClient struct {
-	apiKey string
-	model  string
+	apiKey     string
+	model      string
+	httpClient *http.Client
 }
 
 func New(apiKey, model string) *AnthropicClient {
-	return &AnthropicClient{apiKey: apiKey, model: model}
+	return &AnthropicClient{
+		apiKey: apiKey,
+		model:  model,
+		httpClient: &http.Client{Timeout: 30 * time.Second},
+	}
 }
 
 func (c *AnthropicClient) Evaluate(ctx context.Context, problem models.Problem, stage string, history []ChatMessage, userMessage string) (EvaluateResponse, error) {
@@ -83,13 +90,14 @@ func (c *AnthropicClient) Evaluate(ctx context.Context, problem models.Problem, 
 	req.Header.Set("anthropic-version", "2023-06-01")
 	req.Header.Set("content-type", "application/json")
 
-	resp, err := http.DefaultClient.Do(req)
+	resp, err := c.httpClient.Do(req)
 	if err != nil {
 		return EvaluateResponse{}, fmt.Errorf("claude request failed: %w", err)
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
+		io.Copy(io.Discard, resp.Body)
 		return EvaluateResponse{}, fmt.Errorf("claude API returned status %d", resp.StatusCode)
 	}
 
@@ -108,6 +116,13 @@ func (c *AnthropicClient) Evaluate(ctx context.Context, problem models.Problem, 
 	var evalResp EvaluateResponse
 	if err := json.Unmarshal([]byte(apiResp.Content[0].Text), &evalResp); err != nil {
 		return EvaluateResponse{}, fmt.Errorf("failed to parse claude JSON: %w (raw: %s)", err, apiResp.Content[0].Text)
+	}
+
+	switch evalResp.Stage {
+	case "algorithm", "complexity", "complete":
+		// valid
+	default:
+		return EvaluateResponse{}, fmt.Errorf("claude returned unknown stage %q", evalResp.Stage)
 	}
 
 	return evalResp, nil
