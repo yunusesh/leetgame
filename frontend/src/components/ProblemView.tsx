@@ -1,10 +1,11 @@
 import { useState } from 'react'
 import type { Problem } from '../types'
+import { cn } from '../lib/utils'
 
 const difficultyColor: Record<string, string> = {
-  Easy: '#00b8a9',
-  Medium: '#ffc01e',
-  Hard: '#ff375f',
+  Easy: 'text-easy',
+  Medium: 'text-medium',
+  Hard: 'text-hard',
 }
 
 export function ProblemView({ problem, onSkip }: { problem: Problem, onSkip: () => void }) {
@@ -12,65 +13,46 @@ export function ProblemView({ problem, onSkip }: { problem: Problem, onSkip: () 
   const [titleOpen, setTitleOpen] = useState(false)
 
   return (
-    <div style={{ width: '50%', overflowY: 'auto', padding: '24px', borderRight: '1px solid #e0e0e0' }}>
-      <div style={{ display: 'flex', alignItems: 'flex-start', gap: '12px', marginBottom: '12px' }}>
+    <div className="w-1/2 overflow-y-auto p-6 border-r border-border">
+      <div className="flex items-start gap-3 mb-3">
         <h2
           onClick={() => setTitleOpen(o => !o)}
-          style={{
-            margin: 0,
-            flex: 1,
-            cursor: 'pointer',
-            userSelect: 'none',
-            filter: titleOpen ? 'none' : 'blur(6px)',
-            opacity: titleOpen ? 1 : 0.6,
-            transition: 'filter 0.2s, opacity 0.2s',
-          }}
+          className={cn(
+            "m-0 flex-1 cursor-pointer select-none transition-all duration-200",
+            titleOpen ? "opacity-100 blur-none" : "opacity-60 blur-[6px]"
+          )}
           title={titleOpen ? '' : 'Click to reveal'}
         >
           {problem.title}
         </h2>
-        <span style={{
-          color: difficultyColor[problem.difficulty] ?? '#666',
-          fontWeight: 600,
-          fontSize: '14px',
-        }}>
+        <span className={cn(
+          "font-semibold text-sm",
+          difficultyColor[problem.difficulty] ?? 'text-muted-foreground'
+        )}>
           {problem.difficulty}
         </span>
-        <button onClick={onSkip} style={{
-          marginLeft: 'auto',
-          padding: '4px 12px',
-          fontSize: '13px',
-          cursor: 'pointer',
-          border: '1px solid #555',
-          borderRadius: '6px',
-          background: 'transparent',
-          color: '#aaa',
-        }}>
+        <button
+          onClick={onSkip}
+          className="ml-auto px-3 py-1 text-xs cursor-pointer border border-muted-foreground/50 rounded-md bg-transparent text-muted-foreground hover:bg-muted transition-colors"
+        >
           Skip →
         </button>
       </div>
 
-      <div style={{ marginBottom: '20px' }}>
-        <button onClick={() => setTagsOpen(o => !o)} style={{
-          background: 'transparent',
-          border: 'none',
-          cursor: 'pointer',
-          color: '#888',
-          fontSize: '13px',
-          padding: 0,
-        }}>
+      <div className="mb-5">
+        <button
+          onClick={() => setTagsOpen(o => !o)}
+          className="bg-transparent border-none cursor-pointer text-muted-foreground text-xs p-0 hover:text-foreground transition-colors"
+        >
           {tagsOpen ? '▾ Hide topics' : '▸ Show topics'}
         </button>
         {tagsOpen && (
-          <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginTop: '8px' }}>
+          <div className="flex gap-2 flex-wrap mt-2">
             {problem.topic_tags.map(tag => (
-              <span key={tag} style={{
-                background: '#f0f0f0',
-                borderRadius: '4px',
-                padding: '2px 8px',
-                fontSize: '12px',
-                color: '#444',
-              }}>
+              <span
+                key={tag}
+                className="bg-secondary text-secondary-foreground rounded px-2 py-0.5 text-xs"
+              >
                 {tag}
               </span>
             ))}
@@ -78,7 +60,7 @@ export function ProblemView({ problem, onSkip }: { problem: Problem, onSkip: () 
         )}
       </div>
 
-      <div style={{ lineHeight: 1.7, fontSize: '15px', whiteSpace: 'pre-wrap' }}>
+      <div className="leading-relaxed text-sm whitespace-pre-wrap">
         {problem.description}
       </div>
     </div>
