@@ -28,23 +28,34 @@ export function SearchPage({ onSelectProblem }: { onSelectProblem: (p: Problem) 
   const [results, setResults] = useState<Problem[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [hasSearched, setHasSearched] = useState(false)
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const abortRef = useRef<AbortController | null>(null)
 
   useEffect(() => {
     if (debounceRef.current) clearTimeout(debounceRef.current)
     debounceRef.current = setTimeout(async () => {
+      abortRef.current?.abort()
+      const controller = new AbortController()
+      abortRef.current = controller
       setLoading(true)
       setError(null)
       try {
-        const res = await searchProblems(q, difficulty, tags)
+        const res = await searchProblems(q, difficulty, tags, controller.signal)
         setResults(res)
-      } catch {
-        setError('Search failed. Is the backend running?')
+        setHasSearched(true)
+      } catch (err) {
+        if (err instanceof Error && err.name !== 'AbortError') {
+          setError('Search failed. Is the backend running?')
+        }
       } finally {
         setLoading(false)
       }
     }, 300)
-    return () => { if (debounceRef.current) clearTimeout(debounceRef.current) }
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current)
+      abortRef.current?.abort()
+    }
   }, [q, difficulty, tags])
 
   const addTag = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -109,7 +120,7 @@ export function SearchPage({ onSelectProblem }: { onSelectProblem: (p: Problem) 
             {tags.map(tag => (
               <span key={tag} className="flex items-center gap-1.5 bg-secondary text-secondary-foreground border border-border rounded-sm px-2 py-0.5 text-xs">
                 {tag}
-                <span onClick={() => removeTag(tag)} className="cursor-pointer text-muted-foreground hover:text-foreground leading-none">×</span>
+                <button type="button" onClick={() => removeTag(tag)} aria-label={`Remove ${tag}`} className="cursor-pointer text-muted-foreground hover:text-foreground leading-none bg-transparent border-none p-0">×</button>
               </span>
             ))}
           </div>
@@ -118,7 +129,7 @@ export function SearchPage({ onSelectProblem }: { onSelectProblem: (p: Problem) 
 
       {loading && <p className="text-sm text-muted-foreground">Searching...</p>}
       {error && <p className="text-sm text-destructive">{error}</p>}
-      {!loading && !error && results.length === 0 && (
+      {!loading && !error && hasSearched && results.length === 0 && (
         <p className="text-sm text-muted-foreground">No problems found.</p>
       )}
       {!loading && !error && results.map(p => (
