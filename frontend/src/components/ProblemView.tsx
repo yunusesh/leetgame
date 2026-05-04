@@ -19,7 +19,7 @@ export function ProblemView({ problem, onSkip }: { problem: Problem, onSkip: () 
           onClick={() => setTitleOpen(o => !o)}
           className={cn(
             "m-0 flex-1 cursor-pointer select-none transition-all duration-200",
-            titleOpen ? "opacity-100 blur-none" : "opacity-60 blur-[6px]"
+            titleOpen ? "opacity-100 blur-0" : "opacity-60 blur-[6px]"
           )}
           title={titleOpen ? '' : 'Click to reveal'}
         >
@@ -60,7 +60,7 @@ export function ProblemView({ problem, onSkip }: { problem: Problem, onSkip: () 
         )}
       </div>
 
-      <div className="leading-relaxed text-sm whitespace-pre-wrap">
+      <div className="leading-[1.7] text-[15px] whitespace-pre-wrap">
         {problem.description}
       </div>
     </div>

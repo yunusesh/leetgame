@@ -41,6 +41,36 @@
   }
 }
 
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-background: #16171d;
+    --color-foreground: #f3f4f6;
+    --color-muted: #1f2028;
+    --color-muted-foreground: #9ca3af;
+    --color-border: #2e303a;
+    --color-primary: #c084fc;
+    --color-primary-foreground: #fff;
+    --color-secondary: #2e303a;
+    --color-secondary-foreground: #f3f4f6;
+    --color-accent: rgba(192, 132, 252, 0.15);
+    --color-accent-foreground: #c084fc;
+  }
+}
+
+.dark {
+  --color-background: #16171d;
+  --color-foreground: #f3f4f6;
+  --color-muted: #1f2028;
+  --color-muted-foreground: #9ca3af;
+  --color-border: #2e303a;
+  --color-primary: #c084fc;
+  --color-primary-foreground: #fff;
+  --color-secondary: #2e303a;
+  --color-secondary-foreground: #f3f4f6;
+  --color-accent: rgba(192, 132, 252, 0.15);
+  --color-accent-foreground: #c084fc;
+}
+
 @layer utilities {
   .text-balance {
     text-wrap: balance;
