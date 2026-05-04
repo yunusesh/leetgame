@@ -31,7 +31,7 @@ export function ChatView({ history, stage, loading, error, onSubmit }: Props) {
   }
 
   return (
-    <div className="w-1/2 flex flex-col h-screen">
+    <div className="w-1/2 flex flex-col min-h-0">
       <div className="px-5 py-3 bg-muted border-b border-border text-sm font-semibold text-foreground">
         {stageBanner[stage]}
       </div>

@@ -66,7 +66,7 @@ export default function App() {
     )
     if (stage === 'complete') return <CompleteView onNext={loadProblem} />
     return (
-      <div className="flex flex-1 overflow-hidden">
+      <div className="flex flex-1 overflow-hidden min-h-0">
         <ProblemView key={problem.id} problem={problem} onSkip={loadProblem} />
         <ChatView
           history={history}
