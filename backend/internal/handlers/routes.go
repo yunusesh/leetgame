@@ -18,6 +18,7 @@ func (hs *HandlerService) RegisterRoutes(app *fiber.App) {
 
 		api.Route("/problems", func(problems fiber.Router) {
 			problems.Get("/random", hs.GetRandomProblem)
+			problems.Get("/tags", hs.GetProblemTags)
 			problems.Get("/", hs.GetProblems)
 		})
 

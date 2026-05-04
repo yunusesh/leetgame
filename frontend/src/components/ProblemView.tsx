@@ -8,12 +8,71 @@ const difficultyColor: Record<string, string> = {
   Hard: 'text-hard',
 }
 
-export function ProblemView({ problem, onSkip }: { problem: Problem, onSkip: () => void }) {
+interface SearchPlaylistSummary {
+  q: string
+  difficulty: string
+  tags: string[]
+  tagMatch: 'and' | 'or'
+}
+
+export function ProblemView({
+  problem,
+  onSkip,
+  onRandom,
+  playlistSummary,
+}: {
+  problem: Problem
+  onSkip: () => void
+  onRandom: () => void
+  playlistSummary?: SearchPlaylistSummary | null
+}) {
   const [tagsOpen, setTagsOpen] = useState(false)
   const [titleOpen, setTitleOpen] = useState(false)
 
   return (
     <div className="w-1/2 overflow-y-auto p-6 border-r border-border">
+      {playlistSummary && (
+        <div className="mb-4 rounded-md border border-border bg-muted px-3.5 py-2.5">
+          <div className="mb-2 flex items-center justify-between gap-3">
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">
+                Search playlist
+              </span>
+              <span className="rounded-sm bg-background px-2 py-0.5 text-xs text-foreground">
+                {playlistSummary.tagMatch === 'and' ? 'All tags' : 'Any tag'}
+              </span>
+            </div>
+            <button
+              type="button"
+              onClick={onRandom}
+              className="rounded-md border border-muted-foreground/40 bg-background px-2.5 py-1 text-xs text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+            >
+              Random instead
+            </button>
+          </div>
+          <div className="flex flex-wrap gap-1.5">
+            {playlistSummary.q && (
+              <span className="rounded-sm bg-background px-2 py-0.5 text-xs text-foreground">
+                Query: {playlistSummary.q}
+              </span>
+            )}
+            {playlistSummary.difficulty && (
+              <span className="rounded-sm bg-background px-2 py-0.5 text-xs text-foreground">
+                Difficulty: {playlistSummary.difficulty}
+              </span>
+            )}
+            {playlistSummary.tags.map(tag => (
+              <span
+                key={tag}
+                className="rounded-sm bg-background px-2 py-0.5 text-xs text-foreground"
+              >
+                {tag}
+              </span>
+            ))}
+          </div>
+        </div>
+      )}
+
       <div className="flex items-start gap-3 mb-3">
         <h2
           onClick={() => setTitleOpen(o => !o)}
@@ -42,7 +101,7 @@ export function ProblemView({ problem, onSkip }: { problem: Problem, onSkip: () 
           onClick={onSkip}
           className="ml-auto px-3 py-1 text-xs cursor-pointer border border-muted-foreground/50 rounded-md bg-transparent text-muted-foreground hover:bg-muted transition-colors"
         >
-          Skip →
+          Next in playlist →
         </button>
       </div>
 

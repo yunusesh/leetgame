@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"leetgame/internal/models"
+	"leetgame/internal/types"
 
 	"github.com/google/uuid"
 )
@@ -13,6 +14,8 @@ type Storage interface {
 
 	// problems
 	GetRandomProblem(ctx context.Context) (models.Problem, error)
+	GetRandomProblemFiltered(ctx context.Context, q, difficulty string, tags []string, tagMatch, excludeID string) (models.Problem, error)
 	GetProblemByID(ctx context.Context, id uuid.UUID) (models.Problem, error)
-	SearchProblems(ctx context.Context, q, difficulty string, tags []string) ([]models.Problem, error)
+	SearchProblems(ctx context.Context, q, difficulty string, tags []string, tagMatch string, page, pageSize int) (types.ProblemSearchResponse, error)
+	GetProblemTags(ctx context.Context) ([]types.ProblemTag, error)
 }

@@ -8,6 +8,18 @@ export interface Problem {
   topic_tags: string[]
 }
 
+export interface ProblemSearchResponse {
+  problems: Problem[]
+  page: number
+  page_size: number
+  total: number
+}
+
+export interface ProblemTag {
+  name: string
+  count: number
+}
+
 export interface ChatMessage {
   role: 'user' | 'assistant'
   content: string
