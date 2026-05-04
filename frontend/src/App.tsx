@@ -1,11 +1,16 @@
 import { useEffect, useState } from 'react'
 import type { Problem, ChatMessage, Stage } from './types'
 import { getRandomProblem, sendChat } from './api'
+import { NavBar } from './components/NavBar'
 import { ProblemView } from './components/ProblemView'
 import { ChatView } from './components/ChatView'
 import { CompleteView } from './components/CompleteView'
+import { SearchPage } from './components/SearchPage'
+
+type View = 'practice' | 'search'
 
 export default function App() {
+  const [view, setView] = useState<View>('practice')
   const [problem, setProblem] = useState<Problem | null>(null)
   const [history, setHistory] = useState<ChatMessage[]>([])
   const [stage, setStage] = useState<Stage>('algorithm')
@@ -22,6 +27,14 @@ export default function App() {
     } catch (e) {
       setError('Failed to load problem. Is the backend running?')
     }
+  }
+
+  const selectProblem = (p: Problem) => {
+    setProblem(p)
+    setHistory([])
+    setStage('algorithm')
+    setError(null)
+    setView('practice')
   }
 
   useEffect(() => { loadProblem() }, [])
@@ -44,26 +57,35 @@ export default function App() {
     }
   }
 
-  if (error && !problem) return (
-    <div className="p-10 text-center text-destructive">{error}</div>
-  )
-
-  if (!problem) return (
-    <div className="p-10 text-center text-muted-foreground">Loading problem...</div>
-  )
-
-  if (stage === 'complete') return <CompleteView onNext={loadProblem} />
+  const practiceView = () => {
+    if (error && !problem) return (
+      <div className="p-10 text-center text-destructive">{error}</div>
+    )
+    if (!problem) return (
+      <div className="p-10 text-center text-muted-foreground">Loading problem...</div>
+    )
+    if (stage === 'complete') return <CompleteView onNext={loadProblem} />
+    return (
+      <div className="flex flex-1 overflow-hidden">
+        <ProblemView key={problem.id} problem={problem} onSkip={loadProblem} />
+        <ChatView
+          history={history}
+          stage={stage}
+          loading={loading}
+          error={error}
+          onSubmit={handleSubmit}
+        />
+      </div>
+    )
+  }
 
   return (
-    <div className="flex h-screen font-sans">
-      <ProblemView key={problem.id} problem={problem} onSkip={loadProblem} />
-      <ChatView
-        history={history}
-        stage={stage}
-        loading={loading}
-        error={error}
-        onSubmit={handleSubmit}
-      />
+    <div className="flex flex-col h-screen">
+      <NavBar view={view} onNavigate={setView} />
+      {view === 'search'
+        ? <SearchPage onSelectProblem={selectProblem} />
+        : practiceView()
+      }
     </div>
   )
 }
