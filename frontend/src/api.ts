@@ -7,6 +7,16 @@ export async function getRandomProblem(): Promise<Problem> {
   return res.json()
 }
 
+export async function searchProblems(q: string, difficulty: string, tags: string[]): Promise<Problem[]> {
+  const params = new URLSearchParams()
+  if (q) params.set('q', q)
+  if (difficulty) params.set('difficulty', difficulty)
+  if (tags.length) params.set('tags', tags.join(','))
+  const res = await fetch(`/api/problems?${params.toString()}`)
+  if (!res.ok) throw new Error(`Search failed: ${res.status}`)
+  return res.json()
+}
+
 export async function sendChat(
   problemId: string,
   stage: Stage,
