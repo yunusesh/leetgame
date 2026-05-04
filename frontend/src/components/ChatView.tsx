@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react'
 import type { ChatMessage, Stage } from '../types'
+import { cn } from '../lib/utils'
 
 const stageBanner: Record<string, string> = {
   algorithm: 'Describe your algorithm',
@@ -30,53 +31,42 @@ export function ChatView({ history, stage, loading, error, onSubmit }: Props) {
   }
 
   return (
-    <div style={{ width: '50%', display: 'flex', flexDirection: 'column', height: '100vh' }}>
-      <div style={{
-        padding: '12px 20px',
-        background: '#f8f9fa',
-        borderBottom: '1px solid #e0e0e0',
-        fontSize: '14px',
-        fontWeight: 600,
-        color: '#333',
-      }}>
+    <div className="w-1/2 flex flex-col h-screen">
+      <div className="px-5 py-3 bg-muted border-b border-border text-sm font-semibold text-foreground">
         {stageBanner[stage]}
       </div>
 
-      <div style={{ flex: 1, overflowY: 'auto', padding: '20px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+      <div className="flex-1 overflow-y-auto p-5 flex flex-col gap-3">
         {history.map((msg, i) => (
-          <div key={`${i}-${msg.role}`} style={{
-            alignSelf: msg.role === 'user' ? 'flex-end' : 'flex-start',
-            maxWidth: '80%',
-            padding: '10px 14px',
-            borderRadius: '12px',
-            background: msg.role === 'user' ? '#0070f3' : '#f0f0f0',
-            color: msg.role === 'user' ? '#fff' : '#222',
-            fontSize: '14px',
-            lineHeight: 1.6,
-            whiteSpace: 'pre-wrap',
-          }}>
+          <div
+            key={`${i}-${msg.role}`}
+            className={cn(
+              "max-w-[80%] px-3.5 py-2.5 rounded-xl text-sm leading-relaxed whitespace-pre-wrap",
+              msg.role === 'user'
+                ? "self-end bg-primary text-primary-foreground"
+                : "self-start bg-secondary text-secondary-foreground"
+            )}
+          >
             {msg.content}
           </div>
         ))}
         {loading && (
-          <div style={{ alignSelf: 'flex-start', color: '#888', fontSize: '13px', fontStyle: 'italic' }}>
+          <div className="self-start text-muted-foreground text-xs italic">
             Thinking...
           </div>
         )}
         {error && (
-          <div style={{ alignSelf: 'flex-start', color: '#ff375f', fontSize: '13px' }}>
+          <div className="self-start text-destructive text-xs">
             {error}
           </div>
         )}
         <div ref={bottomRef} />
       </div>
 
-      <form onSubmit={e => { e.preventDefault(); handleSubmit() }} style={{
-        padding: '16px',
-        borderTop: '1px solid #e0e0e0',
-        display: 'flex',
-        gap: '8px',
-      }}>
+      <form
+        onSubmit={e => { e.preventDefault(); handleSubmit() }}
+        className="p-4 border-t border-border flex gap-2"
+      >
         <textarea
           value={input}
           onChange={e => setInput(e.target.value)}
@@ -84,29 +74,12 @@ export function ChatView({ history, stage, loading, error, onSubmit }: Props) {
           placeholder="Describe your approach..."
           disabled={loading}
           rows={3}
-          style={{
-            flex: 1,
-            resize: 'none',
-            padding: '10px 12px',
-            borderRadius: '8px',
-            border: '1px solid #ccc',
-            fontSize: '14px',
-            fontFamily: 'inherit',
-          }}
+          className="flex-1 resize-none px-3 py-2.5 rounded-lg border border-border text-sm font-sans focus:outline-none focus:ring-2 focus:ring-primary/50 disabled:opacity-50"
         />
         <button
           type="submit"
           disabled={loading || !input.trim()}
-          style={{
-            padding: '0 20px',
-            borderRadius: '8px',
-            background: '#0070f3',
-            color: '#fff',
-            border: 'none',
-            fontWeight: 600,
-            cursor: loading ? 'not-allowed' : 'pointer',
-            opacity: loading || !input.trim() ? 0.5 : 1,
-          }}
+          className="px-5 rounded-lg bg-primary text-primary-foreground border-none font-semibold cursor-pointer disabled:cursor-not-allowed disabled:opacity-50 hover:bg-primary/90 transition-colors"
         >
           Send
         </button>

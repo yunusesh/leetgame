@@ -4,31 +4,14 @@ interface Props {
 
 export function CompleteView({ onNext }: Props) {
   return (
-    <div style={{
-      display: 'flex',
-      flexDirection: 'column',
-      alignItems: 'center',
-      justifyContent: 'center',
-      height: '100vh',
-      fontFamily: 'sans-serif',
-      gap: '24px',
-    }}>
-      <h1 style={{ margin: 0, fontSize: '32px' }}>Nice work!</h1>
-      <p style={{ margin: 0, color: '#555', fontSize: '16px' }}>
+    <div className="flex flex-col items-center justify-center h-screen font-sans gap-6">
+      <h1 className="m-0 text-3xl font-medium">Nice work!</h1>
+      <p className="m-0 text-muted-foreground text-base">
         You nailed the algorithm and complexity.
       </p>
       <button
         onClick={onNext}
-        style={{
-          padding: '12px 32px',
-          borderRadius: '8px',
-          background: '#0070f3',
-          color: '#fff',
-          border: 'none',
-          fontSize: '16px',
-          fontWeight: 600,
-          cursor: 'pointer',
-        }}
+        className="px-8 py-3 rounded-lg bg-primary text-primary-foreground border-none text-base font-semibold cursor-pointer hover:bg-primary/90 transition-colors"
       >
         Next Problem
       </button>

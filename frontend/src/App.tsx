@@ -4,7 +4,6 @@ import { getRandomProblem, sendChat } from './api'
 import { ProblemView } from './components/ProblemView'
 import { ChatView } from './components/ChatView'
 import { CompleteView } from './components/CompleteView'
-import { cn } from './lib/utils'
 
 export default function App() {
   const [problem, setProblem] = useState<Problem | null>(null)
