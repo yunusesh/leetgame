@@ -282,7 +282,7 @@ git commit -m "feat: add GET /api/problems search endpoint"
 
 ### Task 3: Frontend — api + SearchPage
 
-**Context:** `frontend/src/api.ts` contains fetch wrappers. `SearchPage` needs a text input, difficulty toggle (All/Easy/Medium/Hard), tag chips input, and results list. Tags are sent as a comma-separated `tags` query param. Debounce with `useEffect` + `setTimeout`/`clearTimeout` — no extra library needed.
+**Context:** `frontend/src/api.ts` contains fetch wrappers. `SearchPage` needs a text input, difficulty toggle (All/Easy/Medium/Hard), tag chips input, and results list. Tags are sent as a comma-separated `tags` query param. Debounce with `useEffect` + `setTimeout`/`clearTimeout` — no extra library needed. The project uses Tailwind v4 with custom theme tokens (`bg-muted`, `bg-secondary`, `text-foreground`, `text-muted-foreground`, `text-destructive`, `text-easy/medium/hard`, `border-border`, `rounded-md`, etc.) and a `cn()` utility at `src/lib/utils.ts`. Use Tailwind classes throughout — no inline styles.
 
 **Files:**
 - Modify: `frontend/src/api.ts`
@@ -333,14 +333,24 @@ export async function sendChat(
 import { useState, useEffect, useRef } from 'react'
 import type { Problem } from '../types'
 import { searchProblems } from '../api'
+import { cn } from '../lib/utils'
 
-const difficultyColor: Record<string, string> = {
-  Easy: '#00b8a9',
-  Medium: '#ffc01e',
-  Hard: '#ff375f',
+const difficulties = ['Easy', 'Medium', 'Hard'] as const
+type Difficulty = typeof difficulties[number]
+
+const difficultyTextClass: Record<Difficulty, string> = {
+  Easy: 'text-easy',
+  Medium: 'text-medium',
+  Hard: 'text-hard',
 }
 
-const difficulties = ['Easy', 'Medium', 'Hard']
+const difficultyActiveClass: Record<Difficulty, string> = {
+  Easy: 'border-easy text-easy bg-easy/10',
+  Medium: 'border-medium text-medium bg-medium/10',
+  Hard: 'border-hard text-hard bg-hard/10',
+}
+
+const inputClass = 'w-full px-3.5 py-2.5 text-sm rounded-md border border-border bg-muted text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary'
 
 export function SearchPage({ onSelectProblem }: { onSelectProblem: (p: Problem) => void }) {
   const [q, setQ] = useState('')
@@ -380,40 +390,25 @@ export function SearchPage({ onSelectProblem }: { onSelectProblem: (p: Problem) 
   const removeTag = (tag: string) => setTags(tags.filter(t => t !== tag))
 
   return (
-    <div style={{ maxWidth: '800px', margin: '0 auto', padding: '32px 24px', fontFamily: 'sans-serif' }}>
-      <h2 style={{ marginTop: 0, marginBottom: '24px' }}>Search Problems</h2>
+    <div className="max-w-2xl mx-auto px-6 py-8">
+      <h2 className="text-xl font-semibold mb-6">Search Problems</h2>
 
-      {/* text search */}
       <input
         value={q}
         onChange={e => setQ(e.target.value)}
         placeholder="Search by title..."
-        style={{
-          width: '100%',
-          padding: '10px 14px',
-          fontSize: '15px',
-          borderRadius: '8px',
-          border: '1px solid #444',
-          background: '#1a1a1a',
-          color: '#fff',
-          boxSizing: 'border-box',
-          marginBottom: '16px',
-        }}
+        className={cn(inputClass, 'mb-4')}
       />
 
-      {/* difficulty filter */}
-      <div style={{ display: 'flex', gap: '8px', marginBottom: '16px' }}>
+      <div className="flex gap-2 mb-4">
         <button
           onClick={() => setDifficulty('')}
-          style={{
-            padding: '6px 14px',
-            borderRadius: '6px',
-            border: '1px solid #555',
-            background: difficulty === '' ? '#fff' : 'transparent',
-            color: difficulty === '' ? '#000' : '#aaa',
-            cursor: 'pointer',
-            fontSize: '13px',
-          }}
+          className={cn(
+            'px-3.5 py-1.5 text-sm rounded-md border cursor-pointer transition-colors',
+            difficulty === ''
+              ? 'border-foreground bg-foreground text-background'
+              : 'border-border text-muted-foreground hover:text-foreground'
+          )}
         >
           All
         </button>
@@ -421,105 +416,58 @@ export function SearchPage({ onSelectProblem }: { onSelectProblem: (p: Problem) 
           <button
             key={d}
             onClick={() => setDifficulty(difficulty === d ? '' : d)}
-            style={{
-              padding: '6px 14px',
-              borderRadius: '6px',
-              border: `1px solid ${difficulty === d ? difficultyColor[d] : '#555'}`,
-              background: difficulty === d ? difficultyColor[d] + '22' : 'transparent',
-              color: difficulty === d ? difficultyColor[d] : '#aaa',
-              cursor: 'pointer',
-              fontSize: '13px',
-            }}
+            className={cn(
+              'px-3.5 py-1.5 text-sm rounded-md border cursor-pointer transition-colors',
+              difficulty === d
+                ? difficultyActiveClass[d]
+                : 'border-border text-muted-foreground hover:text-foreground'
+            )}
           >
             {d}
           </button>
         ))}
       </div>
 
-      {/* tag filter */}
-      <div style={{ marginBottom: '24px' }}>
+      <div className="mb-6">
         <input
           value={tagInput}
           onChange={e => setTagInput(e.target.value)}
           onKeyDown={addTag}
           placeholder="Filter by tag (press Enter to add)..."
-          style={{
-            width: '100%',
-            padding: '8px 14px',
-            fontSize: '14px',
-            borderRadius: '8px',
-            border: '1px solid #444',
-            background: '#1a1a1a',
-            color: '#fff',
-            boxSizing: 'border-box',
-            marginBottom: tags.length ? '8px' : '0',
-          }}
+          className={cn(inputClass, tags.length ? 'mb-2' : '')}
         />
         {tags.length > 0 && (
-          <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+          <div className="flex gap-1.5 flex-wrap">
             {tags.map(tag => (
-              <span key={tag} style={{
-                background: '#2a2a2a',
-                border: '1px solid #555',
-                borderRadius: '4px',
-                padding: '2px 8px',
-                fontSize: '12px',
-                color: '#ccc',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '6px',
-              }}>
+              <span key={tag} className="flex items-center gap-1.5 bg-secondary text-secondary-foreground border border-border rounded-sm px-2 py-0.5 text-xs">
                 {tag}
-                <span
-                  onClick={() => removeTag(tag)}
-                  style={{ cursor: 'pointer', color: '#888', fontSize: '14px', lineHeight: 1 }}
-                >
-                  ×
-                </span>
+                <span onClick={() => removeTag(tag)} className="cursor-pointer text-muted-foreground hover:text-foreground leading-none">×</span>
               </span>
             ))}
           </div>
         )}
       </div>
 
-      {/* results */}
-      {loading && <div style={{ color: '#888', fontSize: '14px' }}>Searching...</div>}
-      {error && <div style={{ color: '#ff375f', fontSize: '14px' }}>{error}</div>}
+      {loading && <p className="text-sm text-muted-foreground">Searching...</p>}
+      {error && <p className="text-sm text-destructive">{error}</p>}
       {!loading && !error && results.length === 0 && (
-        <div style={{ color: '#888', fontSize: '14px' }}>No problems found.</div>
+        <p className="text-sm text-muted-foreground">No problems found.</p>
       )}
       {!loading && !error && results.map(p => (
         <div
           key={p.id}
           onClick={() => onSelectProblem(p)}
-          style={{
-            padding: '14px 16px',
-            borderRadius: '8px',
-            border: '1px solid #2a2a2a',
-            marginBottom: '8px',
-            cursor: 'pointer',
-            background: '#111',
-          }}
-          onMouseEnter={e => (e.currentTarget.style.background = '#1e1e1e')}
-          onMouseLeave={e => (e.currentTarget.style.background = '#111')}
+          className="p-4 rounded-md border border-border bg-muted hover:bg-secondary cursor-pointer mb-2 transition-colors"
         >
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '6px' }}>
-            <span style={{ fontWeight: 600, fontSize: '15px', color: '#fff' }}>{p.title}</span>
-            <span style={{ fontSize: '12px', fontWeight: 600, color: difficultyColor[p.difficulty] ?? '#666' }}>
+          <div className="flex items-center gap-2.5 mb-1.5">
+            <span className="font-semibold text-sm">{p.title}</span>
+            <span className={cn('text-xs font-semibold', difficultyTextClass[p.difficulty as Difficulty])}>
               {p.difficulty}
             </span>
           </div>
-          <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+          <div className="flex gap-1.5 flex-wrap">
             {p.topic_tags.map(tag => (
-              <span key={tag} style={{
-                background: '#2a2a2a',
-                borderRadius: '4px',
-                padding: '2px 7px',
-                fontSize: '11px',
-                color: '#999',
-              }}>
-                {tag}
-              </span>
+              <span key={tag} className="bg-secondary text-muted-foreground rounded-sm px-2 py-0.5 text-xs">{tag}</span>
             ))}
           </div>
         </div>
@@ -549,7 +497,7 @@ git commit -m "feat: add SearchPage component and searchProblems api call"
 
 ### Task 4: App.tsx — nav bar and view switching
 
-**Context:** `App.tsx` currently uses conditional rendering for the complete view. Extend this with a `view` state and a `NavBar`. When `onSelectProblem` is called, set `problem` directly (skip the random fetch), reset `history`/`stage`, and switch `view` to `'practice'`. The nav bar sits outside all conditional views so it's always visible.
+**Context:** `App.tsx` currently uses conditional rendering for the complete view. Extend this with a `view` state and a `NavBar`. When `onSelectProblem` is called, set `problem` directly (skip the random fetch), reset `history`/`stage`, and switch `view` to `'practice'`. The nav bar sits outside all conditional views so it's always visible. Use Tailwind classes throughout — no inline styles. The `cn()` utility is at `src/lib/utils.ts`.
 
 **Files:**
 - Create: `frontend/src/components/NavBar.tsx`
@@ -558,35 +506,27 @@ git commit -m "feat: add SearchPage component and searchProblems api call"
 - [ ] **Step 1: Create `frontend/src/components/NavBar.tsx`**
 
 ```tsx
+import { cn } from '../lib/utils'
+
 type View = 'practice' | 'search'
 
 export function NavBar({ view, onNavigate }: { view: View, onNavigate: (v: View) => void }) {
-  const btnStyle = (active: boolean) => ({
-    padding: '6px 16px',
-    borderRadius: '6px',
-    border: 'none',
-    background: active ? '#fff' : 'transparent',
-    color: active ? '#000' : '#aaa',
-    cursor: 'pointer',
-    fontSize: '14px',
-    fontWeight: active ? 600 : 400,
-  })
-
   return (
-    <div style={{
-      display: 'flex',
-      alignItems: 'center',
-      gap: '4px',
-      padding: '8px 16px',
-      borderBottom: '1px solid #2a2a2a',
-      background: '#111',
-    }}>
-      <button style={btnStyle(view === 'practice')} onClick={() => onNavigate('practice')}>
-        Practice
-      </button>
-      <button style={btnStyle(view === 'search')} onClick={() => onNavigate('search')}>
-        Search
-      </button>
+    <div className="flex items-center gap-1 px-4 py-2 border-b border-border bg-background shrink-0">
+      {(['practice', 'search'] as View[]).map(v => (
+        <button
+          key={v}
+          onClick={() => onNavigate(v)}
+          className={cn(
+            'px-4 py-1.5 rounded-md text-sm cursor-pointer transition-colors border-none capitalize',
+            view === v
+              ? 'bg-secondary text-secondary-foreground font-semibold'
+              : 'bg-transparent text-muted-foreground hover:text-foreground'
+          )}
+        >
+          {v.charAt(0).toUpperCase() + v.slice(1)}
+        </button>
+      ))}
     </div>
   )
 }
@@ -658,14 +598,14 @@ export default function App() {
 
   const practiceView = () => {
     if (error && !problem) return (
-      <div style={{ padding: '40px', textAlign: 'center', color: '#ff375f' }}>{error}</div>
+      <div className="p-10 text-center text-destructive">{error}</div>
     )
     if (!problem) return (
-      <div style={{ padding: '40px', textAlign: 'center' }}>Loading problem...</div>
+      <div className="p-10 text-center text-muted-foreground">Loading problem...</div>
     )
     if (stage === 'complete') return <CompleteView onNext={loadProblem} />
     return (
-      <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
+      <div className="flex flex-1 overflow-hidden">
         <ProblemView key={problem.id} problem={problem} onSkip={loadProblem} />
         <ChatView
           history={history}
@@ -679,7 +619,7 @@ export default function App() {
   }
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', fontFamily: 'sans-serif' }}>
+    <div className="flex flex-col h-screen">
       <NavBar view={view} onNavigate={setView} />
       {view === 'search'
         ? <SearchPage onSelectProblem={selectProblem} />
