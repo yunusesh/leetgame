@@ -17,13 +17,20 @@ export function ProblemView({ problem, onSkip }: { problem: Problem, onSkip: () 
       <div className="flex items-start gap-3 mb-3">
         <h2
           onClick={() => setTitleOpen(o => !o)}
-          className={cn(
-            "m-0 flex-1 cursor-pointer select-none transition-all duration-200",
-            titleOpen ? "opacity-100 blur-0" : "opacity-60 blur-[6px]"
-          )}
+          className="m-0 flex-1 cursor-pointer select-none relative"
           title={titleOpen ? '' : 'Click to reveal'}
         >
-          {problem.title}
+          <span className={cn(
+            "transition-all duration-200 block",
+            titleOpen ? "opacity-100 blur-0" : "opacity-0 blur-[5px]"
+          )}>
+            {problem.title}
+          </span>
+          {!titleOpen && (
+            <span className="absolute inset-0 flex items-center text-muted-foreground text-base font-normal italic">
+              Click to reveal title
+            </span>
+          )}
         </h2>
         <span className={cn(
           "font-semibold text-sm",
