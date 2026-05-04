@@ -14,4 +14,5 @@ type Storage interface {
 	// problems
 	GetRandomProblem(ctx context.Context) (models.Problem, error)
 	GetProblemByID(ctx context.Context, id uuid.UUID) (models.Problem, error)
+	SearchProblems(ctx context.Context, q, difficulty string, tags []string) ([]models.Problem, error)
 }
