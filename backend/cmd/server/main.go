@@ -7,6 +7,8 @@ import (
 	"syscall"
 
 	"leetgame/internal/claude"
+	"leetgame/internal/llm"
+	"leetgame/internal/ollama"
 	"leetgame/internal/server"
 	"leetgame/internal/settings"
 	"leetgame/internal/storage/postgres"
@@ -34,14 +36,20 @@ func main() {
 		DbUrl: settings.Storage.DbUrl,
 	})
 
-	claudeClient := claude.New(settings.Claude.APIKey, settings.Claude.Model)
+	var llmClient llm.Client
+	switch settings.LLM.Provider {
+	case "ollama":
+		llmClient = ollama.New(settings.LLM.OllamaURL, settings.LLM.Model)
+	default:
+		llmClient = claude.New(settings.LLM.APIKey, settings.LLM.Model)
+	}
 
 	app := server.New(&server.Config{
 		Storage: pg,
 		Logger: slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{
 			Level: utils.MustParseSlogLevel(settings.Server.LogLevel),
 		})),
-		ClaudeClient: claudeClient,
+		LLMClient: llmClient,
 	})
 
 	go func() {

@@ -3,7 +3,7 @@ package handlers
 import (
 	"net/http"
 
-	"leetgame/internal/claude"
+	"leetgame/internal/llm"
 	"leetgame/internal/types"
 	"leetgame/internal/xerrors"
 
@@ -24,14 +24,14 @@ func (hs *HandlerService) Chat(c *fiber.Ctx) error {
 		return err
 	}
 
-	history := make([]claude.ChatMessage, len(req.History))
+	history := make([]llm.ChatMessage, len(req.History))
 	for i, h := range req.History {
-		history[i] = claude.ChatMessage{Role: h.Role, Content: h.Content}
+		history[i] = llm.ChatMessage{Role: h.Role, Content: h.Content}
 	}
 
-	result, err := hs.claudeClient.Evaluate(c.Context(), problem, req.Stage, history, req.Message)
+	result, err := hs.llmClient.Evaluate(c.Context(), problem, req.Stage, history, req.Message)
 	if err != nil {
-		hs.logger.Error("claude evaluate failed", "error", err)
+		hs.logger.Error("llm evaluate failed", "error", err)
 		return xerrors.InternalServerError()
 	}
 

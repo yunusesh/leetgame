@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """One-time script to seed the problems table from the HuggingFace dataset."""
 
+import ast
 import os
 import uuid
 import psycopg2
@@ -20,16 +21,15 @@ skipped = 0
 
 try:
     for row in ds:
-        slug        = row.get("title_slug") or row.get("slug") or ""
-        title       = row.get("title") or ""
-        description = row.get("content") or row.get("description") or ""
-        difficulty  = row.get("difficulty") or ""
-        raw_tags    = row.get("topic_tags") or []
-        topic_tags  = [tag for tag in (t if isinstance(t, str) else t.get("name", "") for t in raw_tags) if tag]
-
-        # Normalize difficulty to match CHECK constraint (Easy, Medium, Hard)
-        if difficulty:
-            difficulty = difficulty.capitalize()
+        slug        = row.get("task_id") or ""
+        title       = slug.replace("-", " ").title() if slug else ""
+        description = row.get("problem_description") or ""
+        difficulty  = (row.get("difficulty") or "").capitalize()
+        raw_tags    = row.get("tags") or "[]"
+        try:
+            topic_tags = ast.literal_eval(raw_tags) if isinstance(raw_tags, str) else list(raw_tags)
+        except Exception:
+            topic_tags = []
 
         if not slug or not title or not description or not difficulty:
             skipped += 1
@@ -54,4 +54,5 @@ except Exception:
 finally:
     cur.close()
     conn.close()
+
 print(f"Done. inserted={inserted} skipped={skipped}")

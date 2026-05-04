@@ -4,8 +4,8 @@ import (
 	"log/slog"
 	"net/http"
 
-	"leetgame/internal/claude"
 	"leetgame/internal/handlers"
+	"leetgame/internal/llm"
 	"leetgame/internal/storage"
 	"leetgame/internal/xerrors"
 
@@ -17,9 +17,9 @@ import (
 )
 
 type Config struct {
-	Storage      storage.Storage
-	Logger       *slog.Logger
-	ClaudeClient claude.Client
+	Storage   storage.Storage
+	Logger    *slog.Logger
+	LLMClient llm.Client
 }
 
 func New(cfg *Config) *fiber.App {
@@ -27,9 +27,9 @@ func New(cfg *Config) *fiber.App {
 	setupStatic(app)
 
 	service := handlers.NewService(&handlers.HandlerServiceConfig{
-		Storage:      cfg.Storage,
-		Logger:       cfg.Logger,
-		ClaudeClient: cfg.ClaudeClient,
+		Storage:   cfg.Storage,
+		Logger:    cfg.Logger,
+		LLMClient: cfg.LLMClient,
 	})
 	setupMiddleware(app)
 	service.RegisterRoutes(app)
