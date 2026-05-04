@@ -4,6 +4,7 @@ import { getRandomProblem, sendChat } from './api'
 import { ProblemView } from './components/ProblemView'
 import { ChatView } from './components/ChatView'
 import { CompleteView } from './components/CompleteView'
+import { cn } from './lib/utils'
 
 export default function App() {
   const [problem, setProblem] = useState<Problem | null>(null)
@@ -45,17 +46,17 @@ export default function App() {
   }
 
   if (error && !problem) return (
-    <div style={{ padding: '40px', textAlign: 'center', color: '#ff375f' }}>{error}</div>
+    <div className="p-10 text-center text-destructive">{error}</div>
   )
 
   if (!problem) return (
-    <div style={{ padding: '40px', textAlign: 'center' }}>Loading problem...</div>
+    <div className="p-10 text-center text-muted-foreground">Loading problem...</div>
   )
 
   if (stage === 'complete') return <CompleteView onNext={loadProblem} />
 
   return (
-    <div style={{ display: 'flex', height: '100vh', fontFamily: 'sans-serif' }}>
+    <div className="flex h-screen font-sans">
       <ProblemView key={problem.id} problem={problem} onSkip={loadProblem} />
       <ChatView
         history={history}
