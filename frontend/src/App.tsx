@@ -56,7 +56,7 @@ export default function App() {
 
   return (
     <div style={{ display: 'flex', height: '100vh', fontFamily: 'sans-serif' }}>
-      <ProblemView problem={problem} />
+      <ProblemView key={problem.id} problem={problem} onSkip={loadProblem} />
       <ChatView
         history={history}
         stage={stage}
