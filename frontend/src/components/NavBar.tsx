@@ -10,7 +10,7 @@ export function NavBar({ view, onNavigate }: { view: View, onNavigate: (v: View)
           key={v}
           onClick={() => onNavigate(v)}
           className={cn(
-            'px-4 py-1.5 rounded-md text-sm cursor-pointer transition-colors border-none capitalize',
+            'px-4 py-1.5 rounded-md text-sm cursor-pointer transition-colors border-none',
             view === v
               ? 'bg-secondary text-secondary-foreground font-semibold'
               : 'bg-transparent text-muted-foreground hover:text-foreground'

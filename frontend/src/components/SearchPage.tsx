@@ -49,7 +49,7 @@ export function SearchPage({ onSelectProblem }: { onSelectProblem: (p: Problem) 
           setError('Search failed. Is the backend running?')
         }
       } finally {
-        setLoading(false)
+        if (!controller.signal.aborted) setLoading(false)
       }
     }, 300)
     return () => {
