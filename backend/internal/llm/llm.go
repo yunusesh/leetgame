@@ -24,8 +24,10 @@ Ask the candidate to state both time complexity and space complexity.
 - If incorrect: ask one focused guiding question. Keep stage as "complexity".
 - If both time and space complexity are correct: confirm and set stage to "complete".
 
-Respond ONLY with this exact JSON — no other text before or after:
-{"message": "<your response to the candidate>", "stage": "<algorithm|complexity|complete>"}`
+CRITICAL: Your entire response must be ONLY the following JSON object — no explanation, no markdown, no text before or after, no code fences:
+{"message": "<your response to the candidate>", "stage": "<algorithm|complexity|complete>"}
+
+Any response that is not pure JSON will be rejected. Do not write anything except the JSON object.`
 
 type ChatMessage struct {
 	Role    string `json:"role"`
