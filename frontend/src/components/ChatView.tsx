@@ -57,6 +57,11 @@ export function ChatView({ history, stage, loading, error, onSubmit, streamingMe
             {msg.content}
           </div>
         ))}
+        {loading && !streamingMessage && (
+          <div className="self-start text-muted-foreground text-xs italic">
+            Thinking...
+          </div>
+        )}
         {streamingMessage && (
           <div className="self-start bg-secondary text-secondary-foreground max-w-[80%] px-3.5 py-2.5 rounded-xl text-sm leading-relaxed whitespace-pre-wrap">
             {streamingMessage}
