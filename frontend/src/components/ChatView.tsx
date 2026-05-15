@@ -13,15 +13,22 @@ interface Props {
   loading: boolean
   error: string | null
   onSubmit: (message: string) => void
+  streamingMessage: string
 }
 
-export function ChatView({ history, stage, loading, error, onSubmit }: Props) {
+export function ChatView({ history, stage, loading, error, onSubmit, streamingMessage }: Props) {
   const [input, setInput] = useState('')
   const bottomRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [history])
+
+  useEffect(() => {
+    if (streamingMessage) {
+      bottomRef.current?.scrollIntoView({ behavior: 'instant' as ScrollBehavior })
+    }
+  }, [streamingMessage])
 
   const handleSubmit = () => {
     const trimmed = input.trim()
@@ -50,9 +57,10 @@ export function ChatView({ history, stage, loading, error, onSubmit }: Props) {
             {msg.content}
           </div>
         ))}
-        {loading && (
-          <div className="self-start text-muted-foreground text-xs italic">
-            Thinking...
+        {streamingMessage && (
+          <div className="self-start bg-secondary text-secondary-foreground max-w-[80%] px-3.5 py-2.5 rounded-xl text-sm leading-relaxed whitespace-pre-wrap">
+            {streamingMessage}
+            <span className="animate-pulse ml-0.5">▌</span>
           </div>
         )}
         {error && (
