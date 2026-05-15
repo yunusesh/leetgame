@@ -53,6 +53,7 @@ export default function App() {
   const resetPracticeState = () => {
     setHistory([])
     setStage('algorithm')
+    setStreamingMessage('')
   }
 
   const loadRandomProblem = async () => {
@@ -245,6 +246,7 @@ export default function App() {
       setError('Something went wrong. Please try again.')
     } finally {
       setLoading(false)
+      setStreamingMessage('')
     }
   }
 

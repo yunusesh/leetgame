@@ -77,6 +77,9 @@ func (c *OllamaClient) Evaluate(ctx context.Context, problem models.Problem, sta
 	scanner := bufio.NewScanner(resp.Body)
 	scanner.Buffer(make([]byte, 0, 64*1024), 1*1024*1024)
 	for scanner.Scan() {
+		if ctx.Err() != nil {
+			return llm.EvaluateResponse{}, ctx.Err()
+		}
 		line := scanner.Text()
 		if !strings.HasPrefix(line, "data: ") {
 			continue
@@ -106,7 +109,7 @@ func (c *OllamaClient) Evaluate(ctx context.Context, problem models.Problem, sta
 		ex.add(tok)
 	}
 
-	if ex.state == stateMessage && ex.pending != "" && ex.onToken != nil {
+	if ex.state == stateMessage && ex.pending != "" && ex.onToken != nil && ctx.Err() == nil {
 		ex.onToken(ex.pending)
 		ex.pending = ""
 	}
