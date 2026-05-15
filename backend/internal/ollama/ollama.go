@@ -48,7 +48,6 @@ func (c *OllamaClient) Evaluate(ctx context.Context, problem models.Problem, sta
 		"model":    c.model,
 		"messages": messages,
 		"stream":   true,
-		"options":  map[string]any{"num_ctx": 4096},
 	}
 	bodyBytes, err := json.Marshal(body)
 	if err != nil {
