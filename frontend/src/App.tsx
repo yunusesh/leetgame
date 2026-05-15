@@ -1,6 +1,6 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import type { Problem, ChatMessage, Stage } from './types'
-import { getRandomProblem, getRandomProblemFiltered, searchProblems, sendChat } from './api'
+import { getRandomProblem, getRandomProblemFiltered, searchProblems, streamChat } from './api'
 import { NavBar } from './components/NavBar'
 import { ProblemView } from './components/ProblemView'
 import { ChatView } from './components/ChatView'
@@ -47,6 +47,8 @@ export default function App() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [playlistExhausted, setPlaylistExhausted] = useState(false)
+  const [streamingMessage, setStreamingMessage] = useState('')
+  const streamAbortRef = useRef<AbortController | null>(null)
 
   const resetPracticeState = () => {
     setHistory([])
@@ -173,6 +175,10 @@ export default function App() {
 
   useEffect(() => { void loadRandomProblem() }, [])
 
+  useEffect(() => () => {
+    streamAbortRef.current?.abort()
+  }, [problem])
+
   const restartSearchSet = async () => {
     if (!searchPlaylist) return
 
@@ -209,16 +215,33 @@ export default function App() {
 
   const handleSubmit = async (message: string) => {
     if (!problem) return
+
+    streamAbortRef.current?.abort()
+    const controller = new AbortController()
+    streamAbortRef.current = controller
+
     setLoading(true)
     setError(null)
+    setStreamingMessage('')
+
     const userMsg: ChatMessage = { role: 'user', content: message }
     const nextHistory = [...history, userMsg]
     setHistory(nextHistory)
+
     try {
-      const resp = await sendChat(problem.id, stage, history, message)
-      setHistory([...nextHistory, { role: 'assistant', content: resp.message }])
-      setStage(resp.stage)
+      let accumulated = ''
+      for await (const event of streamChat(problem.id, stage, history, message, controller.signal)) {
+        if (event.type === 'token') {
+          accumulated += event.content
+          setStreamingMessage(accumulated)
+        } else if (event.type === 'done') {
+          setHistory([...nextHistory, { role: 'assistant', content: event.message }])
+          setStage(event.stage)
+          setStreamingMessage('')
+        }
+      }
     } catch (e) {
+      if (e instanceof Error && e.name === 'AbortError') return
       setError('Something went wrong. Please try again.')
     } finally {
       setLoading(false)
@@ -263,6 +286,7 @@ export default function App() {
           loading={loading}
           error={error}
           onSubmit={handleSubmit}
+          streamingMessage={streamingMessage}
         />
       </div>
     )
