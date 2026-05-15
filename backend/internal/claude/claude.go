@@ -27,7 +27,7 @@ func New(apiKey, model string) *AnthropicClient {
 	}
 }
 
-func (c *AnthropicClient) Evaluate(ctx context.Context, problem models.Problem, stage string, history []llm.ChatMessage, userMessage string) (llm.EvaluateResponse, error) {
+func (c *AnthropicClient) Evaluate(ctx context.Context, problem models.Problem, stage string, history []llm.ChatMessage, userMessage string, onToken func(string)) (llm.EvaluateResponse, error) {
 	systemPrompt := fmt.Sprintf(llm.SystemPromptTemplate, problem.Title, problem.Description, stage)
 
 	messages := make([]map[string]string, 0, len(history)+1)

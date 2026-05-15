@@ -38,5 +38,5 @@ type EvaluateResponse struct {
 }
 
 type Client interface {
-	Evaluate(ctx context.Context, problem models.Problem, stage string, history []ChatMessage, userMessage string) (EvaluateResponse, error)
+	Evaluate(ctx context.Context, problem models.Problem, stage string, history []ChatMessage, userMessage string, onToken func(string)) (EvaluateResponse, error)
 }

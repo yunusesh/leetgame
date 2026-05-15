@@ -29,7 +29,7 @@ func (hs *HandlerService) Chat(c *fiber.Ctx) error {
 		history[i] = llm.ChatMessage{Role: h.Role, Content: h.Content}
 	}
 
-	result, err := hs.llmClient.Evaluate(c.Context(), problem, req.Stage, history, req.Message)
+	result, err := hs.llmClient.Evaluate(c.Context(), problem, req.Stage, history, req.Message, nil)
 	if err != nil {
 		hs.logger.Error("llm evaluate failed", "error", err)
 		return xerrors.InternalServerError()
