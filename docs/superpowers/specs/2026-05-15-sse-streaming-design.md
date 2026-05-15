@@ -142,7 +142,7 @@ export async function* streamChat(
   ```
 - Remove "Thinking..." indicator — the streaming bubble is the feedback
 - `loading` prop remains to disable the input while streaming
-- **Auto-scroll fix:** change the scroll `useEffect` dependency from `[history]` to `[history, streamingMessage]` so the view scrolls as the streaming bubble grows
+- **Auto-scroll fix:** split the scroll effect into two: one on `[history]` with `behavior: 'smooth'` (for new complete messages), and a separate one on `[streamingMessage]` with `behavior: 'instant'` (for streaming updates). Using `'smooth'` on every token restarts the 300ms scroll animation each time and causes jitter.
 
 ### Frontend: `frontend/src/types.ts`
 
