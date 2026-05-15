@@ -1,5 +1,4 @@
-// frontend/src/api.ts
-import type { Problem, ChatMessage, Stage, ChatResponse, ProblemSearchResponse, ProblemTag } from './types'
+import type { Problem, ChatMessage, Stage, ProblemSearchResponse, ProblemTag } from './types'
 
 export async function getRandomProblem(): Promise<Problem> {
   const res = await fetch('/api/problems/random')
@@ -52,17 +51,42 @@ export async function getProblemTags(signal?: AbortSignal): Promise<ProblemTag[]
   return res.json()
 }
 
-export async function sendChat(
+export async function* streamChat(
   problemId: string,
   stage: Stage,
   history: ChatMessage[],
   message: string,
-): Promise<ChatResponse> {
+  signal?: AbortSignal,
+): AsyncGenerator<
+  { type: 'token'; content: string } |
+  { type: 'done'; stage: Stage; message: string }
+> {
   const res = await fetch('/api/chat', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ problem_id: problemId, stage, history, message }),
+    signal,
   })
   if (!res.ok) throw new Error(`Chat request failed: ${res.status}`)
-  return res.json()
+
+  const reader = res.body!.getReader()
+  const decoder = new TextDecoder()
+  let buffer = ''
+
+  while (true) {
+    const { done, value } = await reader.read()
+    if (done) break
+    buffer += decoder.decode(value, { stream: true })
+    const events = buffer.split('\n\n')
+    buffer = events.pop()!
+    for (const event of events) {
+      const lines = event.trim().split('\n')
+      const type = lines.find(l => l.startsWith('event: '))?.slice(7)
+      const data = lines.find(l => l.startsWith('data: '))?.slice(6)
+      if (!type || !data) continue
+      const parsed = JSON.parse(data)
+      if (type === 'token') yield { type: 'token', content: parsed.content }
+      else if (type === 'done') yield { type: 'done', ...parsed }
+    }
+  }
 }
