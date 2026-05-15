@@ -159,3 +159,27 @@ func TestEvaluate_passes_history_and_system_prompt(t *testing.T) {
 	assert.Contains(t, body, "prev")
 	assert.Contains(t, body, "new message")
 }
+
+func TestEvaluate_prefix_and_content_in_single_token(t *testing.T) {
+	// The entire prefix + some content arrives as one token
+	payloads := []string{
+		contentChunk(`{"message": "Hello`),
+		contentChunk(` world`),
+		contentChunk(`", "stage": "algorithm"}`),
+	}
+	srv := makeSSEServer(payloads)
+	defer srv.Close()
+
+	client := ollama.New(srv.URL, "test-model")
+	problem := models.Problem{Id: uuid.New(), Title: "Two Sum", Description: "find two numbers"}
+
+	var received []string
+	result, err := client.Evaluate(context.Background(), problem, "algorithm", nil, "use a hash map", func(tok string) {
+		received = append(received, tok)
+	})
+
+	require.NoError(t, err)
+	assert.Equal(t, "Hello world", strings.Join(received, ""))
+	assert.Equal(t, "Hello world", result.Message)
+	assert.Equal(t, "algorithm", result.Stage)
+}

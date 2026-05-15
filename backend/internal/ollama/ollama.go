@@ -75,6 +75,7 @@ func (c *OllamaClient) Evaluate(ctx context.Context, problem models.Problem, sta
 	ex := &extractor{onToken: onToken}
 
 	scanner := bufio.NewScanner(resp.Body)
+	scanner.Buffer(make([]byte, 0, 64*1024), 1*1024*1024)
 	for scanner.Scan() {
 		line := scanner.Text()
 		if !strings.HasPrefix(line, "data: ") {
@@ -104,6 +105,12 @@ func (c *OllamaClient) Evaluate(ctx context.Context, problem models.Problem, sta
 		fullText.WriteString(tok)
 		ex.add(tok)
 	}
+
+	if ex.state == stateMessage && ex.pending != "" && ex.onToken != nil {
+		ex.onToken(ex.pending)
+		ex.pending = ""
+	}
+
 	if err := scanner.Err(); err != nil {
 		return llm.EvaluateResponse{}, fmt.Errorf("error reading ollama stream: %w", err)
 	}
