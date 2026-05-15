@@ -46,27 +46,19 @@ type Client interface {
 
 ### Handler: `internal/handlers/chat.go`
 
-- Set SSE response headers: `Content-Type: text/event-stream`, `Cache-Control: no-cache`, `Connection: keep-alive`
-- Use `c.Context().SetBodyStreamWriter(func(w *bufio.Writer))` (fasthttp streaming)
-- Pass an `onToken` closure that JSON-encodes each token and writes:
-  ```
-  event: token
-  data: {"content":"<token>"}
+**Important constraint:** fasthttp explicitly forbids accessing `RequestCtx` (i.e. `c` or `c.Context()`) from inside the `SetBodyStreamWriter` callback. All request parsing, storage calls, and context extraction must happen before the callback is registered.
 
-  ```
-  followed by `w.Flush()`
-- After `Evaluate` returns, write:
-  ```
-  event: done
-  data: {"stage":"<stage>","message":"<full message>"}
-
-  ```
-- On error, write:
-  ```
-  event: error
-  data: {}
-
-  ```
+Pattern:
+1. Parse request, validate, fetch problem from storage — all using `c.Context()` normally
+2. Create `streamCtx, cancelStream := context.WithCancel(context.Background())`
+3. Set SSE response headers via `c.Set()`: `Content-Type: text/event-stream`, `Cache-Control: no-cache`, `Connection: keep-alive`
+4. Call `c.Context().SetBodyStreamWriter(func(w *bufio.Writer))` — inside the callback, use only `streamCtx` and local variables; never `c` or `c.Context()`
+5. Inside the callback:
+   - `onToken` writes `event: token\ndata: {"content":"<token>"}\n\n` then calls `w.Flush()`; on flush error, calls `cancelStream()` and returns — this propagates client disconnect to the Ollama HTTP call
+   - Call `hs.llmClient.Evaluate(streamCtx, ...)` 
+   - On success, write `event: done\ndata: {"stage":"...","message":"..."}\n\n`
+   - On error, write `event: error\ndata: {}\n\n`
+   - `defer cancelStream()` at top of callback
 
 Token data is JSON-encoded so newlines, quotes, and special characters in LLM output are safe.
 
@@ -129,9 +121,13 @@ export async function* streamChat(
 ### Frontend: `frontend/src/App.tsx`
 
 - Add `streamingMessage: string` state (empty string = not streaming)
+- Add `streamAbortRef = useRef<AbortController | null>(null)` to track the active stream
 - Replace `sendChat` call with `for await` over `streamChat`:
+  - Before starting, cancel any previous stream: `streamAbortRef.current?.abort()`; create a new `AbortController` and store it in the ref; pass its `signal` to `streamChat`
   - `token` events: append content to `streamingMessage`
   - `done` event: push complete message into `history`, update `stage`, clear `streamingMessage`
+  - On catch: ignore `AbortError` (user navigated away); set error state for other failures
+- Cancel the stream on problem change: `useEffect(() => () => streamAbortRef.current?.abort(), [problem])`
 - Pass `streamingMessage` as a new prop to `ChatView`
 
 ### Frontend: `frontend/src/components/ChatView.tsx`
@@ -146,6 +142,7 @@ export async function* streamChat(
   ```
 - Remove "Thinking..." indicator — the streaming bubble is the feedback
 - `loading` prop remains to disable the input while streaming
+- **Auto-scroll fix:** change the scroll `useEffect` dependency from `[history]` to `[history, streamingMessage]` so the view scrolls as the streaming bubble grows
 
 ### Frontend: `frontend/src/types.ts`
 
@@ -178,7 +175,7 @@ data: {"stage":"complexity","message":"The algorithm you described is correct! N
 
 **`onToken` callback vs channel:** Synchronous callback is simpler here — single producer, single consumer, no fan-out needed. No goroutine lifecycle management in the handler.
 
-**State machine for JSON extraction:** The LLM outputs `{"message": "...", "stage": "..."}`. A trailing buffer of `len(endMarker)-1` chars ensures the end marker is detected before forwarding, so no JSON artifacts reach the frontend.
+**State machine for JSON extraction:** The LLM outputs `{"message": "...", "stage": "..."}`. A trailing buffer of `len(endMarker)-1` chars ensures the end marker is detected before forwarding, so no JSON artifacts reach the frontend. This relies on `message` appearing before `stage` in the JSON output — the system prompt already specifies this key order, and LLMs reliably follow key order from their prompt template. This must not change.
 
 **`done` event carries the full message:** The frontend replaces the accumulated streaming text with the authoritative parsed message on `done`. This handles any edge cases in the streaming extraction.
 
