@@ -48,13 +48,14 @@ func (c *OllamaClient) Evaluate(ctx context.Context, problem models.Problem, sta
 		"model":    c.model,
 		"messages": messages,
 		"stream":   true,
+		"think":    false,
 	}
 	bodyBytes, err := json.Marshal(body)
 	if err != nil {
 		return llm.EvaluateResponse{}, fmt.Errorf("failed to marshal request: %w", err)
 	}
 
-	req, err := http.NewRequestWithContext(ctx, http.MethodPost, c.baseURL+"/v1/chat/completions", bytes.NewReader(bodyBytes))
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, c.baseURL+"/api/chat", bytes.NewReader(bodyBytes))
 	if err != nil {
 		return llm.EvaluateResponse{}, fmt.Errorf("failed to create request: %w", err)
 	}
@@ -80,28 +81,19 @@ func (c *OllamaClient) Evaluate(ctx context.Context, problem models.Problem, sta
 		if ctx.Err() != nil {
 			return llm.EvaluateResponse{}, ctx.Err()
 		}
-		line := scanner.Text()
-		if !strings.HasPrefix(line, "data: ") {
+		var chunk struct {
+			Message struct {
+				Content string `json:"content"`
+			} `json:"message"`
+			Done bool `json:"done"`
+		}
+		if err := json.Unmarshal(scanner.Bytes(), &chunk); err != nil {
 			continue
 		}
-		payload := line[6:]
-		if payload == "[DONE]" {
+		if chunk.Done {
 			break
 		}
-		var chunk struct {
-			Choices []struct {
-				Delta struct {
-					Content string `json:"content"`
-				} `json:"delta"`
-			} `json:"choices"`
-		}
-		if err := json.Unmarshal([]byte(payload), &chunk); err != nil {
-			continue
-		}
-		if len(chunk.Choices) == 0 {
-			continue
-		}
-		tok := chunk.Choices[0].Delta.Content
+		tok := chunk.Message.Content
 		if tok == "" {
 			continue
 		}

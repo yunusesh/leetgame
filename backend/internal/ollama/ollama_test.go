@@ -2,6 +2,7 @@ package ollama_test
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
@@ -19,38 +20,32 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// makeSSEServer returns a test HTTP server that streams the given JSON payloads
-// as SSE chunks in OpenAI-compatible format, then sends [DONE].
-func makeSSEServer(payloads []string) *httptest.Server {
+// makeOllamaServer returns a test HTTP server that streams the given content tokens
+// in native Ollama /api/chat format, then sends a done:true terminator.
+func makeOllamaServer(tokens []string) *httptest.Server {
 	return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "text/event-stream")
-		w.Header().Set("Cache-Control", "no-cache")
 		flusher := w.(http.Flusher)
-		for _, p := range payloads {
-			fmt.Fprintf(w, "data: %s\n\n", p)
+		for _, tok := range tokens {
+			line, _ := json.Marshal(map[string]any{
+				"message": map[string]string{"role": "assistant", "content": tok},
+				"done":    false,
+			})
+			fmt.Fprintf(w, "%s\n", line)
 			flusher.Flush()
 		}
-		fmt.Fprintf(w, "data: [DONE]\n\n")
+		done, _ := json.Marshal(map[string]any{
+			"message": map[string]string{"role": "assistant", "content": ""},
+			"done":    true,
+		})
+		fmt.Fprintf(w, "%s\n", done)
 		flusher.Flush()
 	}))
 }
 
-// contentChunk builds one OpenAI-compatible streaming chunk with the given content token.
-func contentChunk(tok string) string {
-	return fmt.Sprintf(`{"choices":[{"delta":{"content":%q,"reasoning":""},"finish_reason":null}]}`, tok)
-}
-
 func TestEvaluate_streams_message_tokens(t *testing.T) {
 	// LLM streams {"message": "Hello world", "stage": "algorithm"} token by token
-	payloads := []string{
-		contentChunk(`{"`),
-		contentChunk(`message`),
-		contentChunk(`": "`),
-		contentChunk(`Hello`),
-		contentChunk(` world`),
-		contentChunk(`", "stage": "algorithm"}`),
-	}
-	srv := makeSSEServer(payloads)
+	tokens := []string{`{"`, `message`, `": "`, `Hello`, ` world`, `", "stage": "algorithm"}`}
+	srv := makeOllamaServer(tokens)
 	defer srv.Close()
 
 	client := ollama.New(srv.URL, "test-model")
@@ -67,36 +62,37 @@ func TestEvaluate_streams_message_tokens(t *testing.T) {
 	assert.Equal(t, "algorithm", result.Stage)
 }
 
-func TestEvaluate_skips_reasoning_tokens(t *testing.T) {
-	// Reasoning tokens have empty content and should be ignored
-	payloads := []string{
-		`{"choices":[{"delta":{"content":"","reasoning":"let me think..."},"finish_reason":null}]}`,
-		`{"choices":[{"delta":{"content":"","reasoning":"ok I know"},"finish_reason":null}]}`,
-		contentChunk(`{"message": "Hi", "stage": "algorithm"}`),
-	}
-	srv := makeSSEServer(payloads)
+func TestEvaluate_think_false_in_request(t *testing.T) {
+	// Verify think:false is sent so reasoning is disabled server-side
+	var capturedBody []byte
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		capturedBody, _ = io.ReadAll(r.Body)
+		line, _ := json.Marshal(map[string]any{
+			"message": map[string]string{"role": "assistant", "content": `{"message": "ok", "stage": "algorithm"}`},
+			"done":    false,
+		})
+		fmt.Fprintf(w, "%s\n", line)
+		w.(http.Flusher).Flush()
+		done, _ := json.Marshal(map[string]any{"message": map[string]string{}, "done": true})
+		fmt.Fprintf(w, "%s\n", done)
+		w.(http.Flusher).Flush()
+	}))
 	defer srv.Close()
 
 	client := ollama.New(srv.URL, "test-model")
 	problem := models.Problem{Id: uuid.New(), Title: "Two Sum", Description: "find two numbers"}
 
-	var received []string
-	result, err := client.Evaluate(context.Background(), problem, "algorithm", nil, "use a hash map", func(tok string) {
-		received = append(received, tok)
-	})
-
+	_, err := client.Evaluate(context.Background(), problem, "algorithm", nil, "use a hash map", nil)
 	require.NoError(t, err)
-	assert.Equal(t, "Hi", strings.Join(received, ""))
-	assert.Equal(t, "Hi", result.Message)
-	assert.Equal(t, "algorithm", result.Stage)
+
+	var body map[string]any
+	require.NoError(t, json.Unmarshal(capturedBody, &body))
+	assert.Equal(t, false, body["think"], "think:false must be sent to disable reasoning")
 }
 
 func TestEvaluate_nil_onToken_does_not_panic(t *testing.T) {
 	// Claude client passes nil — must not panic
-	payloads := []string{
-		contentChunk(`{"message": "Good", "stage": "complexity"}`),
-	}
-	srv := makeSSEServer(payloads)
+	srv := makeOllamaServer([]string{`{"message": "Good", "stage": "complexity"}`})
 	defer srv.Close()
 
 	client := ollama.New(srv.URL, "test-model")
@@ -112,10 +108,12 @@ func TestEvaluate_nil_onToken_does_not_panic(t *testing.T) {
 func TestEvaluate_context_cancellation(t *testing.T) {
 	// Server hangs mid-stream — context cancellation should propagate
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "text/event-stream")
-		flusher := w.(http.Flusher)
-		fmt.Fprintf(w, "data: %s\n\n", contentChunk(`{"message": "`))
-		flusher.Flush()
+		line, _ := json.Marshal(map[string]any{
+			"message": map[string]string{"role": "assistant", "content": `{"message": "`},
+			"done":    false,
+		})
+		fmt.Fprintf(w, "%s\n", line)
+		w.(http.Flusher).Flush()
 		select {
 		case <-r.Context().Done():
 		case <-time.After(10 * time.Second):
@@ -138,12 +136,15 @@ func TestEvaluate_passes_history_and_system_prompt(t *testing.T) {
 	var capturedBody []byte
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		capturedBody, _ = io.ReadAll(r.Body)
-		w.Header().Set("Content-Type", "text/event-stream")
-		flusher := w.(http.Flusher)
-		fmt.Fprintf(w, "data: %s\n\n", contentChunk(`{"message": "ok", "stage": "algorithm"}`))
-		flusher.Flush()
-		fmt.Fprintf(w, "data: [DONE]\n\n")
-		flusher.Flush()
+		line, _ := json.Marshal(map[string]any{
+			"message": map[string]string{"role": "assistant", "content": `{"message": "ok", "stage": "algorithm"}`},
+			"done":    false,
+		})
+		fmt.Fprintf(w, "%s\n", line)
+		w.(http.Flusher).Flush()
+		done, _ := json.Marshal(map[string]any{"message": map[string]string{}, "done": true})
+		fmt.Fprintf(w, "%s\n", done)
+		w.(http.Flusher).Flush()
 	}))
 	defer srv.Close()
 
@@ -162,12 +163,8 @@ func TestEvaluate_passes_history_and_system_prompt(t *testing.T) {
 
 func TestEvaluate_prefix_and_content_in_single_token(t *testing.T) {
 	// The entire prefix + some content arrives as one token
-	payloads := []string{
-		contentChunk(`{"message": "Hello`),
-		contentChunk(` world`),
-		contentChunk(`", "stage": "algorithm"}`),
-	}
-	srv := makeSSEServer(payloads)
+	tokens := []string{`{"message": "Hello`, ` world`, `", "stage": "algorithm"}`}
+	srv := makeOllamaServer(tokens)
 	defer srv.Close()
 
 	client := ollama.New(srv.URL, "test-model")
