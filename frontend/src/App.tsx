@@ -7,6 +7,9 @@ import { ChatView } from './components/ChatView'
 import { CompleteView } from './components/CompleteView'
 import { EndOfSetView } from './components/EndOfSetView'
 import { SearchPage, type SearchSelectionContext } from './components/SearchPage'
+import type { Session } from '@supabase/supabase-js'
+import { supabase } from './lib/supabase'
+import { LoginPage } from './components/LoginPage'
 
 type View = 'practice' | 'search'
 type ProblemSource = 'random' | 'search'
@@ -38,6 +41,22 @@ function getPlaylistSummary(searchPlaylist: SearchPlaylist | null) {
 }
 
 export default function App() {
+  const [session, setSession] = useState<Session | null>(null)
+  const [authLoading, setAuthLoading] = useState(true)
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session)
+      setAuthLoading(false)
+    })
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session)
+    })
+
+    return () => subscription.unsubscribe()
+  }, [])
+
   const [view, setView] = useState<View>('practice')
   const [problem, setProblem] = useState<Problem | null>(null)
   const [problemSource, setProblemSource] = useState<ProblemSource>('random')
@@ -290,6 +309,22 @@ export default function App() {
           onSubmit={handleSubmit}
           streamingMessage={streamingMessage}
         />
+      </div>
+    )
+  }
+
+  if (authLoading) {
+    return (
+      <div className="flex flex-col h-dvh items-center justify-center text-muted-foreground text-sm">
+        Loading...
+      </div>
+    )
+  }
+
+  if (!session) {
+    return (
+      <div className="flex flex-col h-dvh">
+        <LoginPage />
       </div>
     )
   }

@@ -1,9 +1,18 @@
 import type { Problem, ChatMessage, Stage, ProblemSearchResponse, ProblemTag } from './types'
+import { supabase } from './lib/supabase'
 
 const API_URL = import.meta.env.VITE_API_URL ?? ''
 
+async function authHeaders(): Promise<Record<string, string>> {
+  const { data: { session } } = await supabase.auth.getSession()
+  if (!session) return {}
+  return { Authorization: `Bearer ${session.access_token}` }
+}
+
 export async function getRandomProblem(): Promise<Problem> {
-  const res = await fetch(`${API_URL}/api/problems/random`)
+  const res = await fetch(`${API_URL}/api/problems/random`, {
+    headers: await authHeaders(),
+  })
   if (!res.ok) throw new Error(`Failed to fetch problem: ${res.status}`)
   return res.json()
 }
@@ -21,7 +30,9 @@ export async function getRandomProblemFiltered(
   if (tags.length) params.set('tags', tags.join(','))
   if (tags.length) params.set('tag_match', tagMatch)
   if (excludeId) params.set('exclude_id', excludeId)
-  const res = await fetch(`${API_URL}/api/problems/random?${params.toString()}`)
+  const res = await fetch(`${API_URL}/api/problems/random?${params.toString()}`, {
+    headers: await authHeaders(),
+  })
   if (!res.ok) throw new Error(`Failed to fetch filtered random problem: ${res.status}`)
   return res.json()
 }
@@ -42,13 +53,19 @@ export async function searchProblems(
   if (tags.length) params.set('tag_match', tagMatch)
   params.set('page', String(page))
   params.set('page_size', String(pageSize))
-  const res = await fetch(`${API_URL}/api/problems?${params.toString()}`, { signal })
+  const res = await fetch(`${API_URL}/api/problems?${params.toString()}`, {
+    signal,
+    headers: await authHeaders(),
+  })
   if (!res.ok) throw new Error(`Search failed: ${res.status}`)
   return res.json()
 }
 
 export async function getProblemTags(signal?: AbortSignal): Promise<ProblemTag[]> {
-  const res = await fetch(`${API_URL}/api/problems/tags`, { signal })
+  const res = await fetch(`${API_URL}/api/problems/tags`, {
+    signal,
+    headers: await authHeaders(),
+  })
   if (!res.ok) throw new Error(`Failed to fetch tags: ${res.status}`)
   return res.json()
 }
@@ -63,9 +80,13 @@ export async function* streamChat(
   { type: 'token'; content: string } |
   { type: 'done'; stage: Stage; message: string }
 > {
+  const headers = {
+    'Content-Type': 'application/json',
+    ...(await authHeaders()),
+  }
   const res = await fetch(`${API_URL}/api/chat`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers,
     body: JSON.stringify({ problem_id: problemId, stage, history, message }),
     signal,
   })
