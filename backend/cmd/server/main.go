@@ -22,6 +22,11 @@ func main() {
 		slog.Error("failed to load .env file", "error", err)
 	}
 
+	// Render sets PORT; our settings use SERVER_PORT via envPrefix.
+	if port := os.Getenv("PORT"); port != "" && os.Getenv("SERVER_PORT") == "" {
+		os.Setenv("SERVER_PORT", port)
+	}
+
 	settings, err := settings.Load()
 	if err != nil {
 		slog.Error("failed to load settings", "error", err)
@@ -49,7 +54,8 @@ func main() {
 		Logger: slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{
 			Level: utils.MustParseSlogLevel(settings.Server.LogLevel),
 		})),
-		LLMClient: llmClient,
+		LLMClient:      llmClient,
+		AllowedOrigins: settings.Server.AllowedOrigins,
 	})
 
 	go func() {
@@ -66,9 +72,7 @@ func main() {
 	slog.Info("shutting down server")
 
 	if err := app.Shutdown(); err != nil {
-		slog.Error(
-			"failed to shutdown server",
-			slog.String("error", err.Error()))
+		slog.Error("failed to shutdown server", slog.String("error", err.Error()))
 	}
 
 	slog.Info("server shutdown")
