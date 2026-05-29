@@ -1,7 +1,9 @@
 import type { Problem, ChatMessage, Stage, ProblemSearchResponse, ProblemTag } from './types'
 
+const API_URL = import.meta.env.VITE_API_URL ?? ''
+
 export async function getRandomProblem(): Promise<Problem> {
-  const res = await fetch('/api/problems/random')
+  const res = await fetch(`${API_URL}/api/problems/random`)
   if (!res.ok) throw new Error(`Failed to fetch problem: ${res.status}`)
   return res.json()
 }
@@ -19,7 +21,7 @@ export async function getRandomProblemFiltered(
   if (tags.length) params.set('tags', tags.join(','))
   if (tags.length) params.set('tag_match', tagMatch)
   if (excludeId) params.set('exclude_id', excludeId)
-  const res = await fetch(`/api/problems/random?${params.toString()}`)
+  const res = await fetch(`${API_URL}/api/problems/random?${params.toString()}`)
   if (!res.ok) throw new Error(`Failed to fetch filtered random problem: ${res.status}`)
   return res.json()
 }
@@ -40,13 +42,13 @@ export async function searchProblems(
   if (tags.length) params.set('tag_match', tagMatch)
   params.set('page', String(page))
   params.set('page_size', String(pageSize))
-  const res = await fetch(`/api/problems?${params.toString()}`, { signal })
+  const res = await fetch(`${API_URL}/api/problems?${params.toString()}`, { signal })
   if (!res.ok) throw new Error(`Search failed: ${res.status}`)
   return res.json()
 }
 
 export async function getProblemTags(signal?: AbortSignal): Promise<ProblemTag[]> {
-  const res = await fetch('/api/problems/tags', { signal })
+  const res = await fetch(`${API_URL}/api/problems/tags`, { signal })
   if (!res.ok) throw new Error(`Failed to fetch tags: ${res.status}`)
   return res.json()
 }
@@ -61,7 +63,7 @@ export async function* streamChat(
   { type: 'token'; content: string } |
   { type: 'done'; stage: Stage; message: string }
 > {
-  const res = await fetch('/api/chat', {
+  const res = await fetch(`${API_URL}/api/chat`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ problem_id: problemId, stage, history, message }),
