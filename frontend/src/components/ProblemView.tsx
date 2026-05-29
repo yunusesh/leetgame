@@ -48,6 +48,7 @@ export function ProblemView({
         </span>
         <button
           onClick={() => setProblemOpen(o => !o)}
+          aria-expanded={problemOpen}
           className="text-xs text-muted-foreground hover:text-foreground transition-colors px-2 py-1 rounded border border-border"
         >
           {problemOpen ? 'Hide ▴' : 'Show ▾'}
