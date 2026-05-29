@@ -52,6 +52,7 @@ export default function App() {
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session)
+      setAuthLoading(false)
     })
 
     return () => subscription.unsubscribe()
@@ -193,7 +194,9 @@ export default function App() {
     setView('practice')
   }
 
-  useEffect(() => { void loadRandomProblem() }, [])
+  useEffect(() => {
+    if (session) void loadRandomProblem()
+  }, [session])
 
   useEffect(() => () => {
     streamAbortRef.current?.abort()

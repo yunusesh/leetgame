@@ -15,8 +15,9 @@ export function LoginPage() {
         Practice algorithm pattern recognition
       </p>
       <button
+        type="button"
         onClick={() => void handleLogin()}
-        className="px-6 py-2.5 rounded-lg bg-primary text-primary-foreground font-semibold hover:bg-primary/90 transition-colors cursor-pointer"
+        className="px-6 py-2.5 rounded-lg bg-primary text-primary-foreground font-semibold hover:bg-primary/90 transition-colors cursor-pointer focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none"
       >
         Sign in with Google
       </button>
