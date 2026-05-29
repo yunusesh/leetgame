@@ -23,13 +23,15 @@ const (
 type OllamaClient struct {
 	baseURL    string
 	model      string
+	apiKey     string
 	httpClient *http.Client
 }
 
-func New(baseURL, model string) *OllamaClient {
+func New(baseURL, model, apiKey string) *OllamaClient {
 	return &OllamaClient{
 		baseURL:    baseURL,
 		model:      model,
+		apiKey:     apiKey,
 		httpClient: &http.Client{Timeout: 10 * time.Minute},
 	}
 }
@@ -60,6 +62,9 @@ func (c *OllamaClient) Evaluate(ctx context.Context, problem models.Problem, sta
 		return llm.EvaluateResponse{}, fmt.Errorf("failed to create request: %w", err)
 	}
 	req.Header.Set("content-type", "application/json")
+	if c.apiKey != "" {
+		req.Header.Set("Authorization", "Bearer "+c.apiKey)
+	}
 
 	resp, err := c.httpClient.Do(req)
 	if err != nil {

@@ -39,7 +39,7 @@ func main() {
 	var llmClient llm.Client
 	switch settings.LLM.Provider {
 	case "ollama":
-		llmClient = ollama.New(settings.LLM.OllamaURL, settings.LLM.Model)
+		llmClient = ollama.New(settings.LLM.OllamaURL, settings.LLM.Model, settings.LLM.APIKey)
 	default:
 		llmClient = claude.New(settings.LLM.APIKey, settings.LLM.Model)
 	}
