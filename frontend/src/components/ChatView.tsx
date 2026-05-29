@@ -19,6 +19,7 @@ interface Props {
 export function ChatView({ history, stage, loading, error, onSubmit, streamingMessage }: Props) {
   const [input, setInput] = useState('')
   const bottomRef = useRef<HTMLDivElement>(null)
+  const textareaRef = useRef<HTMLTextAreaElement>(null)
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
@@ -30,6 +31,10 @@ export function ChatView({ history, stage, loading, error, onSubmit, streamingMe
     }
   }, [streamingMessage])
 
+  useEffect(() => {
+    if (!loading) textareaRef.current?.focus()
+  }, [loading])
+
   const handleSubmit = () => {
     const trimmed = input.trim()
     if (!trimmed || loading) return
@@ -38,7 +43,7 @@ export function ChatView({ history, stage, loading, error, onSubmit, streamingMe
   }
 
   return (
-    <div className="w-1/2 flex flex-col min-h-0">
+    <div className="flex-1 flex flex-col min-h-0 md:w-1/2">
       <div className="px-5 py-3 bg-muted border-b border-border text-sm font-semibold text-foreground">
         {stageBanner[stage]}
       </div>
@@ -81,6 +86,7 @@ export function ChatView({ history, stage, loading, error, onSubmit, streamingMe
         className="p-4 border-t border-border flex gap-2"
       >
         <textarea
+          ref={textareaRef}
           value={input}
           onChange={e => setInput(e.target.value)}
           onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSubmit() } }}

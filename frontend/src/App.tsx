@@ -274,7 +274,7 @@ export default function App() {
       )
     }
     return (
-      <div className="flex flex-1 overflow-hidden min-h-0">
+      <div className="flex flex-col md:flex-row flex-1 overflow-hidden min-h-0">
         <ProblemView
           key={problem.id}
           problem={problem}
@@ -295,7 +295,7 @@ export default function App() {
   }
 
   return (
-    <div className="flex flex-col h-screen">
+    <div className="flex flex-col h-dvh">
       <NavBar view={view} onNavigate={setView} />
       {view === 'search'
         ? <SearchPage onSelectProblem={selectProblem} />
