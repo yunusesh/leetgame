@@ -20,6 +20,7 @@ type Config struct {
 	Logger         *slog.Logger
 	LLMClient      llm.Client
 	AllowedOrigins string
+	JWTSecret      string
 }
 
 func New(cfg *Config) *fiber.App {
@@ -40,6 +41,7 @@ func New(cfg *Config) *fiber.App {
 		Storage:   cfg.Storage,
 		Logger:    cfg.Logger,
 		LLMClient: cfg.LLMClient,
+		JWTSecret: cfg.JWTSecret,
 	})
 	service.RegisterRoutes(app)
 

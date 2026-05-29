@@ -49,6 +49,10 @@ func InvalidJSON() HTTPError {
 	return NewHTTPError(http.StatusBadRequest, errors.New("invalid JSON request data"))
 }
 
+func UnauthorizedError() HTTPError {
+	return NewHTTPError(http.StatusUnauthorized, errors.New("unauthorized"))
+}
+
 func ConflictError(entity, key, value string) HTTPError {
 	return NewHTTPError(http.StatusConflict, fmt.Errorf("%s with %s=%s already exists", entity, key, value))
 }

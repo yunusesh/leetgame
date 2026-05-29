@@ -56,6 +56,7 @@ func main() {
 		})),
 		LLMClient:      llmClient,
 		AllowedOrigins: settings.Server.AllowedOrigins,
+		JWTSecret:      settings.Auth.SupabaseJWTSecret,
 	})
 
 	go func() {
