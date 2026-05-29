@@ -1,6 +1,8 @@
 package middleware_test
 
 import (
+	"crypto/rand"
+	"crypto/rsa"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -91,6 +93,49 @@ func TestRequireAuth_InvalidSignature(t *testing.T) {
 
 	req := httptest.NewRequest(http.MethodGet, "/test", nil)
 	req.Header.Set("Authorization", "Bearer "+token)
+
+	resp, err := app.Test(req)
+	require.NoError(t, err)
+	assert.Equal(t, http.StatusUnauthorized, resp.StatusCode)
+}
+
+func TestRequireAuth_NonUUIDSub(t *testing.T) {
+	app := fiber.New(fiber.Config{ErrorHandler: func(c *fiber.Ctx, err error) error {
+		return c.Status(http.StatusUnauthorized).SendString("unauthorized")
+	}})
+	app.Use(middleware.RequireAuth(testSecret))
+	app.Get("/test", func(c *fiber.Ctx) error { return c.SendStatus(http.StatusOK) })
+
+	// sub is a valid string but not a UUID
+	token := makeToken(t, "not-a-uuid", time.Now().Add(time.Hour))
+	req := httptest.NewRequest(http.MethodGet, "/test", nil)
+	req.Header.Set("Authorization", "Bearer "+token)
+
+	resp, err := app.Test(req)
+	require.NoError(t, err)
+	assert.Equal(t, http.StatusUnauthorized, resp.StatusCode)
+}
+
+func TestRequireAuth_WrongAlgorithm(t *testing.T) {
+	app := fiber.New(fiber.Config{ErrorHandler: func(c *fiber.Ctx, err error) error {
+		return c.Status(http.StatusUnauthorized).SendString("unauthorized")
+	}})
+	app.Use(middleware.RequireAuth(testSecret))
+	app.Get("/test", func(c *fiber.Ctx) error { return c.SendStatus(http.StatusOK) })
+
+	// Sign with RS256 (wrong algorithm for this middleware)
+	claims := jwt.MapClaims{
+		"sub": uuid.New().String(),
+		"exp": jwt.NewNumericDate(time.Now().Add(time.Hour)),
+	}
+	privateKey, err := rsa.GenerateKey(rand.Reader, 2048)
+	require.NoError(t, err)
+	token := jwt.NewWithClaims(jwt.SigningMethodRS256, claims)
+	signed, err := token.SignedString(privateKey)
+	require.NoError(t, err)
+
+	req := httptest.NewRequest(http.MethodGet, "/test", nil)
+	req.Header.Set("Authorization", "Bearer "+signed)
 
 	resp, err := app.Test(req)
 	require.NoError(t, err)
