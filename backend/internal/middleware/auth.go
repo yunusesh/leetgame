@@ -11,7 +11,7 @@ import (
 	"github.com/google/uuid"
 )
 
-func RequireAuth(jwtSecret string) fiber.Handler {
+func RequireAuth(kf jwt.Keyfunc) fiber.Handler {
 	return func(c *fiber.Ctx) error {
 		authHeader := c.Get("Authorization")
 		if !strings.HasPrefix(authHeader, "Bearer ") {
@@ -19,12 +19,7 @@ func RequireAuth(jwtSecret string) fiber.Handler {
 		}
 		tokenStr := authHeader[7:]
 
-		token, err := jwt.Parse(tokenStr, func(t *jwt.Token) (any, error) {
-			if _, ok := t.Method.(*jwt.SigningMethodHMAC); !ok {
-				return nil, xerrors.UnauthorizedError()
-			}
-			return []byte(jwtSecret), nil
-		})
+		token, err := jwt.Parse(tokenStr, kf)
 		if err != nil || !token.Valid {
 			return xerrors.UnauthorizedError()
 		}
@@ -48,21 +43,20 @@ func RequireAuth(jwtSecret string) fiber.Handler {
 }
 
 // OptionalAuth sets the user ID in context if a valid JWT is present, but does not
-// block unauthenticated requests. Use for routes accessible to guests.
-func OptionalAuth(jwtSecret string) fiber.Handler {
+// block unauthenticated requests. A nil keyfunc disables verification entirely (passthrough).
+func OptionalAuth(kf jwt.Keyfunc) fiber.Handler {
 	return func(c *fiber.Ctx) error {
+		if kf == nil {
+			return c.Next()
+		}
+
 		authHeader := c.Get("Authorization")
 		if !strings.HasPrefix(authHeader, "Bearer ") {
 			return c.Next()
 		}
 		tokenStr := authHeader[7:]
 
-		token, err := jwt.Parse(tokenStr, func(t *jwt.Token) (any, error) {
-			if _, ok := t.Method.(*jwt.SigningMethodHMAC); !ok {
-				return nil, xerrors.UnauthorizedError()
-			}
-			return []byte(jwtSecret), nil
-		})
+		token, err := jwt.Parse(tokenStr, kf)
 		if err != nil || !token.Valid {
 			return c.Next()
 		}
