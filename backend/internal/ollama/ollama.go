@@ -117,7 +117,7 @@ func (c *OllamaClient) Evaluate(ctx context.Context, problem models.Problem, sta
 
 	var evalResp llm.EvaluateResponse
 	if err := json.Unmarshal([]byte(fullText.String()), &evalResp); err != nil {
-		return llm.EvaluateResponse{}, fmt.Errorf("failed to parse ollama JSON: %w (raw: %s)", err, fullText.String())
+		return llm.EvaluateResponse{Message: fullText.String(), Stage: stage}, nil
 	}
 	switch evalResp.Stage {
 	case "pattern", "algorithm", "complexity", "complete":
