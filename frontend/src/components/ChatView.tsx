@@ -3,10 +3,16 @@ import type { ChatMessage, Stage } from '../types'
 import { cn } from '../lib/utils'
 import { Button } from './ui/button'
 
-const stageBanner: Record<string, string> = {
+const stageBanner: Partial<Record<Stage, string>> = {
   pattern: 'What pattern does this problem use?',
   algorithm: 'Pattern ✓ — Now describe your algorithm',
   complexity: 'Algorithm ✓ — Now describe the time and space complexity',
+}
+
+const stagePlaceholder: Partial<Record<Stage, string>> = {
+  pattern: 'e.g. sliding window, BFS/DFS, dynamic programming…',
+  algorithm: 'Describe your algorithm…',
+  complexity: 'State your time and space complexity…',
 }
 
 interface Props {
@@ -92,7 +98,7 @@ export function ChatView({ history, stage, loading, error, onSubmit, streamingMe
           value={input}
           onChange={e => setInput(e.target.value)}
           onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSubmit() } }}
-          placeholder="Describe your approach..."
+          placeholder={stagePlaceholder[stage] ?? 'Describe your approach…'}
           disabled={loading}
           rows={3}
           className="flex-1 resize-none px-3 py-2.5 rounded-lg border border-border text-sm font-sans focus:outline-none focus:ring-2 focus:ring-primary/50 disabled:opacity-50"

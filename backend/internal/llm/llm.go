@@ -12,7 +12,7 @@ Problem Title: %s
 Problem Description:
 %s
 
-Evaluate the candidate's approach in three stages. The current stage is: %s
+Evaluate the candidate's approach in three stages (Stage 0 → 1 → 2). The current stage is: %s
 
 Stage 0 — Pattern (stage = "pattern"):
 The candidate must identify the algorithm pattern or technique this problem uses (e.g. "sliding window", "BFS/DFS", "dynamic programming", "two pointers", "binary search", "union find", "backtracking", "greedy", "heap/priority queue", "trie").
