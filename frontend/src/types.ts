@@ -25,7 +25,7 @@ export interface ChatMessage {
   content: string
 }
 
-export type Stage = 'algorithm' | 'complexity' | 'complete'
+export type Stage = 'pattern' | 'algorithm' | 'complexity' | 'complete'
 
 export interface ChatResponse {
   message: string

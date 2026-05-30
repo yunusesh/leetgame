@@ -62,7 +62,7 @@ export default function App() {
   const [problemSource, setProblemSource] = useState<ProblemSource>('random')
   const [searchPlaylist, setSearchPlaylist] = useState<SearchPlaylist | null>(null)
   const [history, setHistory] = useState<ChatMessage[]>([])
-  const [stage, setStage] = useState<Stage>('algorithm')
+  const [stage, setStage] = useState<Stage>('pattern')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [playlistExhausted, setPlaylistExhausted] = useState(false)
@@ -71,7 +71,7 @@ export default function App() {
 
   const resetPracticeState = () => {
     setHistory([])
-    setStage('algorithm')
+    setStage('pattern')
     setStreamingMessage('')
   }
 

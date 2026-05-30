@@ -4,7 +4,8 @@ import { cn } from '../lib/utils'
 import { Button } from './ui/button'
 
 const stageBanner: Record<string, string> = {
-  algorithm: 'Describe your algorithm',
+  pattern: 'What pattern does this problem use?',
+  algorithm: 'Pattern ✓ — Now describe your algorithm',
   complexity: 'Algorithm ✓ — Now describe the time and space complexity',
 }
 
