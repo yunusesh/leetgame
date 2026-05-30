@@ -1,5 +1,5 @@
 package settings
 
 type Auth struct {
-	SupabaseJWTSecret string `env:"SUPABASE_JWT_SECRET,required"`
+	SupabaseURL string `env:"SUPABASE_URL"`
 }
