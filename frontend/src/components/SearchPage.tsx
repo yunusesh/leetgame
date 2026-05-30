@@ -2,6 +2,8 @@ import { useState, useEffect, useRef } from 'react'
 import type { Problem, ProblemTag } from '../types'
 import { getProblemTags, searchProblems } from '../api'
 import { cn } from '../lib/utils'
+import { Input } from './ui/input'
+import { Badge } from './ui/badge'
 
 const difficulties = ['Easy', 'Medium', 'Hard'] as const
 type Difficulty = typeof difficulties[number]
@@ -18,7 +20,6 @@ const difficultyActiveClass: Record<Difficulty, string> = {
   Hard: 'border-hard text-hard bg-hard/10',
 }
 
-const inputClass = 'w-full px-3.5 py-2.5 text-sm rounded-md border border-border bg-muted text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary'
 const pageSize = 12
 const tagMatchModes = [
   { value: 'and', label: 'All tags' },
@@ -127,11 +128,11 @@ export function SearchPage({ onSelectProblem }: { onSelectProblem: (p: Problem, 
     <div className="max-w-2xl mx-auto px-6 py-8">
       <h2 className="text-xl font-semibold mb-6">Search Problems</h2>
 
-      <input
+      <Input
         value={q}
         onChange={e => setQ(e.target.value)}
         placeholder="Search by title..."
-        className={cn(inputClass, 'mb-4')}
+        className="mb-4 bg-muted"
       />
 
       <div className="flex gap-2 mb-4">
@@ -192,11 +193,11 @@ export function SearchPage({ onSelectProblem }: { onSelectProblem: (p: Problem, 
             </button>
           ))}
         </div>
-        <input
+        <Input
           value={tagQuery}
           onChange={e => setTagQuery(e.target.value)}
           placeholder="Search available tags..."
-          className={cn(inputClass, 'mb-2')}
+          className="mb-2 bg-muted"
         />
         {tags.length > 0 && (
           <div className="mb-3 flex gap-1.5 flex-wrap">
@@ -274,7 +275,7 @@ export function SearchPage({ onSelectProblem }: { onSelectProblem: (p: Problem, 
           </div>
           <div className="flex gap-1.5 flex-wrap">
             {p.topic_tags.map(tag => (
-              <span key={tag} className="bg-secondary text-muted-foreground rounded-sm px-2 py-0.5 text-xs">{tag}</span>
+              <Badge key={tag} variant="secondary">{tag}</Badge>
             ))}
           </div>
         </div>
