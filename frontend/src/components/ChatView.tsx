@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react'
 import type { ChatMessage, Stage } from '../types'
 import { cn } from '../lib/utils'
+import { Button } from './ui/button'
 
 const stageBanner: Record<string, string> = {
   algorithm: 'Describe your algorithm',
@@ -95,13 +96,12 @@ export function ChatView({ history, stage, loading, error, onSubmit, streamingMe
           rows={3}
           className="flex-1 resize-none px-3 py-2.5 rounded-lg border border-border text-sm font-sans focus:outline-none focus:ring-2 focus:ring-primary/50 disabled:opacity-50"
         />
-        <button
+        <Button
           type="submit"
           disabled={loading || !input.trim()}
-          className="px-5 rounded-lg bg-primary text-primary-foreground border-none font-semibold cursor-pointer disabled:cursor-not-allowed disabled:opacity-50 hover:bg-primary/90 transition-colors"
         >
           Send
-        </button>
+        </Button>
       </form>
     </div>
   )
