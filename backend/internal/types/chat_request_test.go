@@ -72,3 +72,13 @@ func TestChatRequest_Validate_invalid_history_role(t *testing.T) {
 	errs := req.Validate()
 	assert.Contains(t, errs, "history[0].role")
 }
+
+func TestChatRequest_Validate_pattern_stage_valid(t *testing.T) {
+	req := types.ChatRequest{
+		ProblemID: uuid.New(),
+		Stage:     "pattern",
+		History:   []types.HistoryMessage{},
+		Message:   "sliding window",
+	}
+	assert.Empty(t, req.Validate())
+}

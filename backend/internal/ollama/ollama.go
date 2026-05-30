@@ -120,7 +120,7 @@ func (c *OllamaClient) Evaluate(ctx context.Context, problem models.Problem, sta
 		return llm.EvaluateResponse{}, fmt.Errorf("failed to parse ollama JSON: %w (raw: %s)", err, fullText.String())
 	}
 	switch evalResp.Stage {
-	case "algorithm", "complexity", "complete":
+	case "pattern", "algorithm", "complexity", "complete":
 	default:
 		return llm.EvaluateResponse{}, fmt.Errorf("ollama returned unknown stage %q", evalResp.Stage)
 	}

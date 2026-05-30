@@ -48,7 +48,7 @@ func TestEvaluate_streams_message_tokens(t *testing.T) {
 	srv := makeOllamaServer(tokens)
 	defer srv.Close()
 
-	client := ollama.New(srv.URL, "test-model")
+	client := ollama.New(srv.URL, "test-model", "")
 	problem := models.Problem{Id: uuid.New(), Title: "Two Sum", Description: "find two numbers"}
 
 	var received []string
@@ -79,7 +79,7 @@ func TestEvaluate_think_false_in_request(t *testing.T) {
 	}))
 	defer srv.Close()
 
-	client := ollama.New(srv.URL, "test-model")
+	client := ollama.New(srv.URL, "test-model", "")
 	problem := models.Problem{Id: uuid.New(), Title: "Two Sum", Description: "find two numbers"}
 
 	_, err := client.Evaluate(context.Background(), problem, "algorithm", nil, "use a hash map", nil)
@@ -95,7 +95,7 @@ func TestEvaluate_nil_onToken_does_not_panic(t *testing.T) {
 	srv := makeOllamaServer([]string{`{"message": "Good", "stage": "complexity"}`})
 	defer srv.Close()
 
-	client := ollama.New(srv.URL, "test-model")
+	client := ollama.New(srv.URL, "test-model", "")
 	problem := models.Problem{Id: uuid.New(), Title: "Two Sum", Description: "find two numbers"}
 
 	result, err := client.Evaluate(context.Background(), problem, "complexity", nil, "O(n) time", nil)
@@ -124,7 +124,7 @@ func TestEvaluate_context_cancellation(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), 150*time.Millisecond)
 	defer cancel()
 
-	client := ollama.New(srv.URL, "test-model")
+	client := ollama.New(srv.URL, "test-model", "")
 	problem := models.Problem{Id: uuid.New(), Title: "Two Sum", Description: "find two numbers"}
 
 	_, err := client.Evaluate(ctx, problem, "algorithm", nil, "use a hash map", nil)
@@ -148,7 +148,7 @@ func TestEvaluate_passes_history_and_system_prompt(t *testing.T) {
 	}))
 	defer srv.Close()
 
-	client := ollama.New(srv.URL, "test-model")
+	client := ollama.New(srv.URL, "test-model", "")
 	problem := models.Problem{Id: uuid.New(), Title: "Two Sum", Description: "find two numbers"}
 	history := []llm.ChatMessage{{Role: "user", Content: "prev"}, {Role: "assistant", Content: "resp"}}
 
@@ -161,13 +161,29 @@ func TestEvaluate_passes_history_and_system_prompt(t *testing.T) {
 	assert.Contains(t, body, "new message")
 }
 
+func TestEvaluate_pattern_stage_returned(t *testing.T) {
+	// LLM returns pattern stage (staying on pattern after incorrect guess)
+	tokens := []string{`{"message": "Think about a subarray technique", "stage": "pattern"}`}
+	srv := makeOllamaServer(tokens)
+	defer srv.Close()
+
+	client := ollama.New(srv.URL, "test-model", "")
+	problem := models.Problem{Id: uuid.New(), Title: "Max Subarray", Description: "find the contiguous subarray"}
+
+	result, err := client.Evaluate(context.Background(), problem, "pattern", nil, "binary search maybe?", nil)
+
+	require.NoError(t, err)
+	assert.Equal(t, "Think about a subarray technique", result.Message)
+	assert.Equal(t, "pattern", result.Stage)
+}
+
 func TestEvaluate_prefix_and_content_in_single_token(t *testing.T) {
 	// The entire prefix + some content arrives as one token
 	tokens := []string{`{"message": "Hello`, ` world`, `", "stage": "algorithm"}`}
 	srv := makeOllamaServer(tokens)
 	defer srv.Close()
 
-	client := ollama.New(srv.URL, "test-model")
+	client := ollama.New(srv.URL, "test-model", "")
 	problem := models.Problem{Id: uuid.New(), Title: "Two Sum", Description: "find two numbers"}
 
 	var received []string

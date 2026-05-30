@@ -27,9 +27,9 @@ func (r ChatRequest) Validate() map[string]string {
 	if strings.TrimSpace(r.Message) == "" {
 		errs["message"] = "required"
 	}
-	validStages := map[string]bool{"algorithm": true, "complexity": true}
+	validStages := map[string]bool{"pattern": true, "algorithm": true, "complexity": true}
 	if !validStages[r.Stage] {
-		errs["stage"] = "must be 'algorithm' or 'complexity'"
+		errs["stage"] = "must be 'pattern', 'algorithm' or 'complexity'"
 	}
 	validRoles := map[string]bool{"user": true, "assistant": true}
 	for i, msg := range r.History {
