@@ -4,6 +4,7 @@ go 1.24.1
 
 require (
 	github.com/Masterminds/squirrel v1.5.4
+	github.com/MicahParks/keyfunc/v2 v2.1.0
 	github.com/caarlos0/env/v11 v11.3.1
 	github.com/goccy/go-json v0.10.5
 	github.com/gofiber/fiber/v2 v2.52.9
@@ -16,7 +17,6 @@ require (
 )
 
 require (
-	github.com/MicahParks/keyfunc/v2 v2.1.0 // indirect
 	github.com/andybalholm/brotli v1.1.1 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/jackc/pgpassfile v1.0.0 // indirect
