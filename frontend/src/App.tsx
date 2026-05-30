@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef } from 'react'
 import type { Problem, ChatMessage, Stage } from './types'
-import { getRandomProblem, getRandomProblemFiltered, searchProblems, streamChat } from './api'
+import { getRandomProblem, getRandomProblemFiltered, searchProblems, streamChat, getStreak, recordStreak } from './api'
 import { NavBar } from './components/NavBar'
 import { ProblemView } from './components/ProblemView'
 import { ChatView } from './components/ChatView'
@@ -67,6 +67,7 @@ export default function App() {
   const [error, setError] = useState<string | null>(null)
   const [playlistExhausted, setPlaylistExhausted] = useState(false)
   const [streamingMessage, setStreamingMessage] = useState('')
+  const [streak, setStreak] = useState<number | null>(null)
   const streamAbortRef = useRef<AbortController | null>(null)
 
   const resetPracticeState = () => {
@@ -194,6 +195,14 @@ export default function App() {
   }
 
   useEffect(() => {
+    if (!session) {
+      setStreak(null)
+      return
+    }
+    getStreak().then(({ streak }) => setStreak(streak)).catch(() => {})
+  }, [session])
+
+  useEffect(() => {
     void loadRandomProblem()
   }, [])
 
@@ -260,6 +269,9 @@ export default function App() {
           setHistory([...nextHistory, { role: 'assistant', content: event.message }])
           setStage(event.stage)
           setStreamingMessage('')
+          if (event.stage === 'complete' && session) {
+            recordStreak().then(({ streak }) => setStreak(streak)).catch(() => {})
+          }
         }
       }
     } catch (e) {
@@ -317,7 +329,7 @@ export default function App() {
 
   return (
     <div className="flex flex-col h-dvh">
-      <NavBar view={view} onNavigate={setView} session={session} authLoading={authLoading} />
+      <NavBar view={view} onNavigate={setView} session={session} authLoading={authLoading} streak={streak} />
       {view === 'search'
         ? <SearchPage onSelectProblem={selectProblem} />
         : practiceView()

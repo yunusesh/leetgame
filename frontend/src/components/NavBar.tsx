@@ -9,9 +9,10 @@ interface Props {
   onNavigate: (v: View) => void
   session: Session | null
   authLoading: boolean
+  streak: number | null
 }
 
-export function NavBar({ view, onNavigate, session, authLoading }: Props) {
+export function NavBar({ view, onNavigate, session, authLoading, streak }: Props) {
   const handleSignIn = async () => {
     await supabase.auth.signInWithOAuth({
       provider: 'google',
@@ -36,11 +37,26 @@ export function NavBar({ view, onNavigate, session, authLoading }: Props) {
         </Button>
       ))}
 
-      <div className="ml-auto">
+      <div className="ml-auto flex items-center gap-2">
         {authLoading ? null : session ? (
-          <Button variant="ghost" size="sm" onClick={() => void handleSignOut()}>
-            Sign out
-          </Button>
+          <>
+            {streak !== null && streak >= 1 && (
+              <span className="text-sm font-medium">🔥 {streak}</span>
+            )}
+            {session.user.user_metadata?.avatar_url && (
+              <img
+                src={session.user.user_metadata.avatar_url as string}
+                alt="avatar"
+                className="h-6 w-6 rounded-full"
+              />
+            )}
+            <span className="text-sm text-muted-foreground hidden sm:inline">
+              {session.user.user_metadata?.name as string ?? session.user.email}
+            </span>
+            <Button variant="ghost" size="sm" onClick={() => void handleSignOut()}>
+              Sign out
+            </Button>
+          </>
         ) : (
           <Button size="sm" onClick={() => void handleSignIn()}>
             Sign in
