@@ -8,12 +8,14 @@ import (
 
 	"leetgame/internal/claude"
 	"leetgame/internal/llm"
+	"leetgame/internal/middleware"
 	"leetgame/internal/ollama"
 	"leetgame/internal/server"
 	"leetgame/internal/settings"
 	"leetgame/internal/storage/postgres"
 	"leetgame/internal/utils"
 
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/joho/godotenv"
 )
 
@@ -49,6 +51,17 @@ func main() {
 		llmClient = claude.New(settings.LLM.APIKey, settings.LLM.Model)
 	}
 
+	var kf jwt.Keyfunc
+	if settings.Auth.SupabaseURL != "" {
+		jwks, err := middleware.NewKeyfunc(settings.Auth.SupabaseURL)
+		if err != nil {
+			slog.Error("failed to initialize JWKS", "error", err)
+			os.Exit(1)
+		}
+		defer jwks.EndBackground()
+		kf = jwks.Keyfunc
+	}
+
 	app := server.New(&server.Config{
 		Storage: pg,
 		Logger: slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{
@@ -56,7 +69,7 @@ func main() {
 		})),
 		LLMClient:      llmClient,
 		AllowedOrigins: settings.Server.AllowedOrigins,
-		JWTSecret:      settings.Auth.SupabaseJWTSecret,
+		Keyfunc:        kf,
 	})
 
 	go func() {

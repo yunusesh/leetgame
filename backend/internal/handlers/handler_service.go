@@ -5,20 +5,22 @@ import (
 
 	"leetgame/internal/llm"
 	"leetgame/internal/storage"
+
+	"github.com/golang-jwt/jwt/v5"
 )
 
 type HandlerService struct {
 	storage   storage.Storage
 	logger    *slog.Logger
 	llmClient llm.Client
-	jwtSecret string
+	keyfunc   jwt.Keyfunc
 }
 
 type HandlerServiceConfig struct {
 	Storage   storage.Storage
 	Logger    *slog.Logger
 	LLMClient llm.Client
-	JWTSecret string
+	Keyfunc   jwt.Keyfunc
 }
 
 func NewService(cfg *HandlerServiceConfig) *HandlerService {
@@ -26,6 +28,6 @@ func NewService(cfg *HandlerServiceConfig) *HandlerService {
 		storage:   cfg.Storage,
 		logger:    cfg.Logger,
 		llmClient: cfg.LLMClient,
-		jwtSecret: cfg.JWTSecret,
+		keyfunc:   cfg.Keyfunc,
 	}
 }

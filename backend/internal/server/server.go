@@ -13,6 +13,7 @@ import (
 	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/gofiber/fiber/v2/middleware/logger"
 	"github.com/gofiber/fiber/v2/middleware/recover"
+	"github.com/golang-jwt/jwt/v5"
 )
 
 type Config struct {
@@ -20,7 +21,7 @@ type Config struct {
 	Logger         *slog.Logger
 	LLMClient      llm.Client
 	AllowedOrigins string
-	JWTSecret      string
+	Keyfunc        jwt.Keyfunc
 }
 
 func New(cfg *Config) *fiber.App {
@@ -41,7 +42,7 @@ func New(cfg *Config) *fiber.App {
 		Storage:   cfg.Storage,
 		Logger:    cfg.Logger,
 		LLMClient: cfg.LLMClient,
-		JWTSecret: cfg.JWTSecret,
+		Keyfunc:   cfg.Keyfunc,
 	})
 	service.RegisterRoutes(app)
 
