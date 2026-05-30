@@ -26,5 +26,7 @@ func (hs *HandlerService) RegisterRoutes(app *fiber.App) {
 		})
 
 		api.Post("/chat", hs.Chat)
+		api.Get("/streak", hs.GetStreak)
+		api.Post("/streak", hs.RecordStreak)
 	})
 }
