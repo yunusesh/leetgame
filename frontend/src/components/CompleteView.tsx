@@ -1,3 +1,5 @@
+import { Button } from './ui/button'
+
 interface Props {
   onNext: () => void
   onRandom?: () => void
@@ -11,19 +13,9 @@ export function CompleteView({ onNext, onRandom }: Props) {
         You nailed the algorithm and complexity.
       </p>
       <div className="flex items-center gap-3">
-        <button
-          onClick={onNext}
-          className="px-8 py-3 rounded-lg bg-primary text-primary-foreground border-none text-base font-semibold cursor-pointer hover:bg-primary/90 transition-colors"
-        >
-          Next Problem
-        </button>
+        <Button size="lg" onClick={onNext}>Next Problem</Button>
         {onRandom && (
-          <button
-            onClick={onRandom}
-            className="px-6 py-3 rounded-lg border border-border bg-transparent text-base font-semibold cursor-pointer hover:bg-muted transition-colors"
-          >
-            Random Problem
-          </button>
+          <Button variant="outline" size="lg" onClick={onRandom}>Random Problem</Button>
         )}
       </div>
     </div>
