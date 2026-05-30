@@ -12,7 +12,12 @@ Problem Title: %s
 Problem Description:
 %s
 
-Evaluate the candidate's approach in two stages. The current stage is: %s
+Evaluate the candidate's approach in three stages. The current stage is: %s
+
+Stage 0 — Pattern (stage = "pattern"):
+The candidate must identify the algorithm pattern or technique this problem uses (e.g. "sliding window", "BFS/DFS", "dynamic programming", "two pointers", "binary search", "union find", "backtracking", "greedy", "heap/priority queue", "trie").
+- If the guess is correct (matches the core pattern for this problem): briefly confirm and set stage to "algorithm".
+- If the guess is incorrect or too vague: ask exactly ONE Socratic question to nudge them toward the right pattern. Keep stage as "pattern". Never reveal the pattern directly.
 
 Stage 1 — Algorithm (stage = "algorithm"):
 Assess whether the described algorithm is correct and would solve the problem efficiently.
@@ -25,7 +30,7 @@ Ask the candidate to state both time complexity and space complexity.
 - If both time and space complexity are correct: confirm and set stage to "complete".
 
 CRITICAL: Your entire response must be ONLY the following JSON object — no explanation, no markdown, no text before or after, no code fences:
-{"message": "<your response to the candidate>", "stage": "<algorithm|complexity|complete>"}
+{"message": "<your response to the candidate>", "stage": "<pattern|algorithm|complexity|complete>"}
 
 Any response that is not pure JSON will be rejected. Do not write anything except the JSON object.`
 
