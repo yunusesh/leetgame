@@ -18,4 +18,8 @@ type Storage interface {
 	GetProblemByID(ctx context.Context, id uuid.UUID) (models.Problem, error)
 	SearchProblems(ctx context.Context, q, difficulty string, tags []string, tagMatch string, page, pageSize int) (types.ProblemSearchResponse, error)
 	GetProblemTags(ctx context.Context) ([]types.ProblemTag, error)
+
+	// streaks
+	UpsertPracticeDay(ctx context.Context, userID uuid.UUID) error
+	GetStreak(ctx context.Context, userID uuid.UUID) (int, error)
 }
