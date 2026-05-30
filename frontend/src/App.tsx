@@ -4,7 +4,6 @@ import { getRandomProblem, getRandomProblemFiltered, searchProblems, streamChat,
 import { NavBar } from './components/NavBar'
 import { ProblemView } from './components/ProblemView'
 import { ChatView } from './components/ChatView'
-import { CompleteView } from './components/CompleteView'
 import { EndOfSetView } from './components/EndOfSetView'
 import { SearchPage, type SearchSelectionContext } from './components/SearchPage'
 import type { Session } from '@supabase/supabase-js'
@@ -12,6 +11,14 @@ import { supabase } from './lib/supabase'
 
 type View = 'practice' | 'search'
 type ProblemSource = 'random' | 'search'
+
+interface PracticeSnapshot {
+  problem: Problem
+  stage: Stage
+  history: ChatMessage[]
+  searchPlaylist: SearchPlaylist | null
+  problemSource: ProblemSource
+}
 
 interface SearchPlaylist {
   q: string
@@ -44,14 +51,15 @@ export default function App() {
   const [authLoading, setAuthLoading] = useState(true)
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       setSession(session)
       setAuthLoading(false)
-    })
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session)
-      setAuthLoading(false)
+      if (event === 'SIGNED_IN' || event === 'INITIAL_SESSION') {
+        if (session) getStreak().then(({ streak }) => setStreak(streak)).catch(() => {})
+        else setStreak(null)
+      } else if (event === 'SIGNED_OUT') {
+        setStreak(null)
+      }
     })
 
     return () => subscription.unsubscribe()
@@ -68,6 +76,7 @@ export default function App() {
   const [playlistExhausted, setPlaylistExhausted] = useState(false)
   const [streamingMessage, setStreamingMessage] = useState('')
   const [streak, setStreak] = useState<number | null>(null)
+  const [sessionStack, setSessionStack] = useState<PracticeSnapshot[]>([])
   const streamAbortRef = useRef<AbortController | null>(null)
 
   const resetPracticeState = () => {
@@ -76,8 +85,30 @@ export default function App() {
     setStreamingMessage('')
   }
 
+  const pushSnapshot = () => {
+    if (!problem) return
+    setSessionStack(s => [...s, { problem, stage, history, searchPlaylist, problemSource }])
+  }
+
+  const goBack = () => {
+    setSessionStack(s => {
+      if (s.length === 0) return s
+      const snap = s[s.length - 1]
+      setProblem(snap.problem)
+      setStage(snap.stage)
+      setHistory(snap.history)
+      setSearchPlaylist(snap.searchPlaylist)
+      setProblemSource(snap.problemSource)
+      setPlaylistExhausted(false)
+      setError(null)
+      setStreamingMessage('')
+      return s.slice(0, -1)
+    })
+  }
+
   const loadRandomProblem = async () => {
     try {
+      pushSnapshot()
       setError(null)
       setPlaylistExhausted(false)
       const p = await getRandomProblem()
@@ -98,6 +129,7 @@ export default function App() {
 
     const nextIndex = searchPlaylist.selectedIndex + 1
     if (nextIndex < searchPlaylist.results.length) {
+      pushSnapshot()
       setProblem(searchPlaylist.results[nextIndex])
       setSearchPlaylist({
         ...searchPlaylist,
@@ -112,6 +144,7 @@ export default function App() {
     const nextPage = searchPlaylist.page + 1
 
     try {
+      pushSnapshot()
       setError(null)
       const res = await searchProblems(
         searchPlaylist.q,
@@ -154,6 +187,7 @@ export default function App() {
   const loadRandomNextProblem = async () => {
     if (problemSource === 'search' && searchPlaylist) {
       try {
+        pushSnapshot()
         setError(null)
         const p = await getRandomProblemFiltered(
           searchPlaylist.q,
@@ -176,6 +210,7 @@ export default function App() {
   }
 
   const selectProblem = (p: Problem, context: SearchSelectionContext) => {
+    pushSnapshot()
     setProblem(p)
     setProblemSource('search')
     setPlaylistExhausted(false)
@@ -194,13 +229,6 @@ export default function App() {
     setView('practice')
   }
 
-  useEffect(() => {
-    if (!session) {
-      setStreak(null)
-      return
-    }
-    getStreak().then(({ streak }) => setStreak(streak)).catch(() => {})
-  }, [session])
 
   useEffect(() => {
     void loadRandomProblem()
@@ -229,6 +257,7 @@ export default function App() {
         return
       }
 
+      pushSnapshot()
       setProblem(res.problems[0])
       setSearchPlaylist({
         ...searchPlaylist,
@@ -298,14 +327,7 @@ export default function App() {
         />
       )
     }
-    if (stage === 'complete') {
-      return (
-        <CompleteView
-          onNext={() => void loadNextProblem()}
-          onRandom={problemSource === 'search' ? () => void loadRandomNextProblem() : undefined}
-        />
-      )
-    }
+    const canGoBack = sessionStack.length > 0
     return (
       <div className="flex flex-col md:flex-row flex-1 overflow-hidden min-h-0">
         <ProblemView
@@ -313,6 +335,7 @@ export default function App() {
           problem={problem}
           onSkip={() => void loadNextProblem()}
           onRandom={() => void loadRandomNextProblem()}
+          onBack={canGoBack ? goBack : undefined}
           playlistSummary={problemSource === 'search' ? getPlaylistSummary(searchPlaylist) : null}
         />
         <ChatView
@@ -322,6 +345,9 @@ export default function App() {
           error={error}
           onSubmit={handleSubmit}
           streamingMessage={streamingMessage}
+          onNext={stage === 'complete' ? () => void loadNextProblem() : undefined}
+          onRandom={stage === 'complete' && problemSource === 'search' ? () => void loadRandomNextProblem() : undefined}
+          onBack={stage === 'complete' && canGoBack ? goBack : undefined}
         />
       </div>
     )

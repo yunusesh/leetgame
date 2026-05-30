@@ -21,11 +21,13 @@ export function ProblemView({
   problem,
   onSkip,
   onRandom,
+  onBack,
   playlistSummary,
 }: {
   problem: Problem
   onSkip: () => void
   onRandom: () => void
+  onBack?: () => void
   playlistSummary?: SearchPlaylistSummary | null
 }) {
   const [tagsOpen, setTagsOpen] = useState(false)
@@ -121,6 +123,11 @@ export function ProblemView({
           )}>
             {problem.difficulty}
           </span>
+          {onBack && (
+            <Button variant="ghost" size="sm" onClick={onBack} className="text-muted-foreground">
+              ← Back
+            </Button>
+          )}
           <Button variant="outline" size="sm" onClick={onSkip} className="ml-auto text-muted-foreground">
             Next →
           </Button>
