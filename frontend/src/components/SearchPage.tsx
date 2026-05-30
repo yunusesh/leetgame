@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import type { Problem, ProblemTag } from '../types'
 import { getProblemTags, searchProblems } from '../api'
 import { cn } from '../lib/utils'
+import { Button } from './ui/button'
 import { Input } from './ui/input'
 import { Badge } from './ui/badge'
 
@@ -283,22 +284,20 @@ export function SearchPage({ onSelectProblem }: { onSelectProblem: (p: Problem, 
 
       {!error && totalPages > 1 && (
         <div className="mt-6 flex items-center justify-between gap-3">
-          <button
-            type="button"
+          <Button
+            variant="outline"
             onClick={() => setPage(p => Math.max(1, p - 1))}
             disabled={page === 1}
-            className="rounded-md border border-border px-3.5 py-2 text-sm text-foreground transition-colors disabled:cursor-not-allowed disabled:opacity-50 hover:bg-secondary"
           >
             Previous
-          </button>
-          <button
-            type="button"
+          </Button>
+          <Button
+            variant="outline"
             onClick={() => setPage(p => Math.min(totalPages, p + 1))}
             disabled={page === totalPages}
-            className="rounded-md border border-border px-3.5 py-2 text-sm text-foreground transition-colors disabled:cursor-not-allowed disabled:opacity-50 hover:bg-secondary"
           >
             Next
-          </button>
+          </Button>
         </div>
       )}
     </div>
