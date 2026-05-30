@@ -9,7 +9,6 @@ import { EndOfSetView } from './components/EndOfSetView'
 import { SearchPage, type SearchSelectionContext } from './components/SearchPage'
 import type { Session } from '@supabase/supabase-js'
 import { supabase } from './lib/supabase'
-import { LoginPage } from './components/LoginPage'
 
 type View = 'practice' | 'search'
 type ProblemSource = 'random' | 'search'
@@ -195,8 +194,8 @@ export default function App() {
   }
 
   useEffect(() => {
-    if (session) void loadRandomProblem()
-  }, [session])
+    void loadRandomProblem()
+  }, [])
 
   useEffect(() => () => {
     streamAbortRef.current?.abort()
@@ -316,25 +315,9 @@ export default function App() {
     )
   }
 
-  if (authLoading) {
-    return (
-      <div className="flex flex-col h-dvh items-center justify-center text-muted-foreground text-sm">
-        Loading...
-      </div>
-    )
-  }
-
-  if (!session) {
-    return (
-      <div className="flex flex-col h-dvh">
-        <LoginPage />
-      </div>
-    )
-  }
-
   return (
     <div className="flex flex-col h-dvh">
-      <NavBar view={view} onNavigate={setView} />
+      <NavBar view={view} onNavigate={setView} session={session} authLoading={authLoading} />
       {view === 'search'
         ? <SearchPage onSelectProblem={selectProblem} />
         : practiceView()

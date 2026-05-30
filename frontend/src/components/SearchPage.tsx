@@ -232,18 +232,26 @@ export function SearchPage({ onSelectProblem }: { onSelectProblem: (p: Problem, 
         </div>
       </div>
 
-      {loading && <p className="text-sm text-muted-foreground">Searching...</p>}
       {error && <p className="text-sm text-destructive">{error}</p>}
-      {!loading && !error && hasSearched && total > 0 && (
+      {!error && hasSearched && total > 0 && (
         <div className="mb-3 flex items-center justify-between gap-3 text-sm text-muted-foreground">
-          <p>Showing {showingFrom}-{showingTo} of {total}</p>
+          {loading
+            ? <span className="flex items-center gap-2"><span className="inline-block h-3.5 w-3.5 animate-spin rounded-full border-2 border-border border-t-foreground" />Searching...</span>
+            : <p>Showing {showingFrom}-{showingTo} of {total}</p>
+          }
           <p>Page {page} of {totalPages}</p>
+        </div>
+      )}
+      {loading && !hasSearched && (
+        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+          <span className="inline-block h-3.5 w-3.5 animate-spin rounded-full border-2 border-border border-t-foreground" />
+          Searching...
         </div>
       )}
       {!loading && !error && hasSearched && results.length === 0 && (
         <p className="text-sm text-muted-foreground">No problems found.</p>
       )}
-      {!loading && !error && results.map(p => (
+      {!error && results.map(p => (
         <div
           key={p.id}
           onClick={() => onSelectProblem(p, {
@@ -272,7 +280,7 @@ export function SearchPage({ onSelectProblem }: { onSelectProblem: (p: Problem, 
         </div>
       ))}
 
-      {!loading && !error && totalPages > 1 && (
+      {!error && totalPages > 1 && (
         <div className="mt-6 flex items-center justify-between gap-3">
           <button
             type="button"

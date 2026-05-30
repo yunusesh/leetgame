@@ -17,7 +17,7 @@ func (hs *HandlerService) RegisterRoutes(app *fiber.App) {
 			return c.SendStatus(http.StatusOK)
 		})
 
-		api.Use(middleware.RequireAuth(hs.jwtSecret))
+		api.Use(middleware.OptionalAuth(hs.jwtSecret))
 
 		api.Route("/problems", func(problems fiber.Router) {
 			problems.Get("/random", hs.GetRandomProblem)

@@ -46,3 +46,41 @@ func RequireAuth(jwtSecret string) fiber.Handler {
 		return c.Next()
 	}
 }
+
+// OptionalAuth sets the user ID in context if a valid JWT is present, but does not
+// block unauthenticated requests. Use for routes accessible to guests.
+func OptionalAuth(jwtSecret string) fiber.Handler {
+	return func(c *fiber.Ctx) error {
+		authHeader := c.Get("Authorization")
+		if !strings.HasPrefix(authHeader, "Bearer ") {
+			return c.Next()
+		}
+		tokenStr := authHeader[7:]
+
+		token, err := jwt.Parse(tokenStr, func(t *jwt.Token) (any, error) {
+			if _, ok := t.Method.(*jwt.SigningMethodHMAC); !ok {
+				return nil, xerrors.UnauthorizedError()
+			}
+			return []byte(jwtSecret), nil
+		})
+		if err != nil || !token.Valid {
+			return c.Next()
+		}
+
+		claims, ok := token.Claims.(jwt.MapClaims)
+		if !ok {
+			return c.Next()
+		}
+		sub, ok := claims["sub"].(string)
+		if !ok {
+			return c.Next()
+		}
+		uid, err := uuid.Parse(sub)
+		if err != nil {
+			return c.Next()
+		}
+
+		xcontext.SetUserID(c, uid)
+		return c.Next()
+	}
+}
