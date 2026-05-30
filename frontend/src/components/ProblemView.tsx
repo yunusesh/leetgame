@@ -1,6 +1,8 @@
 import { useState } from 'react'
 import type { Problem } from '../types'
 import { cn } from '../lib/utils'
+import { Button } from './ui/button'
+import { Badge } from './ui/badge'
 
 const difficultyColor: Record<string, string> = {
   Easy: 'text-easy',
@@ -68,13 +70,9 @@ export function ProblemView({
                   {playlistSummary.tagMatch === 'and' ? 'All tags' : 'Any tag'}
                 </span>
               </div>
-              <button
-                type="button"
-                onClick={onRandom}
-                className="rounded-md border border-muted-foreground/40 bg-background px-2.5 py-1 text-xs text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
-              >
+              <Button variant="outline" size="sm" onClick={onRandom} className="text-muted-foreground">
                 Random instead
-              </button>
+              </Button>
             </div>
             <div className="flex flex-wrap gap-1.5">
               {playlistSummary.q && (
@@ -123,12 +121,9 @@ export function ProblemView({
           )}>
             {problem.difficulty}
           </span>
-          <button
-            onClick={onSkip}
-            className="ml-auto px-3 py-1 text-xs cursor-pointer border border-muted-foreground/50 rounded-md bg-transparent text-muted-foreground hover:bg-muted transition-colors"
-          >
+          <Button variant="outline" size="sm" onClick={onSkip} className="ml-auto text-muted-foreground">
             Next →
-          </button>
+          </Button>
         </div>
 
         <div className="mb-5">
@@ -141,12 +136,7 @@ export function ProblemView({
           {tagsOpen && (
             <div className="flex gap-2 flex-wrap mt-2">
               {problem.topic_tags.map(tag => (
-                <span
-                  key={tag}
-                  className="bg-secondary text-secondary-foreground rounded px-2 py-0.5 text-xs"
-                >
-                  {tag}
-                </span>
+                <Badge key={tag} variant="secondary">{tag}</Badge>
               ))}
             </div>
           )}
