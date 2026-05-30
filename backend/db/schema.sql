@@ -10,3 +10,9 @@ CREATE TABLE IF NOT EXISTS problems (
   topic_tags  TEXT[]      NOT NULL DEFAULT '{}',
   created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
+
+CREATE TABLE IF NOT EXISTS practice_days (
+  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  day     DATE NOT NULL DEFAULT CURRENT_DATE,
+  PRIMARY KEY (user_id, day)
+);
