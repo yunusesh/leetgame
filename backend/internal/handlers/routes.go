@@ -32,5 +32,11 @@ func (hs *HandlerService) RegisterRoutes(app *fiber.App) {
 			streak.Get("/", hs.GetStreak)
 			streak.Post("/", hs.RecordStreak)
 		})
+
+		api.Route("/settings", func(settings fiber.Router) {
+			settings.Use(middleware.RequireAuth(hs.keyfunc))
+			settings.Get("/", hs.GetSettings)
+			settings.Put("/", hs.UpdateSettings)
+		})
 	})
 }
