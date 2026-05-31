@@ -25,7 +25,15 @@ export interface ChatMessage {
   content: string
 }
 
-export type Stage = 'pattern' | 'algorithm' | 'complexity' | 'complete'
+export type ActiveStage = 'edge_cases' | 'brute_force' | 'pattern' | 'algorithm' | 'tc_sc'
+
+export type Stage = ActiveStage | 'complete'
+
+export const CANONICAL_STAGES: ActiveStage[] = [
+  'edge_cases', 'brute_force', 'pattern', 'algorithm', 'tc_sc',
+]
+
+export const DEFAULT_STAGES: ActiveStage[] = ['pattern', 'algorithm', 'tc_sc']
 
 export interface ChatResponse {
   message: string
