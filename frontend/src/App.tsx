@@ -1,6 +1,7 @@
 import { useEffect, useState, useRef } from 'react'
-import type { Problem, ChatMessage, Stage } from './types'
-import { getRandomProblem, getRandomProblemFiltered, searchProblems, streamChat, getStreak, recordStreak } from './api'
+import type { Problem, ChatMessage, Stage, ActiveStage } from './types'
+import { DEFAULT_STAGES } from './types'
+import { getRandomProblem, getRandomProblemFiltered, searchProblems, streamChat, getStreak, recordStreak, getSettings, updateSettings } from './api'
 import { NavBar } from './components/NavBar'
 import { ProblemView } from './components/ProblemView'
 import { ChatView } from './components/ChatView'
@@ -55,10 +56,24 @@ export default function App() {
       setSession(session)
       setAuthLoading(false)
       if (event === 'SIGNED_IN' || event === 'INITIAL_SESSION') {
-        if (session) getStreak().then(({ streak }) => setStreak(streak)).catch(() => {})
-        else setStreak(null)
+        if (session) {
+          getStreak().then(({ streak }) => setStreak(streak)).catch(() => {})
+          getSettings().then(({ active_stages }) => setActiveStages(active_stages)).catch(() => {})
+        } else {
+          setStreak(null)
+          const stored = localStorage.getItem('leetgame_active_stages')
+          if (stored) {
+            try { setActiveStages(JSON.parse(stored) as ActiveStage[]) } catch { /* fall back */ }
+          }
+        }
       } else if (event === 'SIGNED_OUT') {
         setStreak(null)
+        const stored = localStorage.getItem('leetgame_active_stages')
+        if (stored) {
+          try { setActiveStages(JSON.parse(stored) as ActiveStage[]) } catch { setActiveStages(DEFAULT_STAGES) }
+        } else {
+          setActiveStages(DEFAULT_STAGES)
+        }
       }
     })
 
@@ -76,12 +91,14 @@ export default function App() {
   const [playlistExhausted, setPlaylistExhausted] = useState(false)
   const [streamingMessage, setStreamingMessage] = useState('')
   const [streak, setStreak] = useState<number | null>(null)
+  const [activeStages, setActiveStages] = useState<ActiveStage[]>(DEFAULT_STAGES)
   const [sessionStack, setSessionStack] = useState<PracticeSnapshot[]>([])
+  const playlistEntryDepthRef = useRef<number>(0)
   const streamAbortRef = useRef<AbortController | null>(null)
 
   const resetPracticeState = () => {
     setHistory([])
-    setStage('pattern')
+    setStage(activeStages[0])
     setStreamingMessage('')
   }
 
@@ -91,19 +108,28 @@ export default function App() {
   }
 
   const goBack = () => {
-    setSessionStack(s => {
-      if (s.length === 0) return s
-      const snap = s[s.length - 1]
-      setProblem(snap.problem)
-      setStage(snap.stage)
-      setHistory(snap.history)
-      setSearchPlaylist(snap.searchPlaylist)
-      setProblemSource(snap.problemSource)
-      setPlaylistExhausted(false)
-      setError(null)
-      setStreamingMessage('')
-      return s.slice(0, -1)
-    })
+    if (sessionStack.length === 0) return
+    const snap = sessionStack[sessionStack.length - 1]
+    setProblem(snap.problem)
+    setStage(snap.stage)
+    setHistory(snap.history)
+    setSearchPlaylist(snap.searchPlaylist)
+    setProblemSource(snap.problemSource)
+    setPlaylistExhausted(false)
+    setError(null)
+    setStreamingMessage('')
+    setSessionStack(s => s.slice(0, -1))
+  }
+
+  const handleStagesChange = (stages: ActiveStage[]) => {
+    setActiveStages(stages)
+    if (session) {
+      updateSettings(stages).catch(() => {})
+    } else {
+      try {
+        localStorage.setItem('leetgame_active_stages', JSON.stringify(stages))
+      } catch { /* ignore */ }
+    }
   }
 
   const loadRandomProblem = async () => {
@@ -211,6 +237,7 @@ export default function App() {
 
   const selectProblem = (p: Problem, context: SearchSelectionContext) => {
     pushSnapshot()
+    playlistEntryDepthRef.current = sessionStack.length + (problem ? 1 : 0)
     setProblem(p)
     setProblemSource('search')
     setPlaylistExhausted(false)
@@ -290,7 +317,7 @@ export default function App() {
 
     try {
       let accumulated = ''
-      for await (const event of streamChat(problem.id, stage, history, message, controller.signal)) {
+      for await (const event of streamChat(problem.id, stage, activeStages, history, message, controller.signal)) {
         if (event.type === 'token') {
           accumulated += event.content
           setStreamingMessage(accumulated)
@@ -327,7 +354,14 @@ export default function App() {
         />
       )
     }
-    const canGoBack = sessionStack.length > 0
+    const canGoBack = problemSource === 'search'
+      ? sessionStack.length > playlistEntryDepthRef.current
+      : sessionStack.length > 0
+    const exitPlaylist = () => {
+      playlistEntryDepthRef.current = 0
+      setSessionStack([])
+      void loadRandomProblem()
+    }
     return (
       <div className="flex flex-col md:flex-row flex-1 overflow-hidden min-h-0">
         <ProblemView
@@ -336,11 +370,13 @@ export default function App() {
           onSkip={() => void loadNextProblem()}
           onRandom={() => void loadRandomNextProblem()}
           onBack={canGoBack ? goBack : undefined}
+          onExitPlaylist={problemSource === 'search' ? exitPlaylist : undefined}
           playlistSummary={problemSource === 'search' ? getPlaylistSummary(searchPlaylist) : null}
         />
         <ChatView
           history={history}
           stage={stage}
+          activeStages={activeStages}
           loading={loading}
           error={error}
           onSubmit={handleSubmit}
@@ -355,7 +391,15 @@ export default function App() {
 
   return (
     <div className="flex flex-col h-dvh">
-      <NavBar view={view} onNavigate={setView} session={session} authLoading={authLoading} streak={streak} />
+      <NavBar
+        view={view}
+        onNavigate={setView}
+        session={session}
+        authLoading={authLoading}
+        streak={streak}
+        activeStages={activeStages}
+        onStagesChange={handleStagesChange}
+      />
       {view === 'search'
         ? <SearchPage onSelectProblem={selectProblem} />
         : practiceView()

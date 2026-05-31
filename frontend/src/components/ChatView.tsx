@@ -1,23 +1,28 @@
 import { useState, useRef, useEffect } from 'react'
-import type { ChatMessage, Stage } from '../types'
+import type { ChatMessage, Stage, ActiveStage } from '../types'
 import { cn } from '../lib/utils'
 import { Button } from './ui/button'
 
-const stageBanner: Partial<Record<Stage, string>> = {
-  pattern: 'What pattern does this problem use?',
-  algorithm: 'Pattern ✓ — Now describe your algorithm',
-  complexity: 'Algorithm ✓ — Now describe the time and space complexity',
+const stageBanner: Record<ActiveStage, string> = {
+  edge_cases:  'What edge cases does this problem have?',
+  brute_force: 'What is the brute force approach?',
+  pattern:     'What pattern does this problem use?',
+  algorithm:   'Pattern ✓ — Now describe your algorithm',
+  tc_sc:       'Algorithm ✓ — Now describe the time and space complexity',
 }
 
-const stagePlaceholder: Partial<Record<Stage, string>> = {
-  pattern: 'e.g. sliding window, BFS/DFS, dynamic programming…',
-  algorithm: 'Describe your algorithm…',
-  complexity: 'State your time and space complexity…',
+const stagePlaceholder: Record<ActiveStage, string> = {
+  edge_cases:  'e.g. empty input, single element, negative numbers, overflow…',
+  brute_force: 'Describe the naive solution…',
+  pattern:     'e.g. sliding window, BFS/DFS, dynamic programming…',
+  algorithm:   'Describe your algorithm…',
+  tc_sc:       'State your time and space complexity…',
 }
 
 interface Props {
   history: ChatMessage[]
   stage: Stage
+  activeStages: ActiveStage[]
   loading: boolean
   error: string | null
   onSubmit: (message: string) => void
@@ -27,7 +32,7 @@ interface Props {
   onBack?: () => void
 }
 
-export function ChatView({ history, stage, loading, error, onSubmit, streamingMessage, onNext, onRandom, onBack }: Props) {
+export function ChatView({ history, stage, activeStages: _activeStages, loading, error, onSubmit, streamingMessage, onNext, onRandom, onBack }: Props) {
   const [input, setInput] = useState('')
   const [queue, setQueue] = useState<string[]>([])
   const bottomRef = useRef<HTMLDivElement>(null)
@@ -74,7 +79,7 @@ export function ChatView({ history, stage, loading, error, onSubmit, streamingMe
           ? "bg-green-500/10 text-green-700 dark:text-green-400"
           : "bg-muted text-foreground"
       )}>
-        {stage === 'complete' ? 'Nice work! Review your session below.' : stageBanner[stage]}
+        {stage === 'complete' ? 'Nice work! Review your session below.' : stageBanner[stage as ActiveStage]}
       </div>
 
       <div className="flex-1 overflow-y-auto p-5 flex flex-col gap-3">
@@ -133,7 +138,7 @@ export function ChatView({ history, stage, loading, error, onSubmit, streamingMe
               value={input}
               onChange={e => setInput(e.target.value)}
               onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSubmit() } }}
-              placeholder={stagePlaceholder[stage] ?? 'Describe your approach…'}
+              placeholder={stagePlaceholder[stage as ActiveStage] ?? 'Describe your approach…'}
               rows={3}
               className="w-full resize-none px-3 py-2.5 rounded-lg border border-border text-sm font-sans focus:outline-none focus:ring-2 focus:ring-primary/50"
             />

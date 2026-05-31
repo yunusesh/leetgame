@@ -1,6 +1,9 @@
+import { useState } from 'react'
 import type { Session } from '@supabase/supabase-js'
+import type { ActiveStage } from '../types'
 import { supabase } from '../lib/supabase'
 import { Button } from './ui/button'
+import { StagesSettings } from './StagesSettings'
 
 type View = 'practice' | 'search'
 
@@ -10,9 +13,13 @@ interface Props {
   session: Session | null
   authLoading: boolean
   streak: number | null
+  activeStages: ActiveStage[]
+  onStagesChange: (stages: ActiveStage[]) => void
 }
 
-export function NavBar({ view, onNavigate, session, authLoading, streak }: Props) {
+export function NavBar({ view, onNavigate, session, authLoading, streak, activeStages, onStagesChange }: Props) {
+  const [settingsOpen, setSettingsOpen] = useState(false)
+
   const handleSignIn = async () => {
     await supabase.auth.signInWithOAuth({
       provider: 'google',
@@ -38,6 +45,26 @@ export function NavBar({ view, onNavigate, session, authLoading, streak }: Props
       ))}
 
       <div className="ml-auto flex items-center gap-2">
+        {!authLoading && (
+          <div className="relative">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setSettingsOpen(o => !o)}
+              className="text-muted-foreground px-2"
+              title="Practice stages"
+            >
+              ⚙
+            </Button>
+            {settingsOpen && (
+              <StagesSettings
+                activeStages={activeStages}
+                onChange={stages => { onStagesChange(stages) }}
+                onClose={() => setSettingsOpen(false)}
+              />
+            )}
+          </div>
+        )}
         {authLoading ? null : session ? (
           <>
             {streak !== null && streak >= 1 && (
