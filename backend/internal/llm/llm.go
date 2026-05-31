@@ -48,7 +48,10 @@ func BuildSystemPrompt(title, description, stage string, activeStages []string) 
 
 	sb.WriteString("Guide the candidate through the following stages in order:\n\n")
 	for i, s := range activeStages {
-		d := stageDescriptions[s]
+		d, ok := stageDescriptions[s]
+		if !ok {
+			continue
+		}
 		successStage := "complete"
 		if i < len(activeStages)-1 {
 			successStage = activeStages[i+1]

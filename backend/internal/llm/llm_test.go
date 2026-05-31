@@ -40,3 +40,11 @@ func TestBuildSystemPrompt_success_stage_is_complete_for_last(t *testing.T) {
 		t.Error("expected prompt to indicate 'complete' as success for last stage")
 	}
 }
+
+func TestBuildSystemPrompt_empty_active_stages_does_not_panic(t *testing.T) {
+	// Should not panic even with empty stages — returns a minimal prompt
+	prompt := llm.BuildSystemPrompt("Two Sum", "Given an array...", "pattern", []string{})
+	if prompt == "" {
+		t.Error("expected non-empty prompt even with no active stages")
+	}
+}
