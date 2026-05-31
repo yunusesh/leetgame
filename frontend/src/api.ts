@@ -108,9 +108,13 @@ export async function* streamChat(
       const data = lines.find(l => l.startsWith('data: '))?.slice(6)
       if (!type || !data) continue
       const parsed = JSON.parse(data)
-      if (type === 'token') yield { type: 'token', content: parsed.content }
-      else if (type === 'done') yield { type: 'done', ...parsed }
-      else if (type === 'error') throw new Error('LLM evaluation failed')
+      if (type === 'token') {
+        console.log('[stream] token:', parsed.content)
+        yield { type: 'token', content: parsed.content }
+      } else if (type === 'done') {
+        console.log('[stream] done:', parsed)
+        yield { type: 'done', ...parsed }
+      } else if (type === 'error') throw new Error('LLM evaluation failed')
     }
   }
 }
