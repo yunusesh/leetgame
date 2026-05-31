@@ -63,7 +63,7 @@ export default function App() {
           setStreak(null)
           const stored = localStorage.getItem('leetgame_active_stages')
           if (stored) {
-            try { setActiveStages(JSON.parse(stored) as ActiveStage[]) } catch { /* fall back */ }
+            try { setActiveStages(JSON.parse(stored) as ActiveStage[]) } catch { setActiveStages(DEFAULT_STAGES) }
           }
         }
       } else if (event === 'SIGNED_OUT') {
@@ -376,7 +376,6 @@ export default function App() {
         <ChatView
           history={history}
           stage={stage}
-          activeStages={activeStages}
           loading={loading}
           error={error}
           onSubmit={handleSubmit}

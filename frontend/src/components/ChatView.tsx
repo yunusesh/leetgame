@@ -22,7 +22,6 @@ const stagePlaceholder: Record<ActiveStage, string> = {
 interface Props {
   history: ChatMessage[]
   stage: Stage
-  activeStages: ActiveStage[]
   loading: boolean
   error: string | null
   onSubmit: (message: string) => void
@@ -32,7 +31,7 @@ interface Props {
   onBack?: () => void
 }
 
-export function ChatView({ history, stage, activeStages: _activeStages, loading, error, onSubmit, streamingMessage, onNext, onRandom, onBack }: Props) {
+export function ChatView({ history, stage, loading, error, onSubmit, streamingMessage, onNext, onRandom, onBack }: Props) {
   const [input, setInput] = useState('')
   const [queue, setQueue] = useState<string[]>([])
   const bottomRef = useRef<HTMLDivElement>(null)
