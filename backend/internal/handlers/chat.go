@@ -55,7 +55,7 @@ func (hs *HandlerService) Chat(c *fiber.Ctx) error {
 			}
 		}
 
-		result, err := hs.llmClient.Evaluate(streamCtx, problem, req.Stage, history, req.Message, onToken)
+		result, err := hs.llmClient.Evaluate(streamCtx, problem, req.Stage, req.ActiveStages, history, req.Message, onToken)
 		if err != nil {
 			hs.logger.Error("llm evaluate failed", "error", err)
 			fmt.Fprintf(w, "event: error\ndata: {}\n\n") //nolint:errcheck
