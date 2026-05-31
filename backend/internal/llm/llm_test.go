@@ -1,29 +1,42 @@
 package llm_test
 
 import (
-	"fmt"
+	"strings"
 	"testing"
 
 	"leetgame/internal/llm"
-
-	"github.com/stretchr/testify/assert"
 )
 
-func TestSystemPromptTemplate_contains_pattern_stage(t *testing.T) {
-	formatted := fmt.Sprintf(llm.SystemPromptTemplate, "Two Sum", "find pairs", "pattern")
-	assert.Contains(t, formatted, "Stage 0")
-	assert.Contains(t, formatted, `"pattern"`)
-	assert.Contains(t, formatted, "pattern|algorithm|complexity|complete")
+func TestBuildSystemPrompt_contains_current_stage(t *testing.T) {
+	prompt := llm.BuildSystemPrompt("Two Sum", "Given an array...", "pattern", []string{"pattern", "algorithm", "tc_sc"})
+	if !strings.Contains(prompt, `"pattern"`) {
+		t.Error("expected prompt to contain current stage")
+	}
 }
 
-func TestSystemPromptTemplate_contains_algorithm_stage(t *testing.T) {
-	formatted := fmt.Sprintf(llm.SystemPromptTemplate, "Two Sum", "find pairs", "algorithm")
-	assert.Contains(t, formatted, "Stage 1")
-	assert.Contains(t, formatted, "algorithm")
+func TestBuildSystemPrompt_contains_problem_title(t *testing.T) {
+	prompt := llm.BuildSystemPrompt("Two Sum", "Given an array...", "pattern", []string{"pattern", "algorithm", "tc_sc"})
+	if !strings.Contains(prompt, "Two Sum") {
+		t.Error("expected prompt to contain problem title")
+	}
 }
 
-func TestSystemPromptTemplate_contains_complexity_stage(t *testing.T) {
-	formatted := fmt.Sprintf(llm.SystemPromptTemplate, "Two Sum", "find pairs", "complexity")
-	assert.Contains(t, formatted, "Stage 2")
-	assert.Contains(t, formatted, "complexity")
+func TestBuildSystemPrompt_lists_only_active_stages(t *testing.T) {
+	prompt := llm.BuildSystemPrompt("Two Sum", "Given an array...", "pattern", []string{"pattern", "tc_sc"})
+	if !strings.Contains(prompt, "Optimal Pattern") {
+		t.Error("expected prompt to contain active stage 'pattern'")
+	}
+	if !strings.Contains(prompt, "Time & Space Complexity") {
+		t.Error("expected prompt to contain active stage 'tc_sc'")
+	}
+	if strings.Contains(prompt, "Brute Force") {
+		t.Error("expected prompt to NOT contain inactive stage 'brute_force'")
+	}
+}
+
+func TestBuildSystemPrompt_success_stage_is_complete_for_last(t *testing.T) {
+	prompt := llm.BuildSystemPrompt("Two Sum", "Given an array...", "tc_sc", []string{"pattern", "tc_sc"})
+	if !strings.Contains(prompt, `"complete"`) {
+		t.Error("expected prompt to indicate 'complete' as success for last stage")
+	}
 }
