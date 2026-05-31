@@ -5,26 +5,8 @@ import (
 	"strings"
 
 	"github.com/google/uuid"
+	"leetgame/internal/constants"
 )
-
-var validStageIDs = map[string]bool{
-	"edge_cases":  true,
-	"brute_force": true,
-	"pattern":     true,
-	"algorithm":   true,
-	"tc_sc":       true,
-}
-
-var canonicalStageOrder = []string{"edge_cases", "brute_force", "pattern", "algorithm", "tc_sc"}
-
-func canonicalStageIndex(s string) int {
-	for i, v := range canonicalStageOrder {
-		if v == s {
-			return i
-		}
-	}
-	return -1
-}
 
 type HistoryMessage struct {
 	Role    string `json:"role"`
@@ -57,7 +39,7 @@ func (r ChatRequest) Validate() map[string]string {
 		prevIdx := -1
 		stageInActive := false
 		for _, s := range r.ActiveStages {
-			if !validStageIDs[s] {
+			if !constants.ValidStageIDs[s] {
 				errs["active_stages"] = "invalid stage: " + s
 				break
 			}
@@ -66,7 +48,7 @@ func (r ChatRequest) Validate() map[string]string {
 				break
 			}
 			seen[s] = true
-			idx := canonicalStageIndex(s)
+			idx := constants.CanonicalStageIndex(s)
 			if idx <= prevIdx {
 				errs["active_stages"] = "stages must be in canonical order: edge_cases, brute_force, pattern, algorithm, tc_sc"
 				break
@@ -76,8 +58,12 @@ func (r ChatRequest) Validate() map[string]string {
 				stageInActive = true
 			}
 		}
-		if _, hasErr := errs["active_stages"]; !hasErr && !stageInActive {
-			errs["stage"] = "must be one of active_stages"
+		if _, hasErr := errs["active_stages"]; !hasErr {
+			if !constants.ValidStageIDs[r.Stage] {
+				errs["stage"] = "invalid stage"
+			} else if !stageInActive {
+				errs["stage"] = "must be one of active_stages"
+			}
 		}
 	}
 

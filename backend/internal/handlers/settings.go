@@ -1,30 +1,12 @@
 package handlers
 
 import (
+	"leetgame/internal/constants"
 	"leetgame/internal/xcontext"
 	"leetgame/internal/xerrors"
 
 	"github.com/gofiber/fiber/v2"
 )
-
-var validStageIDs = map[string]bool{
-	"edge_cases":  true,
-	"brute_force": true,
-	"pattern":     true,
-	"algorithm":   true,
-	"tc_sc":       true,
-}
-
-var canonicalOrder = []string{"edge_cases", "brute_force", "pattern", "algorithm", "tc_sc"}
-
-func canonicalIndex(s string) int {
-	for i, v := range canonicalOrder {
-		if v == s {
-			return i
-		}
-	}
-	return -1
-}
 
 func (hs *HandlerService) GetSettings(c *fiber.Ctx) error {
 	uid, err := xcontext.GetUserID(c)
@@ -77,7 +59,7 @@ func validateActiveStages(stages []string) map[string]string {
 	seen := map[string]bool{}
 	prevIdx := -1
 	for _, s := range stages {
-		if !validStageIDs[s] {
+		if !constants.ValidStageIDs[s] {
 			errs["active_stages"] = "invalid stage: " + s
 			return errs
 		}
@@ -86,7 +68,7 @@ func validateActiveStages(stages []string) map[string]string {
 			return errs
 		}
 		seen[s] = true
-		idx := canonicalIndex(s)
+		idx := constants.CanonicalStageIndex(s)
 		if idx <= prevIdx {
 			errs["active_stages"] = "stages must be in canonical order: edge_cases, brute_force, pattern, algorithm, tc_sc"
 			return errs
