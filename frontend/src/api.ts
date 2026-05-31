@@ -1,4 +1,4 @@
-import type { Problem, ChatMessage, Stage, ProblemSearchResponse, ProblemTag } from './types'
+import type { Problem, ChatMessage, Stage, ActiveStage, ProblemSearchResponse, ProblemTag } from './types'
 import { supabase } from './lib/supabase'
 
 const API_URL = import.meta.env.VITE_API_URL ?? ''
@@ -73,6 +73,7 @@ export async function getProblemTags(signal?: AbortSignal): Promise<ProblemTag[]
 export async function* streamChat(
   problemId: string,
   stage: Stage,
+  activeStages: ActiveStage[],
   history: ChatMessage[],
   message: string,
   signal?: AbortSignal,
@@ -87,7 +88,7 @@ export async function* streamChat(
   const res = await fetch(`${API_URL}/api/chat`, {
     method: 'POST',
     headers,
-    body: JSON.stringify({ problem_id: problemId, stage, history, message }),
+    body: JSON.stringify({ problem_id: problemId, stage, active_stages: activeStages, history, message }),
     signal,
   })
   if (!res.ok) throw new Error(`Chat request failed: ${res.status}`)
@@ -108,13 +109,9 @@ export async function* streamChat(
       const data = lines.find(l => l.startsWith('data: '))?.slice(6)
       if (!type || !data) continue
       const parsed = JSON.parse(data)
-      if (type === 'token') {
-        console.log('[stream] token:', parsed.content)
-        yield { type: 'token', content: parsed.content }
-      } else if (type === 'done') {
-        console.log('[stream] done:', parsed)
-        yield { type: 'done', ...parsed }
-      } else if (type === 'error') throw new Error('LLM evaluation failed')
+      if (type === 'token') yield { type: 'token', content: parsed.content }
+      else if (type === 'done') yield { type: 'done', ...parsed }
+      else if (type === 'error') throw new Error('LLM evaluation failed')
     }
   }
 }
@@ -134,4 +131,21 @@ export async function recordStreak(): Promise<{ streak: number }> {
   })
   if (!res.ok) throw new Error(`Failed to record streak: ${res.status}`)
   return res.json()
+}
+
+export async function getSettings(): Promise<{ active_stages: ActiveStage[] }> {
+  const res = await fetch(`${API_URL}/api/settings`, {
+    headers: await authHeaders(),
+  })
+  if (!res.ok) throw new Error(`Failed to get settings: ${res.status}`)
+  return res.json()
+}
+
+export async function updateSettings(activeStages: ActiveStage[]): Promise<void> {
+  const res = await fetch(`${API_URL}/api/settings`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...(await authHeaders()) },
+    body: JSON.stringify({ active_stages: activeStages }),
+  })
+  if (!res.ok) throw new Error(`Failed to update settings: ${res.status}`)
 }
