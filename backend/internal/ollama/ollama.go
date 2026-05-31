@@ -36,8 +36,8 @@ func New(baseURL, model, apiKey string) *OllamaClient {
 	}
 }
 
-func (c *OllamaClient) Evaluate(ctx context.Context, problem models.Problem, stage string, history []llm.ChatMessage, userMessage string, onToken func(string)) (llm.EvaluateResponse, error) {
-	systemPrompt := fmt.Sprintf(llm.SystemPromptTemplate, problem.Title, problem.Description, stage)
+func (c *OllamaClient) Evaluate(ctx context.Context, problem models.Problem, stage string, activeStages []string, history []llm.ChatMessage, userMessage string, onToken func(string)) (llm.EvaluateResponse, error) {
+	systemPrompt := llm.BuildSystemPrompt(problem.Title, problem.Description, stage, activeStages)
 
 	messages := make([]map[string]string, 0, len(history)+2)
 	messages = append(messages, map[string]string{"role": "system", "content": systemPrompt})
@@ -119,10 +119,12 @@ func (c *OllamaClient) Evaluate(ctx context.Context, problem models.Problem, sta
 	if err := json.Unmarshal([]byte(fullText.String()), &evalResp); err != nil {
 		return llm.EvaluateResponse{Message: fullText.String(), Stage: stage}, nil
 	}
-	switch evalResp.Stage {
-	case "pattern", "algorithm", "complexity", "complete":
-	default:
-		return llm.EvaluateResponse{}, fmt.Errorf("ollama returned unknown stage %q", evalResp.Stage)
+	validStages := map[string]bool{"complete": true}
+	for _, s := range activeStages {
+		validStages[s] = true
+	}
+	if !validStages[evalResp.Stage] {
+		return llm.EvaluateResponse{Message: fullText.String(), Stage: stage}, nil
 	}
 
 	return evalResp, nil
