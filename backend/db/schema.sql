@@ -16,3 +16,8 @@ CREATE TABLE IF NOT EXISTS practice_days (
   day     DATE NOT NULL DEFAULT CURRENT_DATE,
   PRIMARY KEY (user_id, day)
 );
+
+CREATE TABLE IF NOT EXISTS user_settings (
+  user_id       UUID    PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
+  active_stages TEXT[]  NOT NULL DEFAULT '{pattern,algorithm,tc_sc}'
+);
