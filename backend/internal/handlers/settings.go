@@ -76,7 +76,7 @@ func validateActiveStages(stages []string) map[string]string {
 	}
 	seen := map[string]bool{}
 	prevIdx := -1
-	for i, s := range stages {
+	for _, s := range stages {
 		if !validStageIDs[s] {
 			errs["active_stages"] = "invalid stage: " + s
 			return errs
@@ -92,7 +92,6 @@ func validateActiveStages(stages []string) map[string]string {
 			return errs
 		}
 		prevIdx = idx
-		_ = i
 	}
 	return errs
 }
