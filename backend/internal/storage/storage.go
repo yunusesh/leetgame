@@ -22,4 +22,8 @@ type Storage interface {
 	// streaks
 	UpsertPracticeDay(ctx context.Context, userID uuid.UUID) error
 	GetStreak(ctx context.Context, userID uuid.UUID) (int, error)
+
+	// settings
+	GetUserSettings(ctx context.Context, userID uuid.UUID) (models.UserSettings, error)
+	UpsertUserSettings(ctx context.Context, userID uuid.UUID, activeStages []string) error
 }
