@@ -58,3 +58,31 @@ SELECT cron.schedule('cleanup-proficiency-sessions', '0 3 * * *',
 WHERE NOT EXISTS (
   SELECT 1 FROM cron.job WHERE jobname = 'cleanup-proficiency-sessions'
 );
+
+CREATE TABLE IF NOT EXISTS proficiency_score_snapshots (
+  user_id       UUID  NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  topic         TEXT  NOT NULL,
+  stage         TEXT  NOT NULL,
+  score         FLOAT NOT NULL,
+  snapshot_date DATE  NOT NULL DEFAULT CURRENT_DATE,
+  PRIMARY KEY (user_id, topic, stage, snapshot_date)
+);
+
+-- nightly snapshot at 2am UTC: copy current scores into history
+SELECT cron.schedule('snapshot-proficiency-scores', '0 2 * * *', $$
+  INSERT INTO proficiency_score_snapshots (user_id, topic, stage, score, snapshot_date)
+  SELECT user_id, topic, stage, score, CURRENT_DATE
+  FROM topic_proficiency
+  ON CONFLICT DO NOTHING
+$$)
+WHERE NOT EXISTS (
+  SELECT 1 FROM cron.job WHERE jobname = 'snapshot-proficiency-scores'
+);
+
+-- cleanup: delete snapshots older than 90 days at 3:30am UTC
+SELECT cron.schedule('cleanup-proficiency-snapshots', '30 3 * * *', $$
+  DELETE FROM proficiency_score_snapshots WHERE snapshot_date < CURRENT_DATE - 90
+$$)
+WHERE NOT EXISTS (
+  SELECT 1 FROM cron.job WHERE jobname = 'cleanup-proficiency-snapshots'
+);
