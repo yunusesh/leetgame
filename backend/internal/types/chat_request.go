@@ -14,11 +14,13 @@ type HistoryMessage struct {
 }
 
 type ChatRequest struct {
-	ProblemID    uuid.UUID        `json:"problem_id"`
-	Stage        string           `json:"stage"`
-	ActiveStages []string         `json:"active_stages"`
-	History      []HistoryMessage `json:"history"`
-	Message      string           `json:"message"`
+	ProblemID       uuid.UUID        `json:"problem_id"`
+	Stage           string           `json:"stage"`
+	ActiveStages    []string         `json:"active_stages"`
+	History         []HistoryMessage `json:"history"`
+	Message         string           `json:"message"`
+	HintRequested   bool             `json:"hint_requested"`
+	AnswerRequested bool             `json:"answer_requested"`
 }
 
 func (r ChatRequest) Validate() map[string]string {

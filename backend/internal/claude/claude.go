@@ -34,8 +34,8 @@ func New(apiKey, model string) *AnthropicClient {
 	}
 }
 
-func (c *AnthropicClient) Evaluate(ctx context.Context, problem models.Problem, stage string, activeStages []string, history []llm.ChatMessage, userMessage string, onToken func(string)) (llm.EvaluateResponse, error) {
-	systemPrompt := llm.BuildSystemPrompt(problem.Title, problem.Description, stage, activeStages)
+func (c *AnthropicClient) Evaluate(ctx context.Context, problem models.Problem, stage string, activeStages []string, history []llm.ChatMessage, userMessage string, hintRequested, answerRequested bool, onToken func(string)) (llm.EvaluateResponse, error) {
+	systemPrompt := llm.BuildSystemPrompt(problem.Title, problem.Description, stage, activeStages, hintRequested, answerRequested)
 
 	messages := make([]map[string]string, 0, len(history)+1)
 	for _, h := range history {

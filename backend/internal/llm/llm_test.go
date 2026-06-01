@@ -8,21 +8,21 @@ import (
 )
 
 func TestBuildSystemPrompt_contains_current_stage(t *testing.T) {
-	prompt := llm.BuildSystemPrompt("Two Sum", "Given an array...", "pattern", []string{"pattern", "algorithm", "tc_sc"})
+	prompt := llm.BuildSystemPrompt("Two Sum", "Given an array...", "pattern", []string{"pattern", "algorithm", "tc_sc"}, false, false)
 	if !strings.Contains(prompt, `"pattern"`) {
 		t.Error("expected prompt to contain current stage")
 	}
 }
 
 func TestBuildSystemPrompt_contains_problem_title(t *testing.T) {
-	prompt := llm.BuildSystemPrompt("Two Sum", "Given an array...", "pattern", []string{"pattern", "algorithm", "tc_sc"})
+	prompt := llm.BuildSystemPrompt("Two Sum", "Given an array...", "pattern", []string{"pattern", "algorithm", "tc_sc"}, false, false)
 	if !strings.Contains(prompt, "Two Sum") {
 		t.Error("expected prompt to contain problem title")
 	}
 }
 
 func TestBuildSystemPrompt_lists_only_active_stages(t *testing.T) {
-	prompt := llm.BuildSystemPrompt("Two Sum", "Given an array...", "pattern", []string{"pattern", "tc_sc"})
+	prompt := llm.BuildSystemPrompt("Two Sum", "Given an array...", "pattern", []string{"pattern", "tc_sc"}, false, false)
 	if !strings.Contains(prompt, "Optimal Pattern") {
 		t.Error("expected prompt to contain active stage 'pattern'")
 	}
@@ -35,7 +35,7 @@ func TestBuildSystemPrompt_lists_only_active_stages(t *testing.T) {
 }
 
 func TestBuildSystemPrompt_success_stage_is_complete_for_last(t *testing.T) {
-	prompt := llm.BuildSystemPrompt("Two Sum", "Given an array...", "tc_sc", []string{"pattern", "tc_sc"})
+	prompt := llm.BuildSystemPrompt("Two Sum", "Given an array...", "tc_sc", []string{"pattern", "tc_sc"}, false, false)
 	if !strings.Contains(prompt, `"complete"`) {
 		t.Error("expected prompt to indicate 'complete' as success for last stage")
 	}
@@ -43,8 +43,22 @@ func TestBuildSystemPrompt_success_stage_is_complete_for_last(t *testing.T) {
 
 func TestBuildSystemPrompt_empty_active_stages_does_not_panic(t *testing.T) {
 	// Should not panic even with empty stages — returns a minimal prompt
-	prompt := llm.BuildSystemPrompt("Two Sum", "Given an array...", "pattern", []string{})
+	prompt := llm.BuildSystemPrompt("Two Sum", "Given an array...", "pattern", []string{}, false, false)
 	if prompt == "" {
 		t.Error("expected non-empty prompt even with no active stages")
+	}
+}
+
+func TestBuildSystemPrompt_hint_requested(t *testing.T) {
+	prompt := llm.BuildSystemPrompt("Two Sum", "Given an array...", "pattern", []string{"pattern"}, true, false)
+	if !strings.Contains(prompt, "Give a targeted hint") {
+		t.Error("expected hint instruction in prompt when hintRequested=true")
+	}
+}
+
+func TestBuildSystemPrompt_answer_requested(t *testing.T) {
+	prompt := llm.BuildSystemPrompt("Two Sum", "Given an array...", "pattern", []string{"pattern"}, false, true)
+	if !strings.Contains(prompt, "Reveal the correct answer") {
+		t.Error("expected answer instruction in prompt when answerRequested=true")
 	}
 }

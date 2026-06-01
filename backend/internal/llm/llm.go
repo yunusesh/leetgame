@@ -42,7 +42,7 @@ var stageDescriptions = map[string]stageDesc{
 	},
 }
 
-func BuildSystemPrompt(title, description, stage string, activeStages []string) string {
+func BuildSystemPrompt(title, description, stage string, activeStages []string, hintRequested, answerRequested bool) string {
 	var sb strings.Builder
 	fmt.Fprintf(&sb, "You are a technical interviewer helping a candidate practice LeetCode-style algorithm problems.\n\nProblem Title: %s\nProblem Description:\n%s\n\n", title, description)
 
@@ -73,6 +73,13 @@ func BuildSystemPrompt(title, description, stage string, activeStages []string) 
 	sb.WriteString(`{"message": "<your response to the candidate>", "stage": "<stage_id>"}`)
 	sb.WriteString("\n\nAny response that is not pure JSON will be rejected. Do not write anything except the JSON object.")
 
+	if hintRequested {
+		sb.WriteString("\n\nThe user has clicked 'Give me a hint'. Give a targeted hint that moves them toward the answer without fully revealing it. One sentence maximum.")
+	}
+	if answerRequested {
+		sb.WriteString("\n\nThe user has clicked 'Give me the answer'. Reveal the correct answer for the current stage clearly and completely. Then set stage to the next stage (or \"complete\" if this is the last stage) in your JSON response.")
+	}
+
 	return sb.String()
 }
 
@@ -87,5 +94,5 @@ type EvaluateResponse struct {
 }
 
 type Client interface {
-	Evaluate(ctx context.Context, problem models.Problem, stage string, activeStages []string, history []ChatMessage, userMessage string, onToken func(string)) (EvaluateResponse, error)
+	Evaluate(ctx context.Context, problem models.Problem, stage string, activeStages []string, history []ChatMessage, userMessage string, hintRequested, answerRequested bool, onToken func(string)) (EvaluateResponse, error)
 }
