@@ -27,8 +27,8 @@ var stageDescriptions = map[string]stageDesc{
 	},
 	"pattern": {
 		label:    "Optimal Pattern",
-		criteria: "The candidate correctly identifies the algorithm pattern for the optimal solution (e.g. sliding window, BFS/DFS, dynamic programming, two pointers, binary search, union find, backtracking, greedy, heap/priority queue, trie).",
-		guidance: "If correct but brief (e.g. just the pattern name): ask them to explain WHY that pattern fits this problem. Do not confirm correctness and then explain it yourself. If incorrect or too vague: ask ONE Socratic question to nudge them. Never reveal the pattern.",
+		criteria: "The candidate names the correct algorithm pattern (e.g. backtracking, sliding window, dynamic programming) AND explains in their own words why that pattern fits this specific problem. Knowing the name alone is not enough — they must articulate the reasoning.",
+		guidance: "If they name the pattern but do not explain why it fits: ask them to explain the reasoning. Do not confirm correctness and then explain it yourself. If incorrect or too vague: ask ONE Socratic question. Never reveal the pattern. IMPORTANT: Do NOT ask about implementation details, code structure, or iteration — that is the algorithm stage's job, not this one.",
 	},
 	"algorithm": {
 		label:    "Optimal Algorithm",
