@@ -1,4 +1,4 @@
-import type { Problem, ChatMessage, Stage, ActiveStage, ProblemSearchResponse, ProblemTag, TopicProficiency } from './types'
+import type { Problem, ChatMessage, Stage, ActiveStage, ProblemSearchResponse, ProblemTag, TopicProficiency, ProficiencySnapshot } from './types'
 import { supabase } from './lib/supabase'
 
 const API_URL = import.meta.env.VITE_API_URL ?? ''
@@ -192,4 +192,14 @@ export async function getProficiency(signal?: AbortSignal): Promise<TopicProfici
   })
   if (!res.ok) throw new Error(`Failed to fetch proficiency: ${res.status}`)
   return res.json()
+}
+
+export async function getProficiencyHistory(signal?: AbortSignal): Promise<ProficiencySnapshot[]> {
+  const res = await fetch(`${API_URL}/api/proficiency/history`, {
+    headers: await authHeaders(),
+    signal,
+  })
+  if (!res.ok) throw new Error(`Failed to fetch proficiency history: ${res.status}`)
+  const data = await res.json()
+  return data.history
 }

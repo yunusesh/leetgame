@@ -46,6 +46,13 @@ export interface TopicProficiency {
   updated_at: string
 }
 
+export interface ProficiencySnapshot {
+  topic: string
+  stage: string
+  score: number
+  snapshot_date: string
+}
+
 export interface ChatResponse {
   message: string
   stage: Stage
