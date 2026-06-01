@@ -56,6 +56,7 @@ export function StatsPage({
     <div className="mb-6">
       <button
         onClick={() => setTopicPickerOpen(o => !o)}
+        aria-expanded={topicPickerOpen}
         className="text-sm text-muted-foreground hover:text-foreground transition-colors"
       >
         {topicPickerOpen ? '▾' : '▸'} Manage topics ({activeTopics.length} of {allTags.length} active)
@@ -64,15 +65,19 @@ export function StatsPage({
         <div className="mt-3 flex flex-wrap gap-2">
           {allTags.map(tag => {
             const active = activeTopics.includes(tag.name)
+            const isLast = active && activeTopics.length === 1
             return (
               <button
                 key={tag.name}
                 onClick={() => toggleTopic(tag.name)}
+                disabled={isLast}
+                title={isLast ? 'At least one topic must remain active' : undefined}
                 className={cn(
                   "px-2.5 py-1 rounded-full text-xs font-medium border transition-colors",
                   active
                     ? "bg-foreground text-background border-foreground"
-                    : "bg-transparent text-muted-foreground border-border hover:border-foreground hover:text-foreground"
+                    : "bg-transparent text-muted-foreground border-border hover:border-foreground hover:text-foreground",
+                  isLast && "opacity-50 cursor-not-allowed"
                 )}
               >
                 {tag.name}
