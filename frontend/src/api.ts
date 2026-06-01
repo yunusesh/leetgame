@@ -76,6 +76,8 @@ export async function* streamChat(
   activeStages: ActiveStage[],
   history: ChatMessage[],
   message: string,
+  hintRequested: boolean,
+  answerRequested: boolean,
   signal?: AbortSignal,
 ): AsyncGenerator<
   { type: 'token'; content: string } |
@@ -88,7 +90,7 @@ export async function* streamChat(
   const res = await fetch(`${API_URL}/api/chat`, {
     method: 'POST',
     headers,
-    body: JSON.stringify({ problem_id: problemId, stage, active_stages: activeStages, history, message }),
+    body: JSON.stringify({ problem_id: problemId, stage, active_stages: activeStages, history, message, hint_requested: hintRequested, answer_requested: answerRequested }),
     signal,
   })
   if (!res.ok) throw new Error(`Chat request failed: ${res.status}`)

@@ -318,7 +318,7 @@ export default function App() {
     }
   }
 
-  const handleSubmit = async (message: string) => {
+  const handleSubmit = async (message: string, hintRequested = false, answerRequested = false) => {
     if (!problem) return
 
     streamAbortRef.current?.abort()
@@ -335,7 +335,7 @@ export default function App() {
 
     try {
       let accumulated = ''
-      for await (const event of streamChat(problem.id, stage, sessionActiveStages, history, message, controller.signal)) {
+      for await (const event of streamChat(problem.id, stage, sessionActiveStages, history, message, hintRequested, answerRequested, controller.signal)) {
         if (event.type === 'token') {
           accumulated += event.content
           setStreamingMessage(accumulated)
@@ -437,6 +437,8 @@ export default function App() {
           onSmartPractice={stage === 'complete' && !!session ? () => void loadSmartPracticeProblem() : undefined}
           onRandom={stage === 'complete' && problemSource === 'search' ? () => void loadRandomNextProblem() : undefined}
           onBack={stage === 'complete' && canGoBack ? goBack : undefined}
+          onHint={stage !== 'complete' ? () => void handleSubmit('Give me a hint', true, false) : undefined}
+          onAnswer={stage !== 'complete' ? () => void handleSubmit('Give me the answer', false, true) : undefined}
         />
       </div>
       </div>

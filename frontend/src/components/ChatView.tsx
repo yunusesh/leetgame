@@ -50,9 +50,11 @@ interface Props {
   onSmartPractice?: () => void
   onRandom?: () => void
   onBack?: () => void
+  onHint?: () => void
+  onAnswer?: () => void
 }
 
-export function ChatView({ history, stage, sessionActiveStages, loading, error, onSubmit, streamingMessage, onNext, onSmartPractice, onRandom, onBack }: Props) {
+export function ChatView({ history, stage, sessionActiveStages, loading, error, onSubmit, streamingMessage, onNext, onSmartPractice, onRandom, onBack, onHint, onAnswer }: Props) {
   const [input, setInput] = useState('')
   const [queue, setQueue] = useState<string[]>([])
   const bottomRef = useRef<HTMLDivElement>(null)
@@ -153,38 +155,54 @@ export function ChatView({ history, stage, sessionActiveStages, loading, error, 
       ) : (
         <form
           onSubmit={e => { e.preventDefault(); handleSubmit() }}
-          className="p-4 border-t border-border flex gap-2"
+          className="p-4 border-t border-border flex flex-col gap-2"
         >
-          <div className="flex-1 flex flex-col gap-1">
-            <Textarea
-              ref={textareaRef}
-              value={input}
-              onChange={e => setInput(e.target.value)}
-              onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSubmit() } }}
-              placeholder={stagePlaceholder[stage as ActiveStage] ?? 'Describe your approach…'}
-              rows={3}
-              className="resize-none font-sans"
-            />
-            {queue.length > 0 && (
-              <div className="flex flex-col gap-1 px-1">
-                {queue.map((msg, i) => (
-                  <div key={i} className="flex items-start gap-1.5 text-xs text-muted-foreground">
-                    <span className="shrink-0 mt-0.5 opacity-50">{i + 1}.</span>
-                    <span className="flex-1 truncate">{msg}</span>
-                    <button
-                      type="button"
-                      onClick={() => setQueue(q => q.filter((_, j) => j !== i))}
-                      className="shrink-0 opacity-50 hover:opacity-100 hover:text-destructive transition-opacity"
-                      aria-label="Cancel queued message"
-                    >
-                      ×
-                    </button>
-                  </div>
-                ))}
-              </div>
-            )}
+          <div className="flex gap-2">
+            <div className="flex-1 flex flex-col gap-1">
+              <Textarea
+                ref={textareaRef}
+                value={input}
+                onChange={e => setInput(e.target.value)}
+                onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSubmit() } }}
+                placeholder={stagePlaceholder[stage as ActiveStage] ?? 'Describe your approach…'}
+                rows={3}
+                className="resize-none font-sans"
+              />
+              {queue.length > 0 && (
+                <div className="flex flex-col gap-1 px-1">
+                  {queue.map((msg, i) => (
+                    <div key={i} className="flex items-start gap-1.5 text-xs text-muted-foreground">
+                      <span className="shrink-0 mt-0.5 opacity-50">{i + 1}.</span>
+                      <span className="flex-1 truncate">{msg}</span>
+                      <button
+                        type="button"
+                        onClick={() => setQueue(q => q.filter((_, j) => j !== i))}
+                        className="shrink-0 opacity-50 hover:opacity-100 hover:text-destructive transition-opacity"
+                        aria-label="Cancel queued message"
+                      >
+                        ×
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+            <Button type="submit" disabled={!input.trim()}>Send</Button>
           </div>
-          <Button type="submit" disabled={!input.trim()}>Send</Button>
+          {(onHint || onAnswer) && (
+            <div className="flex gap-2">
+              {onHint && (
+                <Button type="button" variant="outline" size="sm" onClick={onHint} disabled={loading}>
+                  Give me a hint
+                </Button>
+              )}
+              {onAnswer && (
+                <Button type="button" variant="outline" size="sm" onClick={onAnswer} disabled={loading}>
+                  Give me the answer
+                </Button>
+              )}
+            </div>
+          )}
         </form>
       )}
     </div>
