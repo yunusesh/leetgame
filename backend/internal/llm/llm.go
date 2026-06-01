@@ -75,8 +75,7 @@ func BuildSystemPrompt(title, description, stage string, activeStages []string, 
 
 	if hintRequested {
 		sb.WriteString("\n\nThe user has clicked 'Give me a hint'. Give a targeted hint that moves them toward the answer without fully revealing it. One sentence maximum.")
-	}
-	if answerRequested {
+	} else if answerRequested {
 		sb.WriteString("\n\nThe user has clicked 'Give me the answer'. Reveal the correct answer for the current stage clearly and completely. Then set stage to the next stage (or \"complete\" if this is the last stage) in your JSON response.")
 	}
 

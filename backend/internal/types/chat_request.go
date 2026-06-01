@@ -26,6 +26,10 @@ type ChatRequest struct {
 func (r ChatRequest) Validate() map[string]string {
 	errs := map[string]string{}
 
+	if r.HintRequested && r.AnswerRequested {
+		errs["hint_requested"] = "cannot be true when answer_requested is also true"
+	}
+
 	if r.ProblemID == uuid.Nil {
 		errs["problem_id"] = "required"
 	}
