@@ -54,7 +54,7 @@ CREATE TABLE IF NOT EXISTS proficiency_sessions (
 
 -- delete rows older than 30 days at 3am UTC daily
 SELECT cron.schedule('cleanup-proficiency-sessions', '0 3 * * *',
-  'DELETE FROM proficiency_sessions WHERE session_date < CURRENT_DATE - 30')
+  'DELETE FROM proficiency_sessions WHERE session_date < CURRENT_DATE - INTERVAL ''30 days''')
 WHERE NOT EXISTS (
   SELECT 1 FROM cron.job WHERE jobname = 'cleanup-proficiency-sessions'
 );
@@ -67,6 +67,9 @@ CREATE TABLE IF NOT EXISTS proficiency_score_snapshots (
   snapshot_date DATE  NOT NULL DEFAULT CURRENT_DATE,
   PRIMARY KEY (user_id, topic, stage, snapshot_date)
 );
+
+CREATE INDEX IF NOT EXISTS idx_proficiency_score_snapshots_user_date
+  ON proficiency_score_snapshots (user_id, snapshot_date);
 
 -- nightly snapshot at 2am UTC: copy current scores into history
 SELECT cron.schedule('snapshot-proficiency-scores', '0 2 * * *', $$
@@ -81,7 +84,7 @@ WHERE NOT EXISTS (
 
 -- cleanup: delete snapshots older than 90 days at 3:30am UTC
 SELECT cron.schedule('cleanup-proficiency-snapshots', '30 3 * * *', $$
-  DELETE FROM proficiency_score_snapshots WHERE snapshot_date < CURRENT_DATE - 90
+  DELETE FROM proficiency_score_snapshots WHERE snapshot_date < CURRENT_DATE - INTERVAL '90 days'
 $$)
 WHERE NOT EXISTS (
   SELECT 1 FROM cron.job WHERE jobname = 'cleanup-proficiency-snapshots'
