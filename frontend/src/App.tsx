@@ -58,26 +58,36 @@ export default function App() {
       if (event === 'SIGNED_IN' || event === 'INITIAL_SESSION') {
         if (session) {
           getStreak().then(({ streak }) => setStreak(streak)).catch(() => {})
-          getSettings().then(({ active_stages }) => {
-            setActiveStages(active_stages)
-            setSessionActiveStages(active_stages)
-            setStage(active_stages[0])
-          }).catch(() => {})
+          getSettings()
+            .then(({ active_stages }) => {
+              setActiveStages(active_stages)
+              setSessionActiveStages(active_stages)
+            })
+            .catch(() => {})
+            .finally(() => setSettingsReady(true))
         } else {
           setStreak(null)
           const stored = localStorage.getItem('leetgame_active_stages')
+          let stages = DEFAULT_STAGES
           if (stored) {
-            try { setActiveStages(JSON.parse(stored) as ActiveStage[]) } catch { setActiveStages(DEFAULT_STAGES) }
+            try { stages = JSON.parse(stored) as ActiveStage[] } catch { /* use default */ }
           }
+          setActiveStages(stages)
+          setSessionActiveStages(stages)
+          setSettingsReady(true)
         }
       } else if (event === 'SIGNED_OUT') {
         setStreak(null)
         const stored = localStorage.getItem('leetgame_active_stages')
+        let stages = DEFAULT_STAGES
         if (stored) {
-          try { setActiveStages(JSON.parse(stored) as ActiveStage[]) } catch { setActiveStages(DEFAULT_STAGES) }
+          try { stages = JSON.parse(stored) as ActiveStage[] } catch { /* use default */ }
         } else {
-          setActiveStages(DEFAULT_STAGES)
+          stages = DEFAULT_STAGES
         }
+        setActiveStages(stages)
+        setSessionActiveStages(stages)
+        setSettingsReady(true)
       }
     })
 
@@ -98,6 +108,7 @@ export default function App() {
   const [activeStages, setActiveStages] = useState<ActiveStage[]>(DEFAULT_STAGES)
   const [sessionActiveStages, setSessionActiveStages] = useState<ActiveStage[]>(DEFAULT_STAGES)
   const [stageBannerDismissed, setStageBannerDismissed] = useState(false)
+  const [settingsReady, setSettingsReady] = useState(false)
   const [sessionStack, setSessionStack] = useState<PracticeSnapshot[]>([])
   const playlistEntryDepthRef = useRef<number>(0)
   const streamAbortRef = useRef<AbortController | null>(null)
@@ -267,8 +278,16 @@ export default function App() {
 
 
   useEffect(() => {
-    void loadRandomProblem()
-  }, [])
+    if (settingsReady && !problem) void loadRandomProblem()
+  }, [settingsReady])
+
+  useEffect(() => {
+    if (history.length === 0) {
+      setSessionActiveStages(activeStages)
+      setStage(activeStages[0])
+      setStageBannerDismissed(false)
+    }
+  }, [activeStages])
 
   useEffect(() => () => {
     streamAbortRef.current?.abort()
