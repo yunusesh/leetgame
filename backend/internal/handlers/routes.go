@@ -19,6 +19,9 @@ func (hs *HandlerService) RegisterRoutes(app *fiber.App) {
 
 		api.Use(middleware.OptionalAuth(hs.keyfunc))
 
+		// Smart practice — RequireAuth per-route (Chat uses OptionalAuth on the parent group)
+		api.Get("/problems/smart", middleware.RequireAuth(hs.keyfunc), hs.GetSmartPracticeProblem)
+
 		api.Route("/problems", func(problems fiber.Router) {
 			problems.Get("/random", hs.GetRandomProblem)
 			problems.Get("/tags", hs.GetProblemTags)
@@ -44,6 +47,11 @@ func (hs *HandlerService) RegisterRoutes(app *fiber.App) {
 			saved.Get("/", hs.GetSavedProblems)
 			saved.Post("/:problem_id", hs.SaveProblem)
 			saved.Delete("/:problem_id", hs.UnsaveProblem)
+		})
+
+		api.Route("/proficiency", func(proficiency fiber.Router) {
+			proficiency.Use(middleware.RequireAuth(hs.keyfunc))
+			proficiency.Get("/", hs.GetProficiency)
 		})
 	})
 }
