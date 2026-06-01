@@ -26,6 +26,7 @@ func (p *Postgres) UpsertTopicProficiency(ctx context.Context, userID uuid.UUID,
 		    session_count = topic_proficiency.session_count + 1,
 		    updated_at    = NOW()`
 
+	// args: $1=userID $2=topic $3=stage $4=sessionScore $5=floor $6=scale $7=problemID
 	_, err := utils.Retry(ctx, func(ctx context.Context) (struct{}, error) {
 		_, err := p.Pool.Exec(ctx, q, userID, topic, stage, sessionScore, floor, scale, problemID)
 		return struct{}{}, err
