@@ -65,7 +65,7 @@ export function SearchPage({ onSelectProblem, searchState, onSearchStateChange }
   const setDifficulty = (v: string) => onSearchStateChange({ ...searchState, difficulty: v, page: 1 })
   const setTags = (v: string[]) => onSearchStateChange({ ...searchState, tags: v, page: 1 })
   const setTagMatch = (v: 'and' | 'or') => onSearchStateChange({ ...searchState, tagMatch: v, page: 1 })
-  const setPage = (fn: (p: number) => number) => onSearchStateChange({ ...searchState, page: fn(searchState.page) })
+  const setPage = (v: number) => onSearchStateChange({ ...searchState, page: v })
 
   useEffect(() => {
     const controller = new AbortController()
@@ -294,14 +294,14 @@ export function SearchPage({ onSelectProblem, searchState, onSearchStateChange }
         <div className="mt-6 flex items-center justify-between gap-3">
           <Button
             variant="outline"
-            onClick={() => setPage(p => Math.max(1, p - 1))}
+            onClick={() => setPage(Math.max(1, page - 1))}
             disabled={page === 1}
           >
             Previous
           </Button>
           <Button
             variant="outline"
-            onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+            onClick={() => setPage(Math.min(totalPages, page + 1))}
             disabled={page === totalPages}
           >
             Next
