@@ -194,6 +194,21 @@ func (p *Postgres) SearchProblems(ctx context.Context, q, difficulty string, tag
 	})
 }
 
+func (p *Postgres) GetAllProblems(ctx context.Context) ([]models.Problem, error) {
+	const q = `
+		SELECT id, slug, title, description, difficulty, topic_tags, leetcode_id, created_at
+		FROM problems
+		ORDER BY leetcode_id ASC NULLS LAST`
+
+	return utils.Retry(ctx, func(ctx context.Context) ([]models.Problem, error) {
+		rows, err := p.Pool.Query(ctx, q)
+		if err != nil {
+			return nil, err
+		}
+		return pgx.CollectRows(rows, pgx.RowToStructByName[models.Problem])
+	})
+}
+
 func (p *Postgres) GetProblemTags(ctx context.Context) ([]types.ProblemTag, error) {
 	const q = `
 		SELECT tag AS name, COUNT(*)::INT AS count

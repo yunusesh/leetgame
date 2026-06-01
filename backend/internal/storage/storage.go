@@ -13,6 +13,7 @@ type Storage interface {
 	Ping(ctx context.Context) error
 
 	// problems
+	GetAllProblems(ctx context.Context) ([]models.Problem, error)
 	GetRandomProblem(ctx context.Context) (models.Problem, error)
 	GetRandomProblemFiltered(ctx context.Context, q, difficulty string, tags []string, tagMatch, excludeID string) (models.Problem, error)
 	GetProblemByID(ctx context.Context, id uuid.UUID) (models.Problem, error)
