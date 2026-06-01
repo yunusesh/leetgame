@@ -174,13 +174,19 @@ func (c *CachedStorage) SearchProblems(ctx context.Context, q, difficulty string
 	if err != nil {
 		return types.ProblemSearchResponse{}, err
 	}
+	if page < 1 {
+		page = 1
+	}
+	if pageSize < 1 {
+		pageSize = 10
+	}
 	filtered := make([]models.Problem, 0)
 	for _, p := range problems {
 		if matchesProblem(p, q, difficulty, tags, tagMatch, "") {
 			filtered = append(filtered, p)
 		}
 	}
-	sort.Slice(filtered, func(i, j int) bool {
+	sort.SliceStable(filtered, func(i, j int) bool {
 		if filtered[i].LeetcodeID == nil {
 			return false
 		}

@@ -272,6 +272,20 @@ func TestSearchProblems_PageBeyondEnd_ReturnsEmpty(t *testing.T) {
 	}
 }
 
+func TestSearchProblems_InvalidPage_DefaultsToFirstPage(t *testing.T) {
+	c := newCache(testProblems)
+	resp, err := c.SearchProblems(context.Background(), "", "", nil, "and", 0, 10)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if resp.Total != 3 {
+		t.Errorf("total: got %d, want 3", resp.Total)
+	}
+	if len(resp.Problems) != 3 {
+		t.Errorf("page 0 should default to page 1, got %d problems", len(resp.Problems))
+	}
+}
+
 func TestSearchProblems_TitleSubstringMatch(t *testing.T) {
 	c := newCache(testProblems)
 	resp, err := c.SearchProblems(context.Background(), "two sum", "", nil, "and", 1, 10)
