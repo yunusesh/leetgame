@@ -197,10 +197,7 @@ func (c *CachedStorage) SearchProblems(ctx context.Context, q, difficulty string
 			Total:    total,
 		}, nil
 	}
-	end := start + pageSize
-	if end > total {
-		end = total
-	}
+	end := min(start+pageSize, total)
 	return types.ProblemSearchResponse{
 		Problems: filtered[start:end],
 		Page:     page,
