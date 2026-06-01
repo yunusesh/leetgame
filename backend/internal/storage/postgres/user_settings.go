@@ -13,8 +13,26 @@ import (
 
 var defaultActiveStages = []string{"pattern", "algorithm", "tc_sc"}
 
+var defaultActiveTopics = []string{
+	"Array", "Hash Table", "Two Pointers", "Sliding Window",
+	"Stack", "Binary Search", "Linked List",
+	"Tree", "Binary Tree", "Binary Search Tree",
+	"Trie", "Heap (Priority Queue)", "Backtracking",
+	"Graph", "Depth-First Search", "Breadth-First Search", "Union Find",
+	"Dynamic Programming", "Greedy", "Intervals", "Math", "Bit Manipulation",
+	"Matrix",
+}
+
+// resolveActiveTopics returns the stored topics if non-empty, or the NeetCode defaults.
+func resolveActiveTopics(stored []string) []string {
+	if len(stored) > 0 {
+		return stored
+	}
+	return defaultActiveTopics
+}
+
 func (p *Postgres) GetUserSettings(ctx context.Context, userID uuid.UUID) (models.UserSettings, error) {
-	const sql = `SELECT user_id, active_stages, hide_title FROM user_settings WHERE user_id = $1`
+	const sql = `SELECT user_id, active_stages, hide_title, active_topics FROM user_settings WHERE user_id = $1`
 	return utils.Retry(ctx, func(ctx context.Context) (models.UserSettings, error) {
 		row, err := p.Pool.Query(ctx, sql, userID)
 		if err != nil {
@@ -26,20 +44,28 @@ func (p *Postgres) GetUserSettings(ctx context.Context, userID uuid.UUID) (model
 				UserID:       userID,
 				ActiveStages: defaultActiveStages,
 				HideTitle:    true,
+				ActiveTopics: defaultActiveTopics,
 			}, nil
 		}
-		return s, err
+		if err != nil {
+			return models.UserSettings{}, err
+		}
+		s.ActiveTopics = resolveActiveTopics(s.ActiveTopics)
+		return s, nil
 	})
 }
 
-func (p *Postgres) UpsertUserSettings(ctx context.Context, userID uuid.UUID, activeStages []string, hideTitle bool) error {
+func (p *Postgres) UpsertUserSettings(ctx context.Context, userID uuid.UUID, activeStages []string, hideTitle bool, activeTopics []string) error {
 	const sql = `
-		INSERT INTO user_settings (user_id, active_stages, hide_title)
-		VALUES ($1, $2, $3)
-		ON CONFLICT (user_id) DO UPDATE SET active_stages = EXCLUDED.active_stages, hide_title = EXCLUDED.hide_title
+		INSERT INTO user_settings (user_id, active_stages, hide_title, active_topics)
+		VALUES ($1, $2, $3, $4)
+		ON CONFLICT (user_id) DO UPDATE
+		SET active_stages = EXCLUDED.active_stages,
+		    hide_title    = EXCLUDED.hide_title,
+		    active_topics = EXCLUDED.active_topics
 	`
 	_, err := utils.Retry(ctx, func(ctx context.Context) (struct{}, error) {
-		_, err := p.Pool.Exec(ctx, sql, userID, activeStages, hideTitle)
+		_, err := p.Pool.Exec(ctx, sql, userID, activeStages, hideTitle, activeTopics)
 		return struct{}{}, err
 	})
 	return err
