@@ -25,6 +25,8 @@ export function ProblemView({
   onExitPlaylist,
   playlistSummary,
   hideTitle = true,
+  isSaved = false,
+  onToggleSave,
 }: {
   problem: Problem
   onSkip: () => void
@@ -33,6 +35,8 @@ export function ProblemView({
   onExitPlaylist?: () => void
   playlistSummary?: SearchPlaylistSummary | null
   hideTitle?: boolean
+  isSaved?: boolean
+  onToggleSave?: () => void
 }) {
   const [tagsOpen, setTagsOpen] = useState(false)
   const [titleOpen, setTitleOpen] = useState(!hideTitle)
@@ -134,6 +138,16 @@ export function ProblemView({
               </span>
             )}
           </h2>
+          {onToggleSave && (
+            <button
+              onClick={e => { e.stopPropagation(); onToggleSave() }}
+              className="shrink-0 text-lg leading-none text-muted-foreground hover:text-foreground transition-colors px-1"
+              title={isSaved ? 'Remove bookmark' : 'Save for later'}
+              aria-label={isSaved ? 'Remove bookmark' : 'Save for later'}
+            >
+              {isSaved ? '★' : '☆'}
+            </button>
+          )}
           {onBack && (
             <Button variant="ghost" size="sm" onClick={onBack} className="shrink-0 text-muted-foreground">
               ←

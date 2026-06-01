@@ -5,6 +5,7 @@ import { getRandomProblem, getRandomProblemFiltered, searchProblems, streamChat 
 import { useAuth } from './hooks/useAuth'
 import { useSearch } from './hooks/useSearch'
 import { useTags } from './hooks/useTags'
+import { useSaved } from './hooks/useSaved'
 import { NavBar } from './components/NavBar'
 import { ProblemView } from './components/ProblemView'
 import { ChatView } from './components/ChatView'
@@ -67,6 +68,7 @@ export default function App() {
   const [searchState, setSearchState] = useState<SearchState>(defaultSearchState)
   const { loading: searchLoading, error: searchError } = useSearch(searchState, setSearchState)
   const { availableTags, tagsLoading, tagsError } = useTags()
+  const { savedProblems, savedIds, save, unsave, isSaved } = useSaved(session)
   const playlistEntryDepthRef = useRef<number>(0)
   const streamAbortRef = useRef<AbortController | null>(null)
 
@@ -380,6 +382,8 @@ export default function App() {
           onExitPlaylist={problemSource === 'search' ? exitPlaylist : undefined}
           playlistSummary={problemSource === 'search' ? getPlaylistSummary(searchPlaylist) : null}
           hideTitle={hideTitle}
+          isSaved={isSaved(problem.id)}
+          onToggleSave={session ? () => { isSaved(problem.id) ? void unsave(problem.id) : void save(problem) } : undefined}
         />
         <ChatView
           history={history}
@@ -421,6 +425,10 @@ export default function App() {
             availableTags={availableTags}
             tagsLoading={tagsLoading}
             tagsError={tagsError}
+            savedIds={savedIds}
+            savedProblems={savedProblems}
+            onToggleSave={(p) => isSaved(p.id) ? void unsave(p.id) : void save(p)}
+            showSave={!!session}
           />
         : practiceView()
       }

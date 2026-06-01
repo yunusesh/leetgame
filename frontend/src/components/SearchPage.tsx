@@ -64,10 +64,15 @@ interface Props {
   availableTags: ProblemTag[]
   tagsLoading: boolean
   tagsError: string | null
+  savedIds: Set<string>
+  savedProblems: Problem[]
+  onToggleSave: (problem: Problem) => void
+  showSave: boolean
 }
 
-export function SearchPage({ onSelectProblem, searchState, onSearchStateChange, loading, error, availableTags, tagsLoading, tagsError }: Props) {
+export function SearchPage({ onSelectProblem, searchState, onSearchStateChange, loading, error, availableTags, tagsLoading, tagsError, savedIds, savedProblems, onToggleSave, showSave }: Props) {
   const [tagQuery, setTagQuery] = useState('')
+  const [showSaved, setShowSaved] = useState(false)
 
   const { q, difficulty, tags, tagMatch, results, page, total, hasSearched } = searchState
 
@@ -137,6 +142,22 @@ export function SearchPage({ onSelectProblem, searchState, onSearchStateChange, 
           </button>
         ))}
       </div>
+
+      {showSave && (
+        <div className="mb-4">
+          <button
+            onClick={() => setShowSaved(s => !s)}
+            className={cn(
+              'px-3.5 py-1.5 text-sm rounded-md border cursor-pointer transition-colors',
+              showSaved
+                ? 'border-foreground bg-foreground text-background'
+                : 'border-border text-muted-foreground hover:text-foreground'
+            )}
+          >
+            ★ Saved
+          </button>
+        </div>
+      )}
 
       <div className="mb-6">
         <div className="mb-2 flex items-center justify-between gap-3">
@@ -208,19 +229,27 @@ export function SearchPage({ onSelectProblem, searchState, onSearchStateChange, 
         </div>
       </div>
 
-      {error && <p className="text-sm text-destructive">{error}</p>}
-      {!error && hasSearched && total > 0 && (
+      {error && !showSaved && <p className="text-sm text-destructive">{error}</p>}
+      {!showSaved && !error && hasSearched && total > 0 && (
         <div className="mb-3 flex items-center justify-between gap-3 text-sm text-muted-foreground">
           <p>{loading ? 'Searching...' : `Showing ${showingFrom}-${showingTo} of ${total}`}</p>
           <p>Page {page} of {totalPages}</p>
         </div>
       )}
-      {loading && !hasSearched && skeletonList}
-      {!loading && !error && hasSearched && results.length === 0 && (
+      {showSaved && (
+        <p className="mb-3 text-sm text-muted-foreground">
+          {savedProblems.length} saved problem{savedProblems.length !== 1 ? 's' : ''}
+        </p>
+      )}
+      {!showSaved && loading && !hasSearched && skeletonList}
+      {!showSaved && loading && hasSearched && skeletonList}
+      {!showSaved && !loading && !error && hasSearched && results.length === 0 && (
         <p className="text-sm text-muted-foreground">No problems found.</p>
       )}
-      {!error && loading && hasSearched && skeletonList}
-      {!error && !loading && results.map(p => (
+      {showSaved && savedProblems.length === 0 && (
+        <p className="text-sm text-muted-foreground">No saved problems yet.</p>
+      )}
+      {(showSaved ? savedProblems : (!error && !loading ? results : [])).map(p => (
         <div
           key={p.id}
           onClick={() => onSelectProblem(p, {
@@ -230,8 +259,8 @@ export function SearchPage({ onSelectProblem, searchState, onSearchStateChange, 
             tagMatch,
             page,
             pageSize: SEARCH_PAGE_SIZE,
-            results,
-            selectedIndex: results.findIndex(result => result.id === p.id),
+            results: showSaved ? savedProblems : results,
+            selectedIndex: (showSaved ? savedProblems : results).findIndex(r => r.id === p.id),
           })}
           className="p-4 rounded-md border border-border bg-muted hover:bg-secondary cursor-pointer mb-2 transition-colors"
         >
@@ -239,10 +268,19 @@ export function SearchPage({ onSelectProblem, searchState, onSearchStateChange, 
             {p.leetcode_id != null && (
               <span className="text-xs text-muted-foreground font-normal">#{p.leetcode_id}</span>
             )}
-            <span className="font-semibold text-sm">{p.title}</span>
+            <span className="font-semibold text-sm flex-1">{p.title}</span>
             <span className={cn('text-xs font-semibold', difficultyTextClass[p.difficulty as Difficulty])}>
               {p.difficulty}
             </span>
+            {showSave && (
+              <button
+                onClick={e => { e.stopPropagation(); onToggleSave(p) }}
+                className="text-base leading-none text-muted-foreground hover:text-foreground transition-colors ml-1"
+                title={savedIds.has(p.id) ? 'Remove bookmark' : 'Save for later'}
+              >
+                {savedIds.has(p.id) ? '★' : '☆'}
+              </button>
+            )}
           </div>
           <div className="flex gap-1.5 flex-wrap">
             {p.topic_tags.map(tag => (
@@ -251,8 +289,7 @@ export function SearchPage({ onSelectProblem, searchState, onSearchStateChange, 
           </div>
         </div>
       ))}
-
-      {!error && totalPages > 1 && (
+      {!showSaved && !error && totalPages > 1 && (
         <div className="mt-6 flex items-center justify-between gap-3">
           <Button
             variant="outline"
