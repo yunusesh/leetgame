@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import type { Problem } from '../types'
 import { getSavedProblems, saveProblem, unsaveProblem } from '../api'
 import type { Session } from '@supabase/supabase-js'
@@ -6,25 +6,31 @@ import type { Session } from '@supabase/supabase-js'
 export function useSaved(session: Session | null): {
   savedProblems: Problem[]
   savedIds: Set<string>
-  save: (problemId: string) => Promise<void>
+  save: (problem: Problem) => Promise<void>
   unsave: (problemId: string) => Promise<void>
   isSaved: (problemId: string) => boolean
 } {
   const [savedProblems, setSavedProblems] = useState<Problem[]>([])
+  const userId = session?.user.id ?? null
 
   useEffect(() => {
-    if (!session) {
+    if (!userId) {
       setSavedProblems([])
       return
     }
     getSavedProblems().then(setSavedProblems).catch(() => {})
-  }, [session])
+  }, [userId])
 
-  const savedIds = new Set(savedProblems.map(p => p.id))
+  const savedIds = useMemo(
+    () => new Set(savedProblems.map(p => p.id)),
+    [savedProblems]
+  )
 
-  const save = async (problemId: string) => {
-    await saveProblem(problemId)
-    getSavedProblems().then(setSavedProblems).catch(() => {})
+  const save = async (problem: Problem) => {
+    setSavedProblems(prev => prev.some(p => p.id === problem.id) ? prev : [...prev, problem])
+    await saveProblem(problem.id).catch(() => {
+      getSavedProblems().then(setSavedProblems).catch(() => {})
+    })
   }
 
   const unsave = async (problemId: string) => {
