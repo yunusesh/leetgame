@@ -38,5 +38,12 @@ func (hs *HandlerService) RegisterRoutes(app *fiber.App) {
 			settings.Get("/", hs.GetSettings)
 			settings.Put("/", hs.UpdateSettings)
 		})
+
+		api.Route("/saved", func(saved fiber.Router) {
+			saved.Use(middleware.RequireAuth(hs.keyfunc))
+			saved.Get("/", hs.GetSavedProblems)
+			saved.Post("/:problem_id", hs.SaveProblem)
+			saved.Delete("/:problem_id", hs.UnsaveProblem)
+		})
 	})
 }
