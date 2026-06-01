@@ -116,6 +116,16 @@ export async function* streamChat(
   }
 }
 
+export async function getSmartPracticeProblem(activeStages: ActiveStage[]): Promise<Problem> {
+  const params = new URLSearchParams()
+  params.set('active_stages', activeStages.join(','))
+  const res = await fetch(`${API_URL}/api/problems/smart?${params.toString()}`, {
+    headers: await authHeaders(),
+  })
+  if (!res.ok) throw new Error(`Failed to fetch smart practice problem: ${res.status}`)
+  return res.json()
+}
+
 export async function getStreak(): Promise<{ streak: number }> {
   const res = await fetch(`${API_URL}/api/streak`, {
     headers: await authHeaders(),

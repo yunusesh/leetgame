@@ -1,7 +1,7 @@
 import { useEffect, useState, useRef } from 'react'
 import type { Problem, ChatMessage, Stage, ActiveStage, SearchState } from './types'
 import { defaultSearchState } from './types'
-import { getRandomProblem, getRandomProblemFiltered, searchProblems, streamChat } from './api'
+import { getRandomProblem, getRandomProblemFiltered, searchProblems, streamChat, getSmartPracticeProblem } from './api'
 import { useAuth } from './hooks/useAuth'
 import { useSearch } from './hooks/useSearch'
 import { useTags } from './hooks/useTags'
@@ -211,6 +211,21 @@ export default function App() {
     await loadRandomProblem()
   }
 
+  const loadSmartPracticeProblem = async () => {
+    try {
+      pushSnapshot()
+      setError(null)
+      setPlaylistExhausted(false)
+      const p = await getSmartPracticeProblem(activeStages)
+      setProblem(p)
+      setProblemSource('random')
+      setSearchPlaylist(null)
+      resetPracticeState()
+    } catch (e) {
+      setError('Failed to load smart practice problem. Is the backend running?')
+    }
+  }
+
   const selectProblem = (p: Problem, context: SearchSelectionContext) => {
     pushSnapshot()
     playlistEntryDepthRef.current = sessionStack.length + (problem ? 1 : 0)
@@ -394,6 +409,7 @@ export default function App() {
           onSubmit={handleSubmit}
           streamingMessage={streamingMessage}
           onNext={stage === 'complete' ? () => void loadNextProblem() : undefined}
+          onSmartPractice={stage === 'complete' && !!session ? () => void loadSmartPracticeProblem() : undefined}
           onRandom={stage === 'complete' && problemSource === 'search' ? () => void loadRandomNextProblem() : undefined}
           onBack={stage === 'complete' && canGoBack ? goBack : undefined}
         />
