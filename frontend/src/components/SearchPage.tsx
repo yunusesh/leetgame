@@ -23,8 +23,8 @@ const difficultyActiveClass: Record<Difficulty, string> = {
 
 const pageSize = 12
 const tagMatchModes = [
-  { value: 'and', label: 'All tags' },
-  { value: 'or', label: 'Any tag' },
+  { value: 'and', label: 'Match all' },
+  { value: 'or', label: 'Match any' },
 ] as const
 export const problemSearchPageSize = pageSize
 
