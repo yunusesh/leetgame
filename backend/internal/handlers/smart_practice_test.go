@@ -99,7 +99,7 @@ func TestSampleTopic_ReturnsValue(t *testing.T) {
 		{Topic: "Sliding Window", Weight: 0.9},
 	}
 	// Run 100 samples — must always return one of the two topics
-	for i := 0; i < 100; i++ {
+	for range 100 {
 		got := sampleTopic(weights)
 		if got != "Dynamic Programming" && got != "Sliding Window" {
 			t.Errorf("unexpected topic: %s", got)
