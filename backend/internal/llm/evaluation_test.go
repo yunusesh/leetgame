@@ -37,6 +37,13 @@ func TestBuildEvaluationPrompt(t *testing.T) {
 		{"contains assistant message", "Good, can you explain why?"},
 		{"contains second user message", "To achieve O(n) lookup"},
 		{"contains JSON instruction", `"scores"`},
+		{"contains pattern rubric", "pattern, brute_force, algorithm"},
+		{"contains edge_cases rubric", "edge_cases"},
+		{"contains tc_sc rubric", "tc_sc"},
+		{"contains reveal cap", "Reveal cap"},
+		{"contains hint cap", "USER REQUESTED HINT"},
+		{"contains answer cap", "USER REQUESTED ANSWER"},
+		{"contains calibration note", "Calibration"},
 	}
 
 	for _, c := range checks {
