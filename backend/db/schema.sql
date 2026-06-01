@@ -30,3 +30,12 @@ CREATE TABLE IF NOT EXISTS saved_problems (
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   PRIMARY KEY (user_id, problem_id)
 );
+
+CREATE TABLE IF NOT EXISTS topic_proficiency (
+  user_id    UUID   NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  topic      TEXT   NOT NULL,
+  stage      TEXT   NOT NULL,
+  score      FLOAT  NOT NULL DEFAULT 0.0,
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  PRIMARY KEY (user_id, topic, stage)
+);
