@@ -52,6 +52,25 @@ func computeTopicWeights(proficiencies []models.TopicProficiency, tags []types.P
 	return weights
 }
 
+// filterTagsByActiveTopics returns only the tags whose names are in activeTopics.
+// If activeTopics is empty, all tags are returned unchanged.
+func filterTagsByActiveTopics(tags []types.ProblemTag, activeTopics []string) []types.ProblemTag {
+	if len(activeTopics) == 0 {
+		return tags
+	}
+	topicSet := make(map[string]bool, len(activeTopics))
+	for _, t := range activeTopics {
+		topicSet[t] = true
+	}
+	filtered := make([]types.ProblemTag, 0, len(activeTopics))
+	for _, tag := range tags {
+		if topicSet[tag.Name] {
+			filtered = append(filtered, tag)
+		}
+	}
+	return filtered
+}
+
 // sampleTopic picks one topic from weights using weighted random sampling.
 func sampleTopic(weights []topicWeight) string {
 	if len(weights) == 0 {
@@ -91,10 +110,20 @@ func (hs *HandlerService) GetSmartPracticeProblem(c *fiber.Ctx) error {
 		return xerrors.BadRequestError("active_stages must contain at least one non-empty value")
 	}
 
+	var activeTopics []string
+	if topicsParam := strings.TrimSpace(c.Query("active_topics")); topicsParam != "" {
+		for t := range strings.SplitSeq(topicsParam, ",") {
+			if t := strings.TrimSpace(t); t != "" {
+				activeTopics = append(activeTopics, t)
+			}
+		}
+	}
+
 	allTags, err := hs.storage.GetProblemTags(c.Context())
 	if err != nil {
 		return err
 	}
+	allTags = filterTagsByActiveTopics(allTags, activeTopics)
 
 	proficiencies, err := hs.storage.GetTopicProficiencies(c.Context(), uid)
 	if err != nil {

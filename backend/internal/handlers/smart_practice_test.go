@@ -113,3 +113,60 @@ func TestSampleTopic_Empty(t *testing.T) {
 		t.Errorf("empty weights: expected empty string, got %q", got)
 	}
 }
+
+func TestFilterTagsByActiveTopics(t *testing.T) {
+	allTags := []types.ProblemTag{
+		{Name: "Array"},
+		{Name: "Graph"},
+		{Name: "Brain Teaser"},
+		{Name: "Geometry"},
+	}
+	activeTopics := []string{"Array", "Graph"}
+
+	got := filterTagsByActiveTopics(allTags, activeTopics)
+	if len(got) != 2 {
+		t.Fatalf("expected 2 tags, got %d", len(got))
+	}
+	if got[0].Name != "Array" || got[1].Name != "Graph" {
+		t.Errorf("unexpected tags: %v", got)
+	}
+}
+
+func TestFilterTagsByActiveTopics_EmptyFilter(t *testing.T) {
+	allTags := []types.ProblemTag{
+		{Name: "Array"},
+		{Name: "Graph"},
+	}
+	// Empty active topics → return all tags unchanged
+	got := filterTagsByActiveTopics(allTags, []string{})
+	if len(got) != 2 {
+		t.Fatalf("expected 2 tags, got %d", len(got))
+	}
+}
+
+func TestComputeTopicWeights_WithActiveTopics(t *testing.T) {
+	proficiencies := []models.TopicProficiency{
+		{Topic: "Array", Stage: "pattern", Score: 0.8},
+		{Topic: "Graph", Stage: "pattern", Score: 0.2},
+		{Topic: "Brain Teaser", Stage: "pattern", Score: 0.5},
+	}
+	// Only Array and Graph are active — Brain Teaser should not appear in weights
+	tags := []types.ProblemTag{{Name: "Array"}, {Name: "Graph"}}
+	weights := computeTopicWeights(proficiencies, tags, []string{"pattern"})
+	if len(weights) != 2 {
+		t.Fatalf("expected 2 weights, got %d", len(weights))
+	}
+	// Graph (score=0.2) should have higher weight than Array (score=0.8)
+	graphW, arrayW := 0.0, 0.0
+	for _, w := range weights {
+		if w.Topic == "Graph" {
+			graphW = w.Weight
+		}
+		if w.Topic == "Array" {
+			arrayW = w.Weight
+		}
+	}
+	if graphW <= arrayW {
+		t.Errorf("Graph weight (%f) should be > Array weight (%f)", graphW, arrayW)
+	}
+}
