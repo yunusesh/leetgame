@@ -59,7 +59,7 @@ func BuildEvaluationPrompt(problem models.Problem, activeStages []string, histor
 	sb.WriteString("  0.7 — Both correct, explanation vague or incomplete\n")
 	sb.WriteString("  1.0 — Both correct with clear reasoning (e.g. 'O(n) because we iterate once, O(1) because no extra space')\n\n")
 	sb.WriteString("**Reveal cap:** If the interviewer stated an answer directly (not a Socratic question, but an outright explanation or reveal) without the user requesting it, cap that stage's score at 0.2 regardless of the user's response.\n\n")
-	sb.WriteString("**Hint cap:** If you see '[USER REQUESTED HINT]' in the user's message for a stage, the score for that stage cannot exceed 0.6.\n\n")
+	sb.WriteString("**Hint cap:** If you see '[USER REQUESTED HINT]' in the user's message for a stage, the score for that stage cannot exceed 0.6. For tc_sc, use 0.5 as the effective cap (the nearest valid anchor).\n\n")
 	sb.WriteString("**Answer cap:** If you see '[USER REQUESTED ANSWER]' in the user's message for a stage, the score for that stage cannot exceed 0.2.\n\n")
 	sb.WriteString("Calibration: most sessions should score in the 0.2–0.6 range. Reserve 0.8–1.0 for genuinely strong, unprompted answers.\n\n")
 	sb.WriteString("CRITICAL: Return ONLY this JSON — no explanation, no markdown, no text before or after:\n")
