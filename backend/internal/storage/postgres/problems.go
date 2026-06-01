@@ -56,7 +56,7 @@ func applyProblemSearchFilters(sb squirrel.SelectBuilder, q, difficulty string, 
 
 func (p *Postgres) GetRandomProblem(ctx context.Context) (models.Problem, error) {
 	const q = `
-		SELECT id, slug, title, description, difficulty, topic_tags, created_at
+		SELECT id, slug, title, description, difficulty, topic_tags, leetcode_id, created_at
 		FROM problems
 		ORDER BY RANDOM()
 		LIMIT 1`
@@ -82,7 +82,7 @@ func (p *Postgres) GetRandomProblem(ctx context.Context) (models.Problem, error)
 func (p *Postgres) GetRandomProblemFiltered(ctx context.Context, q, difficulty string, tags []string, tagMatch, excludeID string) (models.Problem, error) {
 	return utils.Retry(ctx, func(ctx context.Context) (models.Problem, error) {
 		sql, args, err := applyProblemSearchFilters(
-			squirrel.Select("id, slug, title, description, difficulty, topic_tags, created_at"),
+			squirrel.Select("id, slug, title, description, difficulty, topic_tags, leetcode_id, created_at"),
 			q,
 			difficulty,
 			tags,
@@ -117,7 +117,7 @@ func (p *Postgres) GetRandomProblemFiltered(ctx context.Context, q, difficulty s
 
 func (p *Postgres) GetProblemByID(ctx context.Context, id uuid.UUID) (models.Problem, error) {
 	const q = `
-		SELECT id, slug, title, description, difficulty, topic_tags, created_at
+		SELECT id, slug, title, description, difficulty, topic_tags, leetcode_id, created_at
 		FROM problems
 		WHERE id = $1`
 
@@ -160,14 +160,14 @@ func (p *Postgres) SearchProblems(ctx context.Context, q, difficulty string, tag
 		}
 
 		sql, args, err := applyProblemSearchFilters(
-			squirrel.Select("id, slug, title, description, difficulty, topic_tags, created_at"),
+			squirrel.Select("id, slug, title, description, difficulty, topic_tags, leetcode_id, created_at"),
 			q,
 			difficulty,
 			tags,
 			tagMatch,
 			"",
 		).
-			OrderBy("title ASC").
+			OrderBy("leetcode_id ASC NULLS LAST").
 			Limit(uint64(pageSize)).
 			Offset(uint64((page - 1) * pageSize)).
 			ToSql()

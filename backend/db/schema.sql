@@ -8,6 +8,7 @@ CREATE TABLE IF NOT EXISTS problems (
   description TEXT        NOT NULL,
   difficulty  TEXT        NOT NULL CHECK (difficulty IN ('Easy', 'Medium', 'Hard')),
   topic_tags  TEXT[]      NOT NULL DEFAULT '{}',
+  leetcode_id INT         UNIQUE,
   created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
