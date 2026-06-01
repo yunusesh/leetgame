@@ -5,4 +5,5 @@ import "github.com/google/uuid"
 type UserSettings struct {
 	UserID       uuid.UUID `json:"user_id" db:"user_id"`
 	ActiveStages []string  `json:"active_stages" db:"active_stages"`
+	HideTitle    bool      `json:"hide_title" db:"hide_title"`
 }

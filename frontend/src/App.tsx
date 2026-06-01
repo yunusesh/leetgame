@@ -59,9 +59,10 @@ export default function App() {
         if (session) {
           getStreak().then(({ streak }) => setStreak(streak)).catch(() => {})
           getSettings()
-            .then(({ active_stages }) => {
+            .then(({ active_stages, hide_title }) => {
               setActiveStages(active_stages)
               setSessionActiveStages(active_stages)
+              setHideTitle(hide_title)
             })
             .catch(() => {})
             .finally(() => setSettingsReady(true))
@@ -72,8 +73,10 @@ export default function App() {
           if (stored) {
             try { stages = JSON.parse(stored) as ActiveStage[] } catch { /* use default */ }
           }
+          const storedHideTitle = localStorage.getItem('leetgame_hide_title')
           setActiveStages(stages)
           setSessionActiveStages(stages)
+          setHideTitle(storedHideTitle === null ? true : storedHideTitle === 'true')
           setSettingsReady(true)
         }
       } else if (event === 'SIGNED_OUT') {
@@ -82,11 +85,11 @@ export default function App() {
         let stages = DEFAULT_STAGES
         if (stored) {
           try { stages = JSON.parse(stored) as ActiveStage[] } catch { /* use default */ }
-        } else {
-          stages = DEFAULT_STAGES
         }
+        const storedHideTitle = localStorage.getItem('leetgame_hide_title')
         setActiveStages(stages)
         setSessionActiveStages(stages)
+        setHideTitle(storedHideTitle === null ? true : storedHideTitle === 'true')
         setSettingsReady(true)
       }
     })
@@ -109,6 +112,7 @@ export default function App() {
   const [sessionActiveStages, setSessionActiveStages] = useState<ActiveStage[]>(DEFAULT_STAGES)
   const [stageBannerDismissed, setStageBannerDismissed] = useState(false)
   const [settingsReady, setSettingsReady] = useState(false)
+  const [hideTitle, setHideTitle] = useState(true)
   const [sessionStack, setSessionStack] = useState<PracticeSnapshot[]>([])
   const playlistEntryDepthRef = useRef<number>(0)
   const streamAbortRef = useRef<AbortController | null>(null)
@@ -144,10 +148,21 @@ export default function App() {
     setActiveStages(stages)
     setStageBannerDismissed(false)
     if (session) {
-      updateSettings(stages).catch(() => {})
+      updateSettings(stages, hideTitle).catch(() => {})
     } else {
       try {
         localStorage.setItem('leetgame_active_stages', JSON.stringify(stages))
+      } catch { /* ignore */ }
+    }
+  }
+
+  const handleHideTitleChange = (value: boolean) => {
+    setHideTitle(value)
+    if (session) {
+      updateSettings(activeStages, value).catch(() => {})
+    } else {
+      try {
+        localStorage.setItem('leetgame_hide_title', String(value))
       } catch { /* ignore */ }
     }
   }
@@ -425,6 +440,7 @@ export default function App() {
           onBack={canGoBack ? goBack : undefined}
           onExitPlaylist={problemSource === 'search' ? exitPlaylist : undefined}
           playlistSummary={problemSource === 'search' ? getPlaylistSummary(searchPlaylist) : null}
+          hideTitle={hideTitle}
         />
         <ChatView
           history={history}
@@ -453,6 +469,8 @@ export default function App() {
         streak={streak}
         activeStages={activeStages}
         onStagesChange={handleStagesChange}
+        hideTitle={hideTitle}
+        onHideTitleChange={handleHideTitleChange}
       />
       {view === 'search'
         ? <SearchPage onSelectProblem={selectProblem} />

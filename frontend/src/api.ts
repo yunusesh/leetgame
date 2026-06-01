@@ -133,7 +133,7 @@ export async function recordStreak(): Promise<{ streak: number }> {
   return res.json()
 }
 
-export async function getSettings(): Promise<{ active_stages: ActiveStage[] }> {
+export async function getSettings(): Promise<{ active_stages: ActiveStage[]; hide_title: boolean }> {
   const res = await fetch(`${API_URL}/api/settings`, {
     headers: await authHeaders(),
   })
@@ -141,11 +141,11 @@ export async function getSettings(): Promise<{ active_stages: ActiveStage[] }> {
   return res.json()
 }
 
-export async function updateSettings(activeStages: ActiveStage[]): Promise<void> {
+export async function updateSettings(activeStages: ActiveStage[], hideTitle: boolean): Promise<void> {
   const res = await fetch(`${API_URL}/api/settings`, {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json', ...(await authHeaders()) },
-    body: JSON.stringify({ active_stages: activeStages }),
+    body: JSON.stringify({ active_stages: activeStages, hide_title: hideTitle }),
   })
   if (!res.ok) throw new Error(`Failed to update settings: ${res.status}`)
 }

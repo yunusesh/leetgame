@@ -24,6 +24,7 @@ export function ProblemView({
   onBack,
   onExitPlaylist,
   playlistSummary,
+  hideTitle = true,
 }: {
   problem: Problem
   onSkip: () => void
@@ -31,9 +32,10 @@ export function ProblemView({
   onBack?: () => void
   onExitPlaylist?: () => void
   playlistSummary?: SearchPlaylistSummary | null
+  hideTitle?: boolean
 }) {
   const [tagsOpen, setTagsOpen] = useState(false)
-  const [titleOpen, setTitleOpen] = useState(false)
+  const [titleOpen, setTitleOpen] = useState(!hideTitle)
   const [problemOpen, setProblemOpen] = useState(true)
   const [overflowOpen, setOverflowOpen] = useState(false)
   const overflowRef = useRef<HTMLDivElement>(null)

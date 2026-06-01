@@ -21,8 +21,9 @@ func (hs *HandlerService) GetSettings(c *fiber.Ctx) error {
 
 	type response struct {
 		ActiveStages []string `json:"active_stages"`
+		HideTitle    bool     `json:"hide_title"`
 	}
-	return c.JSON(response{ActiveStages: settings.ActiveStages})
+	return c.JSON(response{ActiveStages: settings.ActiveStages, HideTitle: settings.HideTitle})
 }
 
 func (hs *HandlerService) UpdateSettings(c *fiber.Ctx) error {
@@ -33,6 +34,7 @@ func (hs *HandlerService) UpdateSettings(c *fiber.Ctx) error {
 
 	type request struct {
 		ActiveStages []string `json:"active_stages"`
+		HideTitle    bool     `json:"hide_title"`
 	}
 	var req request
 	if err := c.BodyParser(&req); err != nil {
@@ -43,7 +45,7 @@ func (hs *HandlerService) UpdateSettings(c *fiber.Ctx) error {
 		return xerrors.UnprocessableEntityError(errs)
 	}
 
-	if err := hs.storage.UpsertUserSettings(c.Context(), uid, req.ActiveStages); err != nil {
+	if err := hs.storage.UpsertUserSettings(c.Context(), uid, req.ActiveStages, req.HideTitle); err != nil {
 		return err
 	}
 

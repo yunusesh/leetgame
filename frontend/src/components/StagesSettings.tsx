@@ -15,9 +15,11 @@ interface Props {
   activeStages: ActiveStage[]
   onChange: (stages: ActiveStage[]) => void
   onClose: () => void
+  hideTitle: boolean
+  onHideTitleChange: (value: boolean) => void
 }
 
-export function StagesSettings({ activeStages, onChange, onClose }: Props) {
+export function StagesSettings({ activeStages, onChange, onClose, hideTitle, onHideTitleChange }: Props) {
   const ref = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -44,6 +46,29 @@ export function StagesSettings({ activeStages, onChange, onClose }: Props) {
       ref={ref}
       className="absolute right-0 top-full mt-1 z-30 w-72 rounded-md border border-border bg-background shadow-lg py-2"
     >
+      <p className="px-3 pb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+        Display
+      </p>
+      <button
+        onClick={() => onHideTitleChange(!hideTitle)}
+        className="w-full flex items-center gap-3 px-3 py-2 text-left hover:bg-muted cursor-pointer transition-colors"
+      >
+        <div className={cn(
+          "h-4 w-4 rounded border shrink-0 flex items-center justify-center",
+          hideTitle ? "bg-primary border-primary" : "border-border"
+        )}>
+          {hideTitle && (
+            <svg width="10" height="8" viewBox="0 0 10 8" fill="none">
+              <path d="M1 4l2.5 2.5L9 1" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+          )}
+        </div>
+        <div>
+          <p className="text-sm font-medium">Hide problem title</p>
+          <p className="text-xs text-muted-foreground">Reveal on click to test recall</p>
+        </div>
+      </button>
+      <div className="mx-3 my-2 border-t border-border" />
       <p className="px-3 pb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
         Practice Stages
       </p>

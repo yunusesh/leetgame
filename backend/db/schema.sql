@@ -19,5 +19,6 @@ CREATE TABLE IF NOT EXISTS practice_days (
 
 CREATE TABLE IF NOT EXISTS user_settings (
   user_id       UUID    PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
-  active_stages TEXT[]  NOT NULL DEFAULT '{pattern,algorithm,tc_sc}'
+  active_stages TEXT[]  NOT NULL DEFAULT '{pattern,algorithm,tc_sc}',
+  hide_title    BOOLEAN NOT NULL DEFAULT TRUE
 );

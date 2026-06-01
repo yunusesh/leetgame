@@ -15,9 +15,11 @@ interface Props {
   streak: number | null
   activeStages: ActiveStage[]
   onStagesChange: (stages: ActiveStage[]) => void
+  hideTitle: boolean
+  onHideTitleChange: (value: boolean) => void
 }
 
-export function NavBar({ view, onNavigate, session, authLoading, streak, activeStages, onStagesChange }: Props) {
+export function NavBar({ view, onNavigate, session, authLoading, streak, activeStages, onStagesChange, hideTitle, onHideTitleChange }: Props) {
   const [settingsOpen, setSettingsOpen] = useState(false)
 
   const handleSignIn = async () => {
@@ -59,6 +61,8 @@ export function NavBar({ view, onNavigate, session, authLoading, streak, activeS
                 activeStages={activeStages}
                 onChange={stages => { onStagesChange(stages) }}
                 onClose={() => setSettingsOpen(false)}
+                hideTitle={hideTitle}
+                onHideTitleChange={onHideTitleChange}
               />
             )}
           </div>
