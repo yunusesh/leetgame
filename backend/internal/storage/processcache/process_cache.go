@@ -2,6 +2,7 @@ package processcache
 
 import (
 	"context"
+	"log/slog"
 	"math/rand"
 	"slices"
 	"sort"
@@ -79,6 +80,7 @@ func (c *CachedStorage) triggerReload() {
 		defer c.mu.Unlock()
 		c.reloading = false
 		if err != nil {
+			slog.Error("processcache: background reload failed", "err", err)
 			return
 		}
 		byID := make(map[uuid.UUID]models.Problem, len(problems))
