@@ -455,6 +455,7 @@ export default function App() {
         onStagesChange={handleStagesChange}
         hideTitle={hideTitle}
         onHideTitleChange={handleHideTitleChange}
+        onTakeTour={handleStartTour}
       />
       {showBanner && (
         <TourBanner onStart={handleStartTour} onDismiss={dismissTour} />

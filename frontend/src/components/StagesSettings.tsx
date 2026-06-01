@@ -15,9 +15,10 @@ interface Props {
   onChange: (stages: ActiveStage[]) => void
   hideTitle: boolean
   onHideTitleChange: (value: boolean) => void
+  onTakeTour?: () => void
 }
 
-export function StagesSettings({ activeStages, onChange, hideTitle, onHideTitleChange }: Props) {
+export function StagesSettings({ activeStages, onChange, hideTitle, onHideTitleChange, onTakeTour }: Props) {
   const toggle = (stage: ActiveStage) => {
     const isActive = activeStages.includes(stage)
     if (isActive && activeStages.length === 1) return
@@ -65,6 +66,17 @@ export function StagesSettings({ activeStages, onChange, hideTitle, onHideTitleC
           </button>
         )
       })}
+      {onTakeTour && (
+        <>
+          <div className="mx-3 my-2 border-t border-border" />
+          <button
+            onClick={onTakeTour}
+            className="w-full text-left px-3 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+          >
+            Take a tour
+          </button>
+        </>
+      )}
     </div>
   )
 }

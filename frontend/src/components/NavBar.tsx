@@ -15,9 +15,10 @@ interface Props {
   onStagesChange: (stages: ActiveStage[]) => void
   hideTitle: boolean
   onHideTitleChange: (value: boolean) => void
+  onTakeTour?: () => void
 }
 
-export function NavBar({ view, onNavigate, session, authLoading, streak, activeStages, onStagesChange, hideTitle, onHideTitleChange }: Props) {
+export function NavBar({ view, onNavigate, session, authLoading, streak, activeStages, onStagesChange, hideTitle, onHideTitleChange, onTakeTour }: Props) {
   const handleSignIn = async () => {
     await supabase.auth.signInWithOAuth({
       provider: 'google',
@@ -70,6 +71,7 @@ export function NavBar({ view, onNavigate, session, authLoading, streak, activeS
                 onChange={onStagesChange}
                 hideTitle={hideTitle}
                 onHideTitleChange={onHideTitleChange}
+                onTakeTour={onTakeTour}
               />
             </PopoverContent>
           </Popover>
