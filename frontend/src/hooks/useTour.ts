@@ -2,16 +2,17 @@ import { useState, useEffect } from 'react'
 
 const UNAUTH_TOUR_KEY = 'leetgame_tour_dismissed'
 
-export function useTour(isAuth: boolean, tourDone: boolean, persistTourDone: () => void) {
+export function useTour(isAuth: boolean, settingsReady: boolean, tourDone: boolean, persistTourDone: () => void) {
   const [showBanner, setShowBanner] = useState(false)
 
   useEffect(() => {
     if (isAuth) {
-      setShowBanner(!tourDone)
+      // wait for settings to load before showing — avoids flash when tourDone is still false
+      if (settingsReady) setShowBanner(!tourDone)
     } else {
       setShowBanner(localStorage.getItem(UNAUTH_TOUR_KEY) !== 'true')
     }
-  }, [isAuth, tourDone])
+  }, [isAuth, settingsReady, tourDone])
 
   const dismiss = () => {
     setShowBanner(false)

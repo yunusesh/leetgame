@@ -54,7 +54,7 @@ function getPlaylistSummary(searchPlaylist: SearchPlaylist | null) {
 
 export default function App() {
   const { session, authLoading, streak, activeStages, hideTitle, activeTopics, tourDone, settingsReady, persistStages, persistHideTitle, persistTopics, persistTourDone, recordAndUpdateStreak } = useAuth()
-  const { showBanner, dismiss: dismissTour, markDone: markTourDone } = useTour(!!session, tourDone, persistTourDone)
+  const { showBanner, dismiss: dismissTour, markDone: markTourDone } = useTour(!!session, settingsReady, tourDone, persistTourDone)
 
   const handleStartTour = () => {
     if (view !== 'practice') setView('practice')
