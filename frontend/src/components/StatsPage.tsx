@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
-import type { TopicProficiency } from '../types'
-import { getProficiency } from '../api'
+import type { TopicProficiency, ProblemTag } from '../types'
+import { getProficiency, getProblemTags } from '../api'
 import { cn } from '../lib/utils'
 import { Button } from './ui/button'
 
@@ -12,19 +12,77 @@ const stageLabel: Record<string, string> = {
   tc_sc:       'Time & Space',
 }
 
-export function StatsPage({ onSmartPractice }: { onSmartPractice?: () => void }) {
+export function StatsPage({
+  onSmartPractice,
+  activeTopics,
+  onTopicsChange,
+}: {
+  onSmartPractice?: () => void
+  activeTopics: string[]
+  onTopicsChange: (topics: string[]) => void
+}) {
   const [proficiencies, setProficiencies] = useState<TopicProficiency[]>([])
+  const [allTags, setAllTags] = useState<ProblemTag[]>([])
   const [loading, setLoading] = useState(true)
   const [fetchError, setFetchError] = useState(false)
+  const [topicPickerOpen, setTopicPickerOpen] = useState(false)
 
   useEffect(() => {
     const controller = new AbortController()
-    getProficiency(controller.signal)
-      .then(data => { if (!controller.signal.aborted) { setProficiencies(data); setFetchError(false) } })
+    Promise.all([
+      getProficiency(controller.signal),
+      getProblemTags(controller.signal),
+    ])
+      .then(([prof, tags]) => {
+        if (!controller.signal.aborted) {
+          setProficiencies(prof)
+          setAllTags(tags)
+          setFetchError(false)
+        }
+      })
       .catch(() => { if (!controller.signal.aborted) setFetchError(true) })
       .finally(() => { if (!controller.signal.aborted) setLoading(false) })
     return () => controller.abort()
   }, [])
+
+  const toggleTopic = (name: string) => {
+    const next = activeTopics.includes(name)
+      ? activeTopics.filter(t => t !== name)
+      : [...activeTopics, name]
+    if (next.length > 0) onTopicsChange(next)
+  }
+
+  const topicPicker = (
+    <div className="mb-6">
+      <button
+        onClick={() => setTopicPickerOpen(o => !o)}
+        className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+      >
+        {topicPickerOpen ? '▾' : '▸'} Manage topics ({activeTopics.length} of {allTags.length} active)
+      </button>
+      {topicPickerOpen && (
+        <div className="mt-3 flex flex-wrap gap-2">
+          {allTags.map(tag => {
+            const active = activeTopics.includes(tag.name)
+            return (
+              <button
+                key={tag.name}
+                onClick={() => toggleTopic(tag.name)}
+                className={cn(
+                  "px-2.5 py-1 rounded-full text-xs font-medium border transition-colors",
+                  active
+                    ? "bg-foreground text-background border-foreground"
+                    : "bg-transparent text-muted-foreground border-border hover:border-foreground hover:text-foreground"
+                )}
+              >
+                {tag.name}
+              </button>
+            )
+          })}
+        </div>
+      )}
+    </div>
+  )
 
   if (loading) {
     return (
@@ -46,7 +104,11 @@ export function StatsPage({ onSmartPractice }: { onSmartPractice?: () => void })
     )
   }
 
-  if (proficiencies.length === 0) {
+  // Filter proficiencies to active topics only
+  const activeSet = new Set(activeTopics)
+  const filtered = proficiencies.filter(p => activeSet.has(p.topic))
+
+  if (filtered.length === 0) {
     return (
       <div className="flex-1 overflow-y-auto">
         <div className="max-w-2xl mx-auto px-6 py-8">
@@ -56,6 +118,7 @@ export function StatsPage({ onSmartPractice }: { onSmartPractice?: () => void })
               <Button size="sm" onClick={onSmartPractice}>Practice Weakest Topics</Button>
             )}
           </div>
+          {topicPicker}
           <p className="text-sm text-muted-foreground">Complete a practice session to see your scores.</p>
         </div>
       </div>
@@ -64,7 +127,7 @@ export function StatsPage({ onSmartPractice }: { onSmartPractice?: () => void })
 
   // Group by topic, compute avg per topic for sorting
   const topicMap = new Map<string, TopicProficiency[]>()
-  for (const p of proficiencies) {
+  for (const p of filtered) {
     const existing = topicMap.get(p.topic) ?? []
     topicMap.set(p.topic, [...existing, p])
   }
@@ -86,6 +149,7 @@ export function StatsPage({ onSmartPractice }: { onSmartPractice?: () => void })
             <Button size="sm" onClick={onSmartPractice}>Practice Weakest Topics</Button>
           )}
         </div>
+        {topicPicker}
         <div className="flex flex-col gap-4">
           {topics.map(({ topic, rows }) => (
             <div key={topic} className="rounded-md border border-border bg-muted p-4">
