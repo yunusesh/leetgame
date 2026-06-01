@@ -50,7 +50,7 @@ function getPlaylistSummary(searchPlaylist: SearchPlaylist | null) {
 }
 
 export default function App() {
-  const { session, authLoading, streak, activeStages, hideTitle, settingsReady, persistStages, persistHideTitle, recordAndUpdateStreak } = useAuth()
+  const { session, authLoading, streak, activeStages, hideTitle, activeTopics, settingsReady, persistStages, persistHideTitle, persistTopics, recordAndUpdateStreak } = useAuth()
 
   const [view, setView] = useState<View>('practice')
   const [problem, setProblem] = useState<Problem | null>(null)
@@ -220,7 +220,7 @@ export default function App() {
       pushSnapshot()
       setError(null)
       setPlaylistExhausted(false)
-      const p = await getSmartPracticeProblem(activeStages)
+      const p = await getSmartPracticeProblem(activeStages, activeTopics)
       setProblem(p)
       setProblemSource('smart')
       setSearchPlaylist(null)
@@ -461,7 +461,11 @@ export default function App() {
             showSave={!!session}
           />
         : view === 'stats'
-        ? <StatsPage onSmartPractice={session ? () => { void loadSmartPracticeProblem(); setView('practice') } : undefined} />
+        ? <StatsPage
+            onSmartPractice={session ? () => { void loadSmartPracticeProblem(); setView('practice') } : undefined}
+            activeTopics={activeTopics}
+            onTopicsChange={persistTopics}
+          />
         : practiceView()
       }
     </div>
