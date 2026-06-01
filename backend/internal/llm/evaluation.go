@@ -30,7 +30,7 @@ func BuildEvaluationPrompt(problem models.Problem, activeStages []string, histor
 	fmt.Fprintf(&sb, "Problem tags: %s\n", strings.Join(problem.TopicTags, ", "))
 	fmt.Fprintf(&sb, "Active stages practiced: %s\n\n", strings.Join(activeStages, ", "))
 
-	sb.WriteString("Full conversation:\n")
+	sb.WriteString("Full conversation (note: 'assistant' turns are interviewer coaching prompts, not candidate answers — only score the candidate's own words in 'user' turns):\n")
 	for _, msg := range history {
 		fmt.Fprintf(&sb, "%s: %s\n", msg.Role, msg.Content)
 	}

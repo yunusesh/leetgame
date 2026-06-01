@@ -58,11 +58,17 @@ func (c *AnthropicClient) EvaluateSession(ctx context.Context, problem models.Pr
 		return llm.SessionEvaluation{}, fmt.Errorf("failed to decode evaluation response: %w", err)
 	}
 
-	if len(apiResp.Content) == 0 {
-		return llm.SessionEvaluation{}, fmt.Errorf("empty response from claude")
+	var text string
+	for _, block := range apiResp.Content {
+		if block.Type == "text" {
+			text = block.Text
+			break
+		}
 	}
-
-	text := stripCodeFence(apiResp.Content[0].Text)
+	if text == "" {
+		return llm.SessionEvaluation{}, fmt.Errorf("no text content block in claude evaluation response")
+	}
+	text = stripCodeFence(text)
 
 	var eval llm.SessionEvaluation
 	if err := json.Unmarshal([]byte(text), &eval); err != nil {
