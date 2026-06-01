@@ -19,13 +19,14 @@ import (
 )
 
 type CachedStorage struct {
-	inner    storage.Storage
-	ttl      time.Duration
-	mu       sync.RWMutex
-	problems []models.Problem
-	byID     map[uuid.UUID]models.Problem
-	tags     []types.ProblemTag
-	loadedAt time.Time
+	inner     storage.Storage
+	ttl       time.Duration
+	mu        sync.RWMutex
+	problems  []models.Problem
+	byID      map[uuid.UUID]models.Problem
+	tags      []types.ProblemTag
+	loadedAt  time.Time
+	reloading bool
 }
 
 func New(inner storage.Storage, ttl time.Duration) *CachedStorage {
@@ -34,19 +35,61 @@ func New(inner storage.Storage, ttl time.Duration) *CachedStorage {
 
 func (c *CachedStorage) getOrLoad(ctx context.Context) ([]models.Problem, map[uuid.UUID]models.Problem, []types.ProblemTag, error) {
 	c.mu.RLock()
-	if !c.loadedAt.IsZero() && time.Since(c.loadedAt) < c.ttl {
+	fresh := !c.loadedAt.IsZero() && time.Since(c.loadedAt) < c.ttl
+	populated := !c.loadedAt.IsZero()
+	if fresh {
 		problems, byID, tags := c.problems, c.byID, c.tags
 		c.mu.RUnlock()
 		return problems, byID, tags, nil
 	}
+	if populated {
+		problems, byID, tags, reloading := c.problems, c.byID, c.tags, c.reloading
+		c.mu.RUnlock()
+		if !reloading {
+			c.triggerReload()
+		}
+		return problems, byID, tags, nil
+	}
 	c.mu.RUnlock()
 
+	// cache is empty — block and load synchronously
 	c.mu.Lock()
 	defer c.mu.Unlock()
-	if !c.loadedAt.IsZero() && time.Since(c.loadedAt) < c.ttl {
+	if !c.loadedAt.IsZero() {
 		return c.problems, c.byID, c.tags, nil
 	}
 	return c.load(ctx)
+}
+
+func (c *CachedStorage) triggerReload() {
+	c.mu.Lock()
+	if c.reloading {
+		c.mu.Unlock()
+		return
+	}
+	c.reloading = true
+	c.mu.Unlock()
+
+	go func() {
+		ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+		defer cancel()
+		problems, err := c.inner.GetAllProblems(ctx)
+
+		c.mu.Lock()
+		defer c.mu.Unlock()
+		c.reloading = false
+		if err != nil {
+			return
+		}
+		byID := make(map[uuid.UUID]models.Problem, len(problems))
+		for _, p := range problems {
+			byID[p.Id] = p
+		}
+		c.problems = problems
+		c.byID = byID
+		c.tags = deriveTags(problems)
+		c.loadedAt = time.Now()
+	}()
 }
 
 func (c *CachedStorage) load(ctx context.Context) ([]models.Problem, map[uuid.UUID]models.Problem, []types.ProblemTag, error) {
