@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import type { Problem, ProblemTag, SearchState } from '../types'
 import { SEARCH_PAGE_SIZE } from '../hooks/useSearch'
 import { cn } from '../lib/utils'
@@ -73,6 +73,10 @@ interface Props {
 export function SearchPage({ onSelectProblem, searchState, onSearchStateChange, loading, error, availableTags, tagsLoading, tagsError, savedIds, savedProblems, onToggleSave, showSave }: Props) {
   const [tagQuery, setTagQuery] = useState('')
   const [showSaved, setShowSaved] = useState(false)
+
+  useEffect(() => {
+    if (!showSave) setShowSaved(false)
+  }, [showSave])
 
   const { q, difficulty, tags, tagMatch, results, page, total, hasSearched } = searchState
 
@@ -241,8 +245,7 @@ export function SearchPage({ onSelectProblem, searchState, onSearchStateChange, 
           {savedProblems.length} saved problem{savedProblems.length !== 1 ? 's' : ''}
         </p>
       )}
-      {!showSaved && loading && !hasSearched && skeletonList}
-      {!showSaved && loading && hasSearched && skeletonList}
+      {!showSaved && loading && skeletonList}
       {!showSaved && !loading && !error && hasSearched && results.length === 0 && (
         <p className="text-sm text-muted-foreground">No problems found.</p>
       )}
@@ -253,11 +256,11 @@ export function SearchPage({ onSelectProblem, searchState, onSearchStateChange, 
         <div
           key={p.id}
           onClick={() => onSelectProblem(p, {
-            q,
-            difficulty,
-            tags,
-            tagMatch,
-            page,
+            q: showSaved ? '' : q,
+            difficulty: showSaved ? '' : difficulty,
+            tags: showSaved ? [] : tags,
+            tagMatch: showSaved ? 'and' : tagMatch,
+            page: showSaved ? 1 : page,
             pageSize: SEARCH_PAGE_SIZE,
             results: showSaved ? savedProblems : results,
             selectedIndex: (showSaved ? savedProblems : results).findIndex(r => r.id === p.id),
@@ -277,6 +280,7 @@ export function SearchPage({ onSelectProblem, searchState, onSearchStateChange, 
                 onClick={e => { e.stopPropagation(); onToggleSave(p) }}
                 className="text-base leading-none text-muted-foreground hover:text-foreground transition-colors ml-1"
                 title={savedIds.has(p.id) ? 'Remove bookmark' : 'Save for later'}
+                aria-label={savedIds.has(p.id) ? 'Remove bookmark' : 'Save for later'}
               >
                 {savedIds.has(p.id) ? '★' : '☆'}
               </button>
