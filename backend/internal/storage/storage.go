@@ -26,4 +26,9 @@ type Storage interface {
 	// settings
 	GetUserSettings(ctx context.Context, userID uuid.UUID) (models.UserSettings, error)
 	UpsertUserSettings(ctx context.Context, userID uuid.UUID, activeStages []string, hideTitle bool) error
+
+	// saved problems
+	SaveProblem(ctx context.Context, userID, problemID uuid.UUID) error
+	UnsaveProblem(ctx context.Context, userID, problemID uuid.UUID) error
+	GetSavedProblems(ctx context.Context, userID uuid.UUID) ([]models.Problem, error)
 }

@@ -23,3 +23,10 @@ CREATE TABLE IF NOT EXISTS user_settings (
   active_stages TEXT[]  NOT NULL DEFAULT '{pattern,algorithm,tc_sc}',
   hide_title    BOOLEAN NOT NULL DEFAULT TRUE
 );
+
+CREATE TABLE IF NOT EXISTS saved_problems (
+  user_id    UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  problem_id UUID NOT NULL REFERENCES problems(id) ON DELETE CASCADE,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  PRIMARY KEY (user_id, problem_id)
+);
