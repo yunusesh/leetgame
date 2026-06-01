@@ -35,4 +35,5 @@ type Storage interface {
 	// topic proficiency
 	UpsertTopicProficiency(ctx context.Context, userID uuid.UUID, problemID uuid.UUID, topic, stage string, sessionScore, scale, floor float64) error
 	GetTopicProficiencies(ctx context.Context, userID uuid.UUID) ([]models.TopicProficiency, error)
+	GetProficiencyHistory(ctx context.Context, userID uuid.UUID) ([]models.ProficiencySnapshot, error)
 }
