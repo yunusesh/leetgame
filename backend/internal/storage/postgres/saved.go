@@ -5,6 +5,7 @@ import (
 
 	"leetgame/internal/models"
 	"leetgame/internal/utils"
+	"leetgame/internal/xerrors"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
@@ -27,8 +28,16 @@ func (p *Postgres) UnsaveProblem(ctx context.Context, userID, problemID uuid.UUI
 	const q = `DELETE FROM saved_problems WHERE user_id = $1 AND problem_id = $2`
 
 	_, err := utils.Retry(ctx, func(ctx context.Context) (struct{}, error) {
-		_, err := p.Pool.Exec(ctx, q, userID, problemID)
-		return struct{}{}, err
+		ct, err := p.Pool.Exec(ctx, q, userID, problemID)
+		if err != nil {
+			return struct{}{}, err
+		}
+		if ct.RowsAffected() == 0 {
+			return struct{}{}, utils.CreateNonRetryableError(
+				xerrors.NotFoundError("saved problem", map[string]string{"problem_id": problemID.String()}),
+			)
+		}
+		return struct{}{}, nil
 	})
 	return err
 }
