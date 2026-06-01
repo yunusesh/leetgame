@@ -49,3 +49,20 @@ func (p *Postgres) GetTopicProficiencies(ctx context.Context, userID uuid.UUID) 
 		return pgx.CollectRows(rows, pgx.RowToStructByName[models.TopicProficiency])
 	})
 }
+
+func (p *Postgres) GetProficiencyHistory(ctx context.Context, userID uuid.UUID) ([]models.ProficiencySnapshot, error) {
+	const q = `
+		SELECT topic, stage, score, snapshot_date
+		FROM proficiency_score_snapshots
+		WHERE user_id = $1
+		  AND snapshot_date >= CURRENT_DATE - 30
+		ORDER BY topic, stage, snapshot_date ASC`
+
+	return utils.Retry(ctx, func(ctx context.Context) ([]models.ProficiencySnapshot, error) {
+		rows, err := p.Pool.Query(ctx, q, userID)
+		if err != nil {
+			return nil, err
+		}
+		return pgx.CollectRows(rows, pgx.RowToStructByName[models.ProficiencySnapshot])
+	})
+}
