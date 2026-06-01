@@ -28,6 +28,7 @@ export function useSearch(
       try {
         const { q: sq, difficulty: sd, tags: st, tagMatch: sm, page: sp } = searchStateRef.current
         const res = await searchProblems(sq, sd, st, sm, sp, SEARCH_PAGE_SIZE, controller.signal)
+        // only writes results/total/hasSearched — none of which are in the effect deps, so no loop
         onSearchStateChange({ ...searchStateRef.current, results: res.problems, total: res.total, hasSearched: true })
       } catch (err) {
         if (err instanceof Error && err.name !== 'AbortError') {
@@ -41,7 +42,8 @@ export function useSearch(
       if (debounceRef.current) clearTimeout(debounceRef.current)
       abortRef.current?.abort()
     }
-  }, [q, difficulty, tags, tagMatch, page]) // eslint-disable-line react-hooks/exhaustive-deps
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- tags.join(',') replaces array ref; others are primitives; onSearchStateChange is a stable useState setter
+  }, [q, difficulty, tags.join(','), tagMatch, page])
 
   return { loading, error }
 }
