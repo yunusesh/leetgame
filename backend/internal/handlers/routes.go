@@ -52,6 +52,7 @@ func (hs *HandlerService) RegisterRoutes(app *fiber.App) {
 		api.Route("/proficiency", func(proficiency fiber.Router) {
 			proficiency.Use(middleware.RequireAuth(hs.keyfunc))
 			proficiency.Get("/", hs.GetProficiency)
+			proficiency.Get("/history", hs.GetProficiencyHistory)
 		})
 	})
 }
