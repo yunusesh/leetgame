@@ -126,7 +126,7 @@ export function SearchPage({ onSelectProblem }: { onSelectProblem: (p: Problem, 
   const showingTo = Math.min(page * pageSize, total)
 
   return (
-    <div className="max-w-2xl mx-auto px-6 py-8">
+    <div className="flex-1 overflow-y-auto"><div className="max-w-2xl mx-auto px-6 py-8">
       <h2 className="text-xl font-semibold mb-6">Search Problems</h2>
 
       <Input
@@ -300,6 +300,6 @@ export function SearchPage({ onSelectProblem }: { onSelectProblem: (p: Problem, 
           </Button>
         </div>
       )}
-    </div>
+    </div></div>
   )
 }
