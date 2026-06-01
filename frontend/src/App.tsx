@@ -329,7 +329,10 @@ export default function App() {
     setError(null)
     setStreamingMessage('')
 
-    const userMsg: ChatMessage = { role: 'user', content: message }
+    const markedContent = hintRequested ? `[USER REQUESTED HINT]\n${message}`
+      : answerRequested ? `[USER REQUESTED ANSWER]\n${message}`
+      : message
+    const userMsg: ChatMessage = { role: 'user', content: markedContent }
     const nextHistory = [...history, userMsg]
     setHistory(nextHistory)
 
