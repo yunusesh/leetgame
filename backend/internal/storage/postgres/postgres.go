@@ -51,3 +51,7 @@ func New(cfg *Config) *Postgres {
 func (p *Postgres) Ping(ctx context.Context) error {
 	return p.Pool.Ping(ctx)
 }
+
+func (p *Postgres) Close() {
+	p.Pool.Close()
+}

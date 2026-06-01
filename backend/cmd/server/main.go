@@ -89,5 +89,6 @@ func main() {
 		slog.Error("failed to shutdown server", slog.String("error", err.Error()))
 	}
 
+	pg.Close()
 	slog.Info("server shutdown")
 }

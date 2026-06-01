@@ -1,15 +1,22 @@
-# leetgame mission
+# leetgame — mission
 
-leetgame is a LeetCode pattern-recognition practice tool for verbal-only practice — no code writing, just talking through approaches.
+## What this is
 
-## why
+A verbal pattern recognition drill for people preparing for coding interviews. Users explain their thinking out loud instead of writing code — the LLM evaluates whether they understand the pattern, algorithm, and complexity.
 
-1. **Pattern recognition** — train yourself to identify which algorithm pattern applies, without needing to implement it
-2. **Articulation** — force yourself to explain your thinking in plain language; writing code is a crutch that lets you avoid fully articulating your approach. Verbal explanation cements understanding and is better interview prep.
-3. **Accessibility** — practice anywhere, especially on mobile, without a full coding session
+## Core value
 
-## what it is not
+**LeetCode tests whether you can implement. This tests whether you understand.**
 
-- A coding environment
-- A replacement for actually solving problems
-- Something that requires you to sit down at a desk
+Coding up a full solution takes 30-45 minutes. A verbal explanation takes 3-5. That 10x speed difference means more reps per session, and more reps means:
+
+1. **Better recall** — you've seen more problems, so you may recognize one in an interview
+2. **Better pattern transfer** — exposure to more problems builds intuition for the underlying shapes
+
+## Who this is for
+
+People who have already done LeetCode problems and want to drill recall and articulation before an interview. Not a replacement for LeetCode — a complement to it.
+
+## What makes it work
+
+Forced articulation is the mechanic. Most people can recognize a solution when they see it. Fewer can explain *why* sliding window applies, *why* the complexity is O(n), *why* this greedy approach is correct. That gap is what interviews probe — and what this drills.

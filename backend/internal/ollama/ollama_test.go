@@ -98,7 +98,7 @@ func TestEvaluate_nil_onToken_does_not_panic(t *testing.T) {
 	client := ollama.New(srv.URL, "test-model", "")
 	problem := models.Problem{Id: uuid.New(), Title: "Two Sum", Description: "find two numbers"}
 
-	result, err := client.Evaluate(context.Background(), problem, "complexity", []string{"pattern", "algorithm", "tc_sc"}, nil, "O(n) time", nil)
+	result, err := client.Evaluate(context.Background(), problem, "complexity", []string{"pattern", "algorithm", "tc_sc", "complexity"}, nil, "O(n) time", nil)
 
 	require.NoError(t, err)
 	assert.Equal(t, "Good", result.Message)
