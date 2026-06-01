@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
-import type { Problem, ProblemTag } from '../types'
+import type { Problem, ProblemTag, SearchState } from '../types'
 import { getProblemTags, searchProblems } from '../api'
 import { cn } from '../lib/utils'
 import { Button } from './ui/button'
@@ -39,23 +39,33 @@ export interface SearchSelectionContext {
   selectedIndex: number
 }
 
-export function SearchPage({ onSelectProblem }: { onSelectProblem: (p: Problem, context: SearchSelectionContext) => void }) {
-  const [q, setQ] = useState('')
-  const [difficulty, setDifficulty] = useState('')
+interface Props {
+  onSelectProblem: (p: Problem, context: SearchSelectionContext) => void
+  searchState: SearchState
+  onSearchStateChange: (s: SearchState) => void
+}
+
+export function SearchPage({ onSelectProblem, searchState, onSearchStateChange }: Props) {
   const [tagQuery, setTagQuery] = useState('')
   const [availableTags, setAvailableTags] = useState<ProblemTag[]>([])
-  const [tags, setTags] = useState<string[]>([])
-  const [tagMatch, setTagMatch] = useState<'and' | 'or'>('and')
-  const [results, setResults] = useState<Problem[]>([])
-  const [page, setPage] = useState(1)
-  const [total, setTotal] = useState(0)
   const [loading, setLoading] = useState(false)
   const [tagsLoading, setTagsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [tagsError, setTagsError] = useState<string | null>(null)
-  const [hasSearched, setHasSearched] = useState(false)
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const abortRef = useRef<AbortController | null>(null)
+
+  const { q, difficulty, tags, tagMatch, results, page, total, hasSearched } = searchState
+
+  // Use a ref to access current searchState inside effects without stale closure
+  const searchStateRef = useRef(searchState)
+  searchStateRef.current = searchState
+
+  const setQ = (v: string) => onSearchStateChange({ ...searchState, q: v, page: 1 })
+  const setDifficulty = (v: string) => onSearchStateChange({ ...searchState, difficulty: v, page: 1 })
+  const setTags = (v: string[]) => onSearchStateChange({ ...searchState, tags: v, page: 1 })
+  const setTagMatch = (v: 'and' | 'or') => onSearchStateChange({ ...searchState, tagMatch: v, page: 1 })
+  const setPage = (fn: (p: number) => number) => onSearchStateChange({ ...searchState, page: fn(searchState.page) })
 
   useEffect(() => {
     const controller = new AbortController()
@@ -89,10 +99,9 @@ export function SearchPage({ onSelectProblem }: { onSelectProblem: (p: Problem, 
       setLoading(true)
       setError(null)
       try {
-        const res = await searchProblems(q, difficulty, tags, tagMatch, page, pageSize, controller.signal)
-        setResults(res.problems)
-        setTotal(res.total)
-        setHasSearched(true)
+        const { q: sq, difficulty: sd, tags: st, tagMatch: sm, page: sp } = searchStateRef.current
+        const res = await searchProblems(sq, sd, st, sm, sp, pageSize, controller.signal)
+        onSearchStateChange({ ...searchStateRef.current, results: res.problems, total: res.total, hasSearched: true })
       } catch (err) {
         if (err instanceof Error && err.name !== 'AbortError') {
           setError('Search failed. Is the backend running?')
@@ -105,11 +114,7 @@ export function SearchPage({ onSelectProblem }: { onSelectProblem: (p: Problem, 
       if (debounceRef.current) clearTimeout(debounceRef.current)
       abortRef.current?.abort()
     }
-  }, [q, difficulty, tags, tagMatch, page])
-
-  useEffect(() => {
-    setPage(1)
-  }, [q, difficulty, tags, tagMatch])
+  }, [q, difficulty, tags, tagMatch, page]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const addTag = (tag: string) => {
     if (!tags.includes(tag)) setTags([...tags, tag])

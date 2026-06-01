@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef } from 'react'
-import type { Problem, ChatMessage, Stage, ActiveStage } from './types'
-import { DEFAULT_STAGES } from './types'
+import type { Problem, ChatMessage, Stage, ActiveStage, SearchState } from './types'
+import { DEFAULT_STAGES, defaultSearchState } from './types'
 import { getRandomProblem, getRandomProblemFiltered, searchProblems, streamChat, getStreak, recordStreak, getSettings, updateSettings } from './api'
 import { NavBar } from './components/NavBar'
 import { ProblemView } from './components/ProblemView'
@@ -114,6 +114,7 @@ export default function App() {
   const [settingsReady, setSettingsReady] = useState(false)
   const [hideTitle, setHideTitle] = useState(true)
   const [sessionStack, setSessionStack] = useState<PracticeSnapshot[]>([])
+  const [searchState, setSearchState] = useState<SearchState>(defaultSearchState)
   const playlistEntryDepthRef = useRef<number>(0)
   const streamAbortRef = useRef<AbortController | null>(null)
 
@@ -473,7 +474,11 @@ export default function App() {
         onHideTitleChange={handleHideTitleChange}
       />
       {view === 'search'
-        ? <SearchPage onSelectProblem={selectProblem} />
+        ? <SearchPage
+            onSelectProblem={selectProblem}
+            searchState={searchState}
+            onSearchStateChange={setSearchState}
+          />
         : practiceView()
       }
     </div>

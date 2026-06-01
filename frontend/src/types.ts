@@ -40,3 +40,25 @@ export interface ChatResponse {
   message: string
   stage: Stage
 }
+
+export interface SearchState {
+  q: string
+  difficulty: string
+  tags: string[]
+  tagMatch: 'and' | 'or'
+  results: Problem[]
+  page: number
+  total: number
+  hasSearched: boolean
+}
+
+export const defaultSearchState: SearchState = {
+  q: '',
+  difficulty: '',
+  tags: [],
+  tagMatch: 'and',
+  results: [],
+  page: 1,
+  total: 0,
+  hasSearched: false,
+}
