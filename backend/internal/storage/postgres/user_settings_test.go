@@ -11,8 +11,8 @@ func TestNeetcodeDefault(t *testing.T) {
 	}
 	// Spot-check a few expected topics
 	topicSet := make(map[string]bool, len(defaultActiveTopics))
-	for _, t := range defaultActiveTopics {
-		topicSet[t] = true
+	for _, topic := range defaultActiveTopics {
+		topicSet[topic] = true
 	}
 	required := []string{"Array", "Dynamic Programming", "Graph", "Binary Search"}
 	for _, r := range required {
