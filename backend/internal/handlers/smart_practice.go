@@ -82,7 +82,7 @@ func (hs *HandlerService) GetSmartPracticeProblem(c *fiber.Ctx) error {
 		return xerrors.BadRequestError("active_stages is required")
 	}
 	var activeStages []string
-	for _, s := range strings.Split(stagesParam, ",") {
+	for s := range strings.SplitSeq(stagesParam, ",") {
 		if t := strings.TrimSpace(s); t != "" {
 			activeStages = append(activeStages, t)
 		}
