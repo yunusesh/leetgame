@@ -3,6 +3,7 @@ package processcache
 import (
 	"context"
 	"math/rand"
+	"slices"
 	"sort"
 	"strings"
 	"sync"
@@ -98,23 +99,14 @@ func matchesProblem(p models.Problem, q, difficulty string, tags []string, tagMa
 	switch tagMatch {
 	case "or":
 		for _, tag := range tags {
-			for _, pt := range p.TopicTags {
-				if pt == tag {
-					return true
-				}
+			if slices.Contains(p.TopicTags, tag) {
+				return true
 			}
 		}
 		return false
 	default: // "and"
 		for _, tag := range tags {
-			found := false
-			for _, pt := range p.TopicTags {
-				if pt == tag {
-					found = true
-					break
-				}
-			}
-			if !found {
+			if !slices.Contains(p.TopicTags, tag) {
 				return false
 			}
 		}
