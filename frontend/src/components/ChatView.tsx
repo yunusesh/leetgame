@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react'
 import type { ChatMessage, Stage, ActiveStage } from '../types'
 import { cn } from '../lib/utils'
 import { Button } from './ui/button'
+import { Textarea } from './ui/textarea'
 
 const stageBannerBase: Record<ActiveStage, string> = {
   edge_cases:  'What edge cases does this problem have?',
@@ -151,14 +152,14 @@ export function ChatView({ history, stage, sessionActiveStages, loading, error, 
           className="p-4 border-t border-border flex gap-2"
         >
           <div className="flex-1 flex flex-col gap-1">
-            <textarea
+            <Textarea
               ref={textareaRef}
               value={input}
               onChange={e => setInput(e.target.value)}
               onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSubmit() } }}
               placeholder={stagePlaceholder[stage as ActiveStage] ?? 'Describe your approach…'}
               rows={3}
-              className="w-full resize-none px-3 py-2.5 rounded-lg border border-border text-sm font-sans focus:outline-none focus:ring-2 focus:ring-primary/50"
+              className="resize-none font-sans"
             />
             {queue.length > 0 && (
               <div className="flex flex-col gap-1 px-1">

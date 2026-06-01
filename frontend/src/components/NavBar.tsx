@@ -1,8 +1,8 @@
-import { useState } from 'react'
 import type { Session } from '@supabase/supabase-js'
 import type { ActiveStage } from '../types'
 import { supabase } from '../lib/supabase'
 import { Button } from './ui/button'
+import { Popover, PopoverTrigger, PopoverContent } from './ui/popover'
 import { StagesSettings } from './StagesSettings'
 
 type View = 'practice' | 'search'
@@ -20,8 +20,6 @@ interface Props {
 }
 
 export function NavBar({ view, onNavigate, session, authLoading, streak, activeStages, onStagesChange, hideTitle, onHideTitleChange }: Props) {
-  const [settingsOpen, setSettingsOpen] = useState(false)
-
   const handleSignIn = async () => {
     await supabase.auth.signInWithOAuth({
       provider: 'google',
@@ -48,24 +46,24 @@ export function NavBar({ view, onNavigate, session, authLoading, streak, activeS
 
       <div className="ml-auto flex items-center gap-2">
         {!authLoading && (
-          <div className="relative">
-            <button
-              onClick={() => setSettingsOpen(o => !o)}
-              className="text-muted-foreground hover:text-foreground transition-colors text-2xl leading-none px-1"
-              title="Practice stages"
-            >
-              ⚙
-            </button>
-            {settingsOpen && (
+          <Popover>
+            <PopoverTrigger asChild>
+              <button
+                className="text-muted-foreground hover:text-foreground transition-colors text-2xl leading-none px-1"
+                title="Practice stages"
+              >
+                ⚙
+              </button>
+            </PopoverTrigger>
+            <PopoverContent className="p-0 w-72">
               <StagesSettings
                 activeStages={activeStages}
-                onChange={stages => { onStagesChange(stages) }}
-                onClose={() => setSettingsOpen(false)}
+                onChange={onStagesChange}
                 hideTitle={hideTitle}
                 onHideTitleChange={onHideTitleChange}
               />
-            )}
-          </div>
+            </PopoverContent>
+          </Popover>
         )}
         {authLoading ? null : session ? (
           <>
