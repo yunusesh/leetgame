@@ -45,6 +45,8 @@ export function StatsPage({
     return () => controller.abort()
   }, [])
 
+  const activeSet = new Set(activeTopics)
+
   const toggleTopic = (name: string) => {
     const next = activeTopics.includes(name)
       ? activeTopics.filter(t => t !== name)
@@ -64,7 +66,7 @@ export function StatsPage({
       {topicPickerOpen && (
         <div className="mt-3 flex flex-wrap gap-2">
           {allTags.map(tag => {
-            const active = activeTopics.includes(tag.name)
+            const active = activeSet.has(tag.name)
             const isLast = active && activeTopics.length === 1
             return (
               <button
@@ -110,7 +112,6 @@ export function StatsPage({
   }
 
   // Filter proficiencies to active topics only
-  const activeSet = new Set(activeTopics)
   const filtered = proficiencies.filter(p => activeSet.has(p.topic))
 
   if (filtered.length === 0) {
