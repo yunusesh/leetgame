@@ -137,7 +137,7 @@ func (hs *HandlerService) runSessionEvaluation(userID uuid.UUID, problem models.
 			)
 			continue
 		}
-		if err := hs.storage.UpsertTopicProficiency(ctx, userID, score.Topic, score.Stage, score.Score, dp.scale, dp.floor); err != nil {
+		if err := hs.storage.UpsertTopicProficiency(ctx, userID, problem.Id, score.Topic, score.Stage, score.Score, dp.scale, dp.floor); err != nil {
 			hs.logger.Error("failed to upsert topic proficiency",
 				"error", err,
 				"topic", score.Topic,
