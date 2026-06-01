@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef } from 'react'
-import type { Problem, ChatMessage, Stage, ActiveStage, SearchState } from './types'
+import type { Problem, ChatMessage, Stage, ActiveStage, SearchState, View } from './types'
 import { defaultSearchState } from './types'
 import { getRandomProblem, getRandomProblemFiltered, searchProblems, streamChat, getSmartPracticeProblem } from './api'
 import { useAuth } from './hooks/useAuth'
@@ -11,8 +11,8 @@ import { ProblemView } from './components/ProblemView'
 import { ChatView } from './components/ChatView'
 import { EndOfSetView } from './components/EndOfSetView'
 import { SearchPage, type SearchSelectionContext } from './components/SearchPage'
+import { StatsPage } from './components/StatsPage'
 
-type View = 'practice' | 'search'
 type ProblemSource = 'random' | 'search'
 
 interface PracticeSnapshot {
@@ -260,6 +260,10 @@ export default function App() {
     }
   }, [activeStages])
 
+  useEffect(() => {
+    if (!session && view === 'stats') setView('practice')
+  }, [session, view])
+
   useEffect(() => () => {
     streamAbortRef.current?.abort()
   }, [problem])
@@ -446,6 +450,8 @@ export default function App() {
             onToggleSave={(p) => isSaved(p.id) ? void unsave(p.id) : void save(p)}
             showSave={!!session}
           />
+        : view === 'stats'
+        ? <StatsPage />
         : practiceView()
       }
     </div>

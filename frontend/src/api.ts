@@ -1,4 +1,4 @@
-import type { Problem, ChatMessage, Stage, ActiveStage, ProblemSearchResponse, ProblemTag } from './types'
+import type { Problem, ChatMessage, Stage, ActiveStage, ProblemSearchResponse, ProblemTag, TopicProficiency } from './types'
 import { supabase } from './lib/supabase'
 
 const API_URL = import.meta.env.VITE_API_URL ?? ''
@@ -182,4 +182,13 @@ export async function unsaveProblem(problemId: string): Promise<void> {
     headers: await authHeaders(),
   })
   if (!res.ok) throw new Error(`Failed to unsave problem: ${res.status}`)
+}
+
+export async function getProficiency(signal?: AbortSignal): Promise<TopicProficiency[]> {
+  const res = await fetch(`${API_URL}/api/proficiency`, {
+    headers: await authHeaders(),
+    signal,
+  })
+  if (!res.ok) throw new Error(`Failed to fetch proficiency: ${res.status}`)
+  return res.json()
 }

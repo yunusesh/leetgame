@@ -1,11 +1,9 @@
 import type { Session } from '@supabase/supabase-js'
-import type { ActiveStage } from '../types'
+import type { ActiveStage, View } from '../types'
 import { supabase } from '../lib/supabase'
 import { Button } from './ui/button'
 import { Popover, PopoverTrigger, PopoverContent } from './ui/popover'
 import { StagesSettings } from './StagesSettings'
-
-type View = 'practice' | 'search'
 
 interface Props {
   view: View
@@ -33,7 +31,7 @@ export function NavBar({ view, onNavigate, session, authLoading, streak, activeS
 
   return (
     <div className="flex items-center gap-1 px-4 py-2 border-b border-border bg-background shrink-0">
-      {(['practice', 'search'] as View[]).map(v => (
+      {(['practice', 'search'] as const).map(v => (
         <Button
           key={v}
           variant={view === v ? 'secondary' : 'ghost'}
@@ -43,6 +41,15 @@ export function NavBar({ view, onNavigate, session, authLoading, streak, activeS
           {v.charAt(0).toUpperCase() + v.slice(1)}
         </Button>
       ))}
+      {session && (
+        <Button
+          variant={view === 'stats' ? 'secondary' : 'ghost'}
+          size="sm"
+          onClick={() => onNavigate('stats')}
+        >
+          Stats
+        </Button>
+      )}
 
       <div className="ml-auto flex items-center gap-2">
         {!authLoading && (

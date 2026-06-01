@@ -36,6 +36,16 @@ export const CANONICAL_STAGES: ActiveStage[] = [
 
 export const DEFAULT_STAGES: ActiveStage[] = ['pattern', 'algorithm', 'tc_sc']
 
+export type View = 'practice' | 'search' | 'stats'
+
+export interface TopicProficiency {
+  user_id: string
+  topic: string
+  stage: string
+  score: number
+  updated_at: string
+}
+
 export interface ChatResponse {
   message: string
   stage: Stage
