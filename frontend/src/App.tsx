@@ -4,6 +4,7 @@ import { defaultSearchState } from './types'
 import { getRandomProblem, getRandomProblemFiltered, searchProblems, streamChat } from './api'
 import { useAuth } from './hooks/useAuth'
 import { useSearch } from './hooks/useSearch'
+import { useTags } from './hooks/useTags'
 import { NavBar } from './components/NavBar'
 import { ProblemView } from './components/ProblemView'
 import { ChatView } from './components/ChatView'
@@ -64,7 +65,8 @@ export default function App() {
   const [stageBannerDismissed, setStageBannerDismissed] = useState(false)
   const [sessionStack, setSessionStack] = useState<PracticeSnapshot[]>([])
   const [searchState, setSearchState] = useState<SearchState>(defaultSearchState)
-  const { loading: searchLoading, error: searchError, availableTags, tagsLoading, tagsError } = useSearch(searchState, setSearchState)
+  const { loading: searchLoading, error: searchError } = useSearch(searchState, setSearchState)
+  const { availableTags, tagsLoading, tagsError } = useTags()
   const playlistEntryDepthRef = useRef<number>(0)
   const streamAbortRef = useRef<AbortController | null>(null)
 
