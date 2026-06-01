@@ -49,7 +49,13 @@ func (hs *HandlerService) Chat(c *fiber.Ctx) error {
 	// baseHistory = prior turns + user's current message; assistant reply appended after streaming
 	baseHistory := make([]llm.ChatMessage, 0, len(history)+1)
 	baseHistory = append(baseHistory, history...)
-	baseHistory = append(baseHistory, llm.ChatMessage{Role: "user", Content: req.Message})
+	userContent := req.Message
+	if req.HintRequested {
+		userContent = "[USER REQUESTED HINT]\n" + userContent
+	} else if req.AnswerRequested {
+		userContent = "[USER REQUESTED ANSWER]\n" + userContent
+	}
+	baseHistory = append(baseHistory, llm.ChatMessage{Role: "user", Content: userContent})
 
 	c.Set("Content-Type", "text/event-stream")
 	c.Set("Cache-Control", "no-cache")
