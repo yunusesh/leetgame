@@ -205,7 +205,7 @@ export function StatsPage({
         <div className="flex flex-col gap-4">
           {topics.map(({ topic, rows }) => {
             const isExpanded = expandedTopic === topic
-            const chartData = buildChartData(history, topic)
+            const chartData = isExpanded ? buildChartData(history, topic) : []
             return (
               <div key={topic} className="rounded-md border border-border bg-muted p-4">
                 <div className="flex items-center justify-between mb-3">
