@@ -32,7 +32,7 @@ export const problemSearchPageSize = pageSize
 function SearchResultSkeleton() {
   return (
     <div className="p-4 rounded-md border border-border bg-muted mb-2">
-      <div className="flex items-center gap-2.5 mb-3">
+      <div className="flex items-center gap-2.5 mb-1.5">
         <Skeleton className="h-3.5 w-8 rounded-sm" />
         <Skeleton className="h-3.5 w-48 rounded-sm" />
         <Skeleton className="h-3.5 w-12 rounded-sm" />
@@ -147,6 +147,14 @@ export function SearchPage({ onSelectProblem, searchState, onSearchStateChange }
   const totalPages = Math.max(1, Math.ceil(total / pageSize))
   const showingFrom = total === 0 ? 0 : (page - 1) * pageSize + 1
   const showingTo = Math.min(page * pageSize, total)
+
+  const skeletonList = (
+    <div>
+      {Array.from({ length: 8 }).map((_, i) => (
+        <SearchResultSkeleton key={i} />
+      ))}
+    </div>
+  )
 
   return (
     <div className="flex-1 overflow-y-auto"><div className="max-w-2xl mx-auto px-6 py-8">
@@ -264,23 +272,11 @@ export function SearchPage({ onSelectProblem, searchState, onSearchStateChange }
           <p>Page {page} of {totalPages}</p>
         </div>
       )}
-      {loading && !hasSearched && (
-        <div>
-          {Array.from({ length: 8 }).map((_, i) => (
-            <SearchResultSkeleton key={i} />
-          ))}
-        </div>
-      )}
+      {loading && !hasSearched && skeletonList}
       {!loading && !error && hasSearched && results.length === 0 && (
         <p className="text-sm text-muted-foreground">No problems found.</p>
       )}
-      {!error && loading && hasSearched && (
-        <div>
-          {Array.from({ length: 8 }).map((_, i) => (
-            <SearchResultSkeleton key={i} />
-          ))}
-        </div>
-      )}
+      {!error && loading && hasSearched && skeletonList}
       {!error && !loading && results.map(p => (
         <div
           key={p.id}
