@@ -1,15 +1,14 @@
 import { useEffect, useState, useRef } from 'react'
 import type { Problem, ChatMessage, Stage, ActiveStage, SearchState } from './types'
-import { DEFAULT_STAGES, defaultSearchState } from './types'
-import { getRandomProblem, getRandomProblemFiltered, searchProblems, streamChat, getStreak, recordStreak, getSettings, updateSettings } from './api'
+import { defaultSearchState } from './types'
+import { getRandomProblem, getRandomProblemFiltered, searchProblems, streamChat } from './api'
+import { useAuth } from './hooks/useAuth'
 import { useSearch } from './hooks/useSearch'
 import { NavBar } from './components/NavBar'
 import { ProblemView } from './components/ProblemView'
 import { ChatView } from './components/ChatView'
 import { EndOfSetView } from './components/EndOfSetView'
 import { SearchPage, type SearchSelectionContext } from './components/SearchPage'
-import type { Session } from '@supabase/supabase-js'
-import { supabase } from './lib/supabase'
 
 type View = 'practice' | 'search'
 type ProblemSource = 'random' | 'search'
@@ -49,54 +48,7 @@ function getPlaylistSummary(searchPlaylist: SearchPlaylist | null) {
 }
 
 export default function App() {
-  const [session, setSession] = useState<Session | null>(null)
-  const [authLoading, setAuthLoading] = useState(true)
-
-  useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      setSession(session)
-      setAuthLoading(false)
-      if (event === 'SIGNED_IN' || event === 'INITIAL_SESSION') {
-        if (session) {
-          getStreak().then(({ streak }) => setStreak(streak)).catch(() => {})
-          getSettings()
-            .then(({ active_stages, hide_title }) => {
-              setActiveStages(active_stages)
-              setSessionActiveStages(active_stages)
-              setHideTitle(hide_title)
-            })
-            .catch(() => {})
-            .finally(() => setSettingsReady(true))
-        } else {
-          setStreak(null)
-          const stored = localStorage.getItem('leetgame_active_stages')
-          let stages = DEFAULT_STAGES
-          if (stored) {
-            try { stages = JSON.parse(stored) as ActiveStage[] } catch { /* use default */ }
-          }
-          const storedHideTitle = localStorage.getItem('leetgame_hide_title')
-          setActiveStages(stages)
-          setSessionActiveStages(stages)
-          setHideTitle(storedHideTitle === null ? true : storedHideTitle === 'true')
-          setSettingsReady(true)
-        }
-      } else if (event === 'SIGNED_OUT') {
-        setStreak(null)
-        const stored = localStorage.getItem('leetgame_active_stages')
-        let stages = DEFAULT_STAGES
-        if (stored) {
-          try { stages = JSON.parse(stored) as ActiveStage[] } catch { /* use default */ }
-        }
-        const storedHideTitle = localStorage.getItem('leetgame_hide_title')
-        setActiveStages(stages)
-        setSessionActiveStages(stages)
-        setHideTitle(storedHideTitle === null ? true : storedHideTitle === 'true')
-        setSettingsReady(true)
-      }
-    })
-
-    return () => subscription.unsubscribe()
-  }, [])
+  const { session, authLoading, streak, activeStages, hideTitle, settingsReady, persistStages, persistHideTitle, recordAndUpdateStreak } = useAuth()
 
   const [view, setView] = useState<View>('practice')
   const [problem, setProblem] = useState<Problem | null>(null)
@@ -108,12 +60,8 @@ export default function App() {
   const [error, setError] = useState<string | null>(null)
   const [playlistExhausted, setPlaylistExhausted] = useState(false)
   const [streamingMessage, setStreamingMessage] = useState('')
-  const [streak, setStreak] = useState<number | null>(null)
-  const [activeStages, setActiveStages] = useState<ActiveStage[]>(DEFAULT_STAGES)
-  const [sessionActiveStages, setSessionActiveStages] = useState<ActiveStage[]>(DEFAULT_STAGES)
+  const [sessionActiveStages, setSessionActiveStages] = useState<ActiveStage[]>(activeStages)
   const [stageBannerDismissed, setStageBannerDismissed] = useState(false)
-  const [settingsReady, setSettingsReady] = useState(false)
-  const [hideTitle, setHideTitle] = useState(true)
   const [sessionStack, setSessionStack] = useState<PracticeSnapshot[]>([])
   const [searchState, setSearchState] = useState<SearchState>(defaultSearchState)
   const { loading: searchLoading, error: searchError, availableTags, tagsLoading, tagsError } = useSearch(searchState, setSearchState)
@@ -148,26 +96,12 @@ export default function App() {
   }
 
   const handleStagesChange = (stages: ActiveStage[]) => {
-    setActiveStages(stages)
+    persistStages(stages)
     setStageBannerDismissed(false)
-    if (session) {
-      updateSettings(stages, hideTitle).catch(() => {})
-    } else {
-      try {
-        localStorage.setItem('leetgame_active_stages', JSON.stringify(stages))
-      } catch { /* ignore */ }
-    }
   }
 
   const handleHideTitleChange = (value: boolean) => {
-    setHideTitle(value)
-    if (session) {
-      updateSettings(activeStages, value).catch(() => {})
-    } else {
-      try {
-        localStorage.setItem('leetgame_hide_title', String(value))
-      } catch { /* ignore */ }
-    }
+    persistHideTitle(value)
   }
 
   const loadRandomProblem = async () => {
@@ -372,7 +306,7 @@ export default function App() {
           setStage(event.stage)
           setStreamingMessage('')
           if (event.stage === 'complete' && session) {
-            recordStreak().then(({ streak }) => setStreak(streak)).catch(() => {})
+            recordAndUpdateStreak()
           }
         }
       }
