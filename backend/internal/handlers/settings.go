@@ -22,8 +22,13 @@ func (hs *HandlerService) GetSettings(c *fiber.Ctx) error {
 	type response struct {
 		ActiveStages []string `json:"active_stages"`
 		HideTitle    bool     `json:"hide_title"`
+		ActiveTopics []string `json:"active_topics"`
 	}
-	return c.JSON(response{ActiveStages: settings.ActiveStages, HideTitle: settings.HideTitle})
+	return c.JSON(response{
+		ActiveStages: settings.ActiveStages,
+		HideTitle:    settings.HideTitle,
+		ActiveTopics: settings.ActiveTopics,
+	})
 }
 
 func (hs *HandlerService) UpdateSettings(c *fiber.Ctx) error {
@@ -35,6 +40,7 @@ func (hs *HandlerService) UpdateSettings(c *fiber.Ctx) error {
 	type request struct {
 		ActiveStages []string `json:"active_stages"`
 		HideTitle    bool     `json:"hide_title"`
+		ActiveTopics []string `json:"active_topics"`
 	}
 	var req request
 	if err := c.BodyParser(&req); err != nil {
@@ -44,8 +50,13 @@ func (hs *HandlerService) UpdateSettings(c *fiber.Ctx) error {
 	if errs := validateActiveStages(req.ActiveStages); len(errs) > 0 {
 		return xerrors.UnprocessableEntityError(errs)
 	}
+	if len(req.ActiveTopics) == 0 {
+		return xerrors.UnprocessableEntityError(map[string]string{
+			"active_topics": "must contain at least one topic",
+		})
+	}
 
-	if err := hs.storage.UpsertUserSettings(c.Context(), uid, req.ActiveStages, req.HideTitle); err != nil {
+	if err := hs.storage.UpsertUserSettings(c.Context(), uid, req.ActiveStages, req.HideTitle, req.ActiveTopics); err != nil {
 		return err
 	}
 
