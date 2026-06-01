@@ -1,5 +1,0 @@
-- generic [ref=e3]:
-  - generic [ref=e4]:
-    - button "Practice" [ref=e5]
-    - button "Search" [ref=e6]
-  - generic [ref=e7]: Loading problem...

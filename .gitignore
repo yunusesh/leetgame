@@ -8,3 +8,6 @@ backend/internal/static/
 # supabase
 supabase/.branches/
 supabase/.temp/
+
+# playwright mcp artifacts
+.playwright-mcp/
