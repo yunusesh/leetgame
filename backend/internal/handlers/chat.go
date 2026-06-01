@@ -44,7 +44,8 @@ func (hs *HandlerService) Chat(c *fiber.Ctx) error {
 	evalUID, _ := xcontext.GetUserID(c)
 	evalEnabled := hs.evaluator != nil && evalUID != uuid.Nil
 	evalProblem := problem
-	evalActiveStages := req.ActiveStages
+	evalProblem.TopicTags = append([]string(nil), problem.TopicTags...)
+	evalActiveStages := append([]string(nil), req.ActiveStages...)
 	// baseHistory = prior turns + user's current message; assistant reply appended after streaming
 	baseHistory := make([]llm.ChatMessage, 0, len(history)+1)
 	baseHistory = append(baseHistory, history...)
@@ -82,7 +83,7 @@ func (hs *HandlerService) Chat(c *fiber.Ctx) error {
 		w.Flush()                                          //nolint:errcheck
 
 		if evalEnabled && result.Stage == "complete" {
-			fullHistory := append(baseHistory, llm.ChatMessage{Role: "assistant", Content: result.Message})
+			fullHistory := append(baseHistory[:len(baseHistory):len(baseHistory)], llm.ChatMessage{Role: "assistant", Content: result.Message})
 			go hs.runSessionEvaluation(evalUID, evalProblem, evalActiveStages, fullHistory)
 		}
 	})
