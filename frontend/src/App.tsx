@@ -116,7 +116,7 @@ export default function App() {
   const [hideTitle, setHideTitle] = useState(true)
   const [sessionStack, setSessionStack] = useState<PracticeSnapshot[]>([])
   const [searchState, setSearchState] = useState<SearchState>(defaultSearchState)
-  const { loading: searchLoading, error: searchError } = useSearch(searchState, setSearchState)
+  const { loading: searchLoading, error: searchError, availableTags, tagsLoading, tagsError } = useSearch(searchState, setSearchState)
   const playlistEntryDepthRef = useRef<number>(0)
   const streamAbortRef = useRef<AbortController | null>(null)
 
@@ -482,6 +482,9 @@ export default function App() {
             onSearchStateChange={setSearchState}
             loading={searchLoading}
             error={searchError}
+            availableTags={availableTags}
+            tagsLoading={tagsLoading}
+            tagsError={tagsError}
           />
         : practiceView()
       }

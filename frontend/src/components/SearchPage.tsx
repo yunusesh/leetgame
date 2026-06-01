@@ -1,6 +1,5 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState } from 'react'
 import type { Problem, ProblemTag, SearchState } from '../types'
-import { getProblemTags } from '../api'
 import { SEARCH_PAGE_SIZE } from '../hooks/useSearch'
 import { cn } from '../lib/utils'
 import { Button } from './ui/button'
@@ -62,13 +61,13 @@ interface Props {
   onSearchStateChange: (s: SearchState) => void
   loading: boolean
   error: string | null
+  availableTags: ProblemTag[]
+  tagsLoading: boolean
+  tagsError: string | null
 }
 
-export function SearchPage({ onSelectProblem, searchState, onSearchStateChange, loading, error }: Props) {
+export function SearchPage({ onSelectProblem, searchState, onSearchStateChange, loading, error, availableTags, tagsLoading, tagsError }: Props) {
   const [tagQuery, setTagQuery] = useState('')
-  const [availableTags, setAvailableTags] = useState<ProblemTag[]>([])
-  const [tagsLoading, setTagsLoading] = useState(true)
-  const [tagsError, setTagsError] = useState<string | null>(null)
 
   const { q, difficulty, tags, tagMatch, results, page, total, hasSearched } = searchState
 
@@ -77,29 +76,6 @@ export function SearchPage({ onSelectProblem, searchState, onSearchStateChange, 
   const setTags = (v: string[]) => onSearchStateChange({ ...searchState, tags: v, page: 1 })
   const setTagMatch = (v: 'and' | 'or') => onSearchStateChange({ ...searchState, tagMatch: v, page: 1 })
   const setPage = (v: number) => onSearchStateChange({ ...searchState, page: v })
-
-  useEffect(() => {
-    const controller = new AbortController()
-
-    async function loadTags() {
-      setTagsLoading(true)
-      setTagsError(null)
-      try {
-        const res = await getProblemTags(controller.signal)
-        setAvailableTags(res)
-      } catch (err) {
-        if (err instanceof Error && err.name !== 'AbortError') {
-          setTagsError('Failed to load tags.')
-        }
-      } finally {
-        if (!controller.signal.aborted) setTagsLoading(false)
-      }
-    }
-
-    void loadTags()
-
-    return () => controller.abort()
-  }, [])
 
   const addTag = (tag: string) => {
     if (!tags.includes(tag)) setTags([...tags, tag])
