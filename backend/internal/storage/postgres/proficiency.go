@@ -29,7 +29,8 @@ func (p *Postgres) GetTopicProficiencies(ctx context.Context, userID uuid.UUID) 
 	const q = `
 		SELECT user_id, topic, stage, score, updated_at
 		FROM topic_proficiency
-		WHERE user_id = $1`
+		WHERE user_id = $1
+		ORDER BY topic, stage`
 
 	return utils.Retry(ctx, func(ctx context.Context) ([]models.TopicProficiency, error) {
 		rows, err := p.Pool.Query(ctx, q, userID)

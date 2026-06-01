@@ -2,6 +2,7 @@ package postgres
 
 import "testing"
 
+// computeEMA mirrors the SQL formula in UpsertTopicProficiency: score + lr*(session-score)
 func computeEMA(current, sessionScore, learningRate float64) float64 {
 	return current + learningRate*(sessionScore-current)
 }
