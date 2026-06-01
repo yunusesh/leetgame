@@ -194,12 +194,16 @@ export async function getProficiency(signal?: AbortSignal): Promise<TopicProfici
   return res.json()
 }
 
+interface ProficiencyHistoryResponse {
+  history: ProficiencySnapshot[]
+}
+
 export async function getProficiencyHistory(signal?: AbortSignal): Promise<ProficiencySnapshot[]> {
   const res = await fetch(`${API_URL}/api/proficiency/history`, {
     headers: await authHeaders(),
     signal,
   })
   if (!res.ok) throw new Error(`Failed to fetch proficiency history: ${res.status}`)
-  const data = await res.json()
+  const data = await res.json() as ProficiencyHistoryResponse
   return data.history
 }
