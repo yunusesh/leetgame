@@ -115,7 +115,7 @@ export function ChatView({ history, stage, sessionActiveStages, loading, error, 
                 : "self-start bg-secondary text-secondary-foreground"
             )}
           >
-            {msg.content}
+            {msg.role === 'user' ? msg.content.replace(/^\[USER REQUESTED (?:HINT|ANSWER)\]\n/, '') : msg.content}
           </div>
         ))}
         {loading && !streamingMessage && (
