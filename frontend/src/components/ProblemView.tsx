@@ -28,6 +28,7 @@ export function ProblemView({
   isSaved = false,
   onToggleSave,
   onSmartPractice,
+  smartMode = false,
 }: {
   problem: Problem
   onSkip: () => void
@@ -35,6 +36,7 @@ export function ProblemView({
   onBack?: () => void
   onExitPlaylist?: () => void
   onSmartPractice?: () => void
+  smartMode?: boolean
   playlistSummary?: SearchPlaylistSummary | null
   hideTitle?: boolean
   isSaved?: boolean
@@ -90,7 +92,18 @@ export function ProblemView({
 
       {/* content: always visible on desktop, toggled on mobile */}
       <div className={cn("p-6", !problemOpen && "hidden md:block")}>
-        {playlistSummary ? (
+        {smartMode ? (
+          <div className="mb-4 rounded-md border border-border bg-muted px-3.5 py-2.5">
+            <div className="flex flex-wrap gap-1.5 items-center">
+              <span className="text-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground mr-1">
+                Smart Practice
+              </span>
+              <span className={cn("rounded-sm bg-background px-2 py-0.5 text-xs font-semibold", difficultyColor[problem.difficulty] ?? 'text-foreground')}>
+                {problem.difficulty}
+              </span>
+            </div>
+          </div>
+        ) : playlistSummary ? (
           <div className="mb-4 rounded-md border border-border bg-muted px-3.5 py-2.5">
             <div className="flex flex-wrap gap-1.5 items-center">
               <span className="text-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground mr-1">
@@ -191,7 +204,7 @@ export function ProblemView({
                       onClick={() => { onExitPlaylist(); setOverflowOpen(false) }}
                       className="w-full text-left px-3 py-2 text-sm text-destructive hover:bg-muted transition-colors"
                     >
-                      Exit playlist
+                      {smartMode ? 'Exit Smart Practice' : 'Exit playlist'}
                     </button>
                   )}
                 </div>

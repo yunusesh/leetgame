@@ -13,7 +13,7 @@ import { EndOfSetView } from './components/EndOfSetView'
 import { SearchPage, type SearchSelectionContext } from './components/SearchPage'
 import { StatsPage } from './components/StatsPage'
 
-type ProblemSource = 'random' | 'search'
+type ProblemSource = 'random' | 'search' | 'smart'
 
 interface PracticeSnapshot {
   problem: Problem
@@ -183,6 +183,10 @@ export default function App() {
       await loadNextSearchProblem()
       return
     }
+    if (problemSource === 'smart') {
+      await loadSmartPracticeProblem()
+      return
+    }
     await loadRandomProblem()
   }
 
@@ -218,7 +222,7 @@ export default function App() {
       setPlaylistExhausted(false)
       const p = await getSmartPracticeProblem(activeStages)
       setProblem(p)
-      setProblemSource('random')
+      setProblemSource('smart')
       setSearchPlaylist(null)
       resetPracticeState()
     } catch (e) {
@@ -360,6 +364,10 @@ export default function App() {
     const canGoBack = problemSource === 'search'
       ? sessionStack.length > playlistEntryDepthRef.current
       : sessionStack.length > 0
+    const exitSmartPractice = () => {
+      setSessionStack([])
+      void loadRandomProblem()
+    }
     const stagesChanged = !stageBannerDismissed &&
       stage !== 'complete' &&
       history.length > 0 &&
@@ -398,7 +406,8 @@ export default function App() {
           onSkip={() => void loadNextProblem()}
           onRandom={() => void loadRandomNextProblem()}
           onBack={canGoBack ? goBack : undefined}
-          onExitPlaylist={problemSource === 'search' ? exitPlaylist : undefined}
+          onExitPlaylist={problemSource === 'search' ? exitPlaylist : problemSource === 'smart' ? exitSmartPractice : undefined}
+          smartMode={problemSource === 'smart'}
           playlistSummary={problemSource === 'search' ? getPlaylistSummary(searchPlaylist) : null}
           hideTitle={hideTitle}
           isSaved={isSaved(problem.id)}
