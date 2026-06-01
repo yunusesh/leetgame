@@ -119,6 +119,9 @@ export function ProblemView({
               "transition-all duration-200 block",
               titleOpen ? "opacity-100 blur-0" : "opacity-0 blur-[5px]"
             )}>
+              {problem.leetcode_id != null && (
+                <span className="text-muted-foreground font-normal mr-1">#{problem.leetcode_id}</span>
+              )}
               {problem.title}
             </span>
             {!titleOpen && (

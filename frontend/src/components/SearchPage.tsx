@@ -269,6 +269,9 @@ export function SearchPage({ onSelectProblem }: { onSelectProblem: (p: Problem, 
           className="p-4 rounded-md border border-border bg-muted hover:bg-secondary cursor-pointer mb-2 transition-colors"
         >
           <div className="flex items-center gap-2.5 mb-1.5">
+            {p.leetcode_id != null && (
+              <span className="text-xs text-muted-foreground font-normal">#{p.leetcode_id}</span>
+            )}
             <span className="font-semibold text-sm">{p.title}</span>
             <span className={cn('text-xs font-semibold', difficultyTextClass[p.difficulty as Difficulty])}>
               {p.difficulty}

@@ -6,6 +6,7 @@ export interface Problem {
   description: string
   difficulty: 'Easy' | 'Medium' | 'Hard'
   topic_tags: string[]
+  leetcode_id: number | null
 }
 
 export interface ProblemSearchResponse {
