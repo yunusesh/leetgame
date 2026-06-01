@@ -36,6 +36,10 @@ export function ProblemView({
 }) {
   const [tagsOpen, setTagsOpen] = useState(false)
   const [titleOpen, setTitleOpen] = useState(!hideTitle)
+
+  useEffect(() => {
+    setTitleOpen(!hideTitle)
+  }, [hideTitle])
   const [problemOpen, setProblemOpen] = useState(true)
   const [overflowOpen, setOverflowOpen] = useState(false)
   const overflowRef = useRef<HTMLDivElement>(null)
