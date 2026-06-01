@@ -405,6 +405,7 @@ export default function App() {
         <ChatView
           history={history}
           stage={stage}
+          sessionActiveStages={sessionActiveStages}
           loading={loading}
           error={error}
           onSubmit={handleSubmit}

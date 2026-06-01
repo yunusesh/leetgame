@@ -3,12 +3,30 @@ import type { ChatMessage, Stage, ActiveStage } from '../types'
 import { cn } from '../lib/utils'
 import { Button } from './ui/button'
 
-const stageBanner: Record<ActiveStage, string> = {
+const stageBannerBase: Record<ActiveStage, string> = {
   edge_cases:  'What edge cases does this problem have?',
   brute_force: 'What is the brute force approach?',
   pattern:     'What pattern does this problem use?',
-  algorithm:   'Pattern ✓ — Now describe your algorithm',
-  tc_sc:       'Algorithm ✓ — Now describe the time and space complexity',
+  algorithm:   'Describe your algorithm',
+  tc_sc:       'Describe the time and space complexity',
+}
+
+const stagePrev: Partial<Record<ActiveStage, ActiveStage>> = {
+  algorithm: 'pattern',
+  tc_sc:     'algorithm',
+}
+
+const stageLabel: Partial<Record<ActiveStage, string>> = {
+  pattern:   'Pattern',
+  algorithm: 'Algorithm',
+}
+
+function getStageBanner(stage: ActiveStage, sessionActiveStages: ActiveStage[]): string {
+  const prev = stagePrev[stage]
+  if (prev && sessionActiveStages.includes(prev)) {
+    return `${stageLabel[prev]} ✓ — ${stageBannerBase[stage]}`
+  }
+  return stageBannerBase[stage]
 }
 
 const stagePlaceholder: Record<ActiveStage, string> = {
@@ -22,6 +40,7 @@ const stagePlaceholder: Record<ActiveStage, string> = {
 interface Props {
   history: ChatMessage[]
   stage: Stage
+  sessionActiveStages: ActiveStage[]
   loading: boolean
   error: string | null
   onSubmit: (message: string) => void
@@ -31,7 +50,7 @@ interface Props {
   onBack?: () => void
 }
 
-export function ChatView({ history, stage, loading, error, onSubmit, streamingMessage, onNext, onRandom, onBack }: Props) {
+export function ChatView({ history, stage, sessionActiveStages, loading, error, onSubmit, streamingMessage, onNext, onRandom, onBack }: Props) {
   const [input, setInput] = useState('')
   const [queue, setQueue] = useState<string[]>([])
   const bottomRef = useRef<HTMLDivElement>(null)
@@ -78,7 +97,7 @@ export function ChatView({ history, stage, loading, error, onSubmit, streamingMe
           ? "bg-green-500/10 text-green-700 dark:text-green-400"
           : "bg-muted text-foreground"
       )}>
-        {stage === 'complete' ? 'Nice work! Review your session below.' : stageBanner[stage as ActiveStage]}
+        {stage === 'complete' ? 'Nice work! Review your session below.' : getStageBanner(stage as ActiveStage, sessionActiveStages)}
       </div>
 
       <div className="flex-1 overflow-y-auto p-5 flex flex-col gap-3">
