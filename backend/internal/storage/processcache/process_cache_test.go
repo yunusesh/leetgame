@@ -274,12 +274,12 @@ func TestSearchProblems_PageBeyondEnd_ReturnsEmpty(t *testing.T) {
 
 func TestSearchProblems_TitleSubstringMatch(t *testing.T) {
 	c := newCache(testProblems)
-	resp, err := c.SearchProblems(context.Background(), "two", "", nil, "and", 1, 10)
+	resp, err := c.SearchProblems(context.Background(), "two sum", "", nil, "and", 1, 10)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
 	if resp.Total != 1 || resp.Problems[0].Id != id1 {
-		t.Errorf("expected id1 for query 'two', got total=%d", resp.Total)
+		t.Errorf("expected id1 for query 'two sum', got total=%d", resp.Total)
 	}
 }
 
