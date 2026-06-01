@@ -47,15 +47,13 @@ export function NavBar({ view, onNavigate, session, authLoading, streak, activeS
       <div className="ml-auto flex items-center gap-2">
         {!authLoading && (
           <div className="relative">
-            <Button
-              variant="ghost"
-              size="sm"
+            <button
               onClick={() => setSettingsOpen(o => !o)}
-              className="text-muted-foreground px-2"
+              className="text-muted-foreground hover:text-foreground transition-colors text-2xl leading-none px-1"
               title="Practice stages"
             >
               ⚙
-            </Button>
+            </button>
             {settingsOpen && (
               <StagesSettings
                 activeStages={activeStages}

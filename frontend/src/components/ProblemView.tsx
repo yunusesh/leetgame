@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import type { Problem } from '../types'
 import { cn } from '../lib/utils'
 import { Button } from './ui/button'
@@ -22,17 +22,34 @@ export function ProblemView({
   onSkip,
   onRandom,
   onBack,
+  onExitPlaylist,
   playlistSummary,
 }: {
   problem: Problem
   onSkip: () => void
   onRandom: () => void
   onBack?: () => void
+  onExitPlaylist?: () => void
   playlistSummary?: SearchPlaylistSummary | null
 }) {
   const [tagsOpen, setTagsOpen] = useState(false)
   const [titleOpen, setTitleOpen] = useState(false)
-  const [problemOpen, setProblemOpen] = useState(false)
+  const [problemOpen, setProblemOpen] = useState(true)
+  const [overflowOpen, setOverflowOpen] = useState(false)
+  const overflowRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (!overflowOpen) return
+    const handle = (e: MouseEvent) => {
+      if (overflowRef.current && !overflowRef.current.contains(e.target as Node)) {
+        setOverflowOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', handle)
+    return () => document.removeEventListener('mousedown', handle)
+  }, [overflowOpen])
+
+  const hasOverflow = !!(onRandom || onExitPlaylist)
 
   return (
     <div className={cn(
@@ -40,7 +57,7 @@ export function ProblemView({
       problemOpen ? "flex-1 overflow-y-auto" : "shrink-0"
     )}>
       {/* mobile toggle bar */}
-      <div className="md:hidden flex items-center gap-3 px-4 py-2.5 border-b border-border">
+      <div className="md:hidden sticky top-0 z-10 bg-background flex items-center gap-3 px-4 py-2.5 border-b border-border">
         <span className="flex-1 text-sm font-medium truncate text-muted-foreground">
           {titleOpen ? problem.title : 'Problem'}
         </span>
@@ -61,45 +78,36 @@ export function ProblemView({
 
       {/* content: always visible on desktop, toggled on mobile */}
       <div className={cn("p-6", !problemOpen && "hidden md:block")}>
-        {playlistSummary && (
+        {playlistSummary ? (
           <div className="mb-4 rounded-md border border-border bg-muted px-3.5 py-2.5">
-            <div className="mb-2 flex items-center justify-between gap-3">
-              <div className="flex items-center gap-2">
-                <span className="text-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">
-                  Search playlist
-                </span>
-                <span className="rounded-sm bg-background px-2 py-0.5 text-xs text-foreground">
-                  {playlistSummary.tagMatch === 'and' ? 'All tags' : 'Any tag'}
-                </span>
-              </div>
-              <Button variant="outline" size="sm" onClick={onRandom} className="text-muted-foreground">
-                Random instead
-              </Button>
-            </div>
-            <div className="flex flex-wrap gap-1.5">
+            <div className="flex flex-wrap gap-1.5 items-center">
+              <span className="text-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground mr-1">
+                Playlist
+              </span>
+              <span className={cn("rounded-sm bg-background px-2 py-0.5 text-xs font-semibold", difficultyColor[problem.difficulty] ?? 'text-foreground')}>
+                {problem.difficulty}
+              </span>
               {playlistSummary.q && (
                 <span className="rounded-sm bg-background px-2 py-0.5 text-xs text-foreground">
-                  Query: {playlistSummary.q}
-                </span>
-              )}
-              {playlistSummary.difficulty && (
-                <span className="rounded-sm bg-background px-2 py-0.5 text-xs text-foreground">
-                  Difficulty: {playlistSummary.difficulty}
+                  {playlistSummary.q}
                 </span>
               )}
               {playlistSummary.tags.map(tag => (
-                <span
-                  key={tag}
-                  className="rounded-sm bg-background px-2 py-0.5 text-xs text-foreground"
-                >
+                <span key={tag} className="rounded-sm bg-background px-2 py-0.5 text-xs text-foreground">
                   {tag}
                 </span>
               ))}
             </div>
           </div>
+        ) : (
+          <div className="mb-3">
+            <span className={cn("text-xs font-semibold", difficultyColor[problem.difficulty] ?? 'text-muted-foreground')}>
+              {problem.difficulty}
+            </span>
+          </div>
         )}
 
-        <div className="flex items-start gap-3 mb-3">
+        <div className="flex items-start gap-2 mb-3">
           <h2
             onClick={() => setTitleOpen(o => !o)}
             className="m-0 flex-1 cursor-pointer select-none relative"
@@ -117,20 +125,46 @@ export function ProblemView({
               </span>
             )}
           </h2>
-          <span className={cn(
-            "font-semibold text-sm hidden md:block",
-            difficultyColor[problem.difficulty] ?? 'text-muted-foreground'
-          )}>
-            {problem.difficulty}
-          </span>
           {onBack && (
-            <Button variant="ghost" size="sm" onClick={onBack} className="text-muted-foreground">
-              ← Back
+            <Button variant="ghost" size="sm" onClick={onBack} className="shrink-0 text-muted-foreground">
+              ←
             </Button>
           )}
-          <Button variant="outline" size="sm" onClick={onSkip} className="ml-auto text-muted-foreground">
+          <Button variant="outline" size="sm" onClick={onSkip} className="shrink-0 text-muted-foreground">
             Next →
           </Button>
+          {hasOverflow && (
+            <div className="relative shrink-0" ref={overflowRef}>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setOverflowOpen(o => !o)}
+                className="text-muted-foreground px-2"
+              >
+                ···
+              </Button>
+              {overflowOpen && (
+                <div className="absolute right-0 top-full mt-1 z-20 min-w-[160px] rounded-md border border-border bg-background shadow-md py-1">
+                  {onRandom && (
+                    <button
+                      onClick={() => { onRandom(); setOverflowOpen(false) }}
+                      className="w-full text-left px-3 py-2 text-sm hover:bg-muted transition-colors"
+                    >
+                      Random problem
+                    </button>
+                  )}
+                  {onExitPlaylist && (
+                    <button
+                      onClick={() => { onExitPlaylist(); setOverflowOpen(false) }}
+                      className="w-full text-left px-3 py-2 text-sm text-destructive hover:bg-muted transition-colors"
+                    >
+                      Exit playlist
+                    </button>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
         </div>
 
         <div className="mb-5">
