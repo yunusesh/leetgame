@@ -25,7 +25,7 @@ export function useAuth() {
             .then(({ active_stages, hide_title, active_topics }) => {
               setActiveStages(active_stages)
               setHideTitle(hide_title)
-              setActiveTopics(active_topics)
+              setActiveTopics(active_topics ?? NEETCODE_TOPICS)
             })
             .catch(() => {})
             .finally(() => setSettingsReady(true))
