@@ -5,6 +5,7 @@ import { cn } from '../lib/utils'
 import { Button } from './ui/button'
 import { Input } from './ui/input'
 import { Badge } from './ui/badge'
+import { Skeleton } from './ui/skeleton'
 
 const difficulties = ['Easy', 'Medium', 'Hard'] as const
 type Difficulty = typeof difficulties[number]
@@ -27,6 +28,23 @@ const tagMatchModes = [
   { value: 'or', label: 'Match any' },
 ] as const
 export const problemSearchPageSize = pageSize
+
+function SearchResultSkeleton() {
+  return (
+    <div className="p-4 rounded-md border border-border bg-muted mb-2">
+      <div className="flex items-center gap-2.5 mb-3">
+        <Skeleton className="h-3.5 w-8 rounded-sm" />
+        <Skeleton className="h-3.5 w-48 rounded-sm" />
+        <Skeleton className="h-3.5 w-12 rounded-sm" />
+      </div>
+      <div className="flex gap-1.5">
+        <Skeleton className="h-5 w-16 rounded-sm" />
+        <Skeleton className="h-5 w-20 rounded-sm" />
+        <Skeleton className="h-5 w-14 rounded-sm" />
+      </div>
+    </div>
+  )
+}
 
 export interface SearchSelectionContext {
   q: string
@@ -242,23 +260,28 @@ export function SearchPage({ onSelectProblem, searchState, onSearchStateChange }
       {error && <p className="text-sm text-destructive">{error}</p>}
       {!error && hasSearched && total > 0 && (
         <div className="mb-3 flex items-center justify-between gap-3 text-sm text-muted-foreground">
-          {loading
-            ? <span className="flex items-center gap-2"><span className="inline-block h-3.5 w-3.5 animate-spin rounded-full border-2 border-border border-t-foreground" />Searching...</span>
-            : <p>Showing {showingFrom}-{showingTo} of {total}</p>
-          }
+          <p>{loading ? 'Searching...' : `Showing ${showingFrom}-${showingTo} of ${total}`}</p>
           <p>Page {page} of {totalPages}</p>
         </div>
       )}
       {loading && !hasSearched && (
-        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-          <span className="inline-block h-3.5 w-3.5 animate-spin rounded-full border-2 border-border border-t-foreground" />
-          Searching...
+        <div>
+          {Array.from({ length: 8 }).map((_, i) => (
+            <SearchResultSkeleton key={i} />
+          ))}
         </div>
       )}
       {!loading && !error && hasSearched && results.length === 0 && (
         <p className="text-sm text-muted-foreground">No problems found.</p>
       )}
-      {!error && results.map(p => (
+      {!error && loading && hasSearched && (
+        <div>
+          {Array.from({ length: 8 }).map((_, i) => (
+            <SearchResultSkeleton key={i} />
+          ))}
+        </div>
+      )}
+      {!error && !loading && results.map(p => (
         <div
           key={p.id}
           onClick={() => onSelectProblem(p, {
