@@ -79,15 +79,17 @@ Max rows per user: 23 topics × 5 stages × 90 days = 10,350. Very manageable.
 ```go
 package models
 
+import "time"
+
 type ProficiencySnapshot struct {
-    Topic        string  `json:"topic"         db:"topic"`
-    Stage        string  `json:"stage"         db:"stage"`
-    Score        float64 `json:"score"         db:"score"`
-    SnapshotDate string  `json:"snapshot_date" db:"snapshot_date"`
+    Topic        string    `json:"topic"         db:"topic"`
+    Stage        string    `json:"stage"         db:"stage"`
+    Score        float64   `json:"score"         db:"score"`
+    SnapshotDate time.Time `json:"snapshot_date" db:"snapshot_date"`
 }
 ```
 
-`SnapshotDate` is a `string` (ISO date `"2026-06-01"`) — no need for `time.Time` since it's passed straight to JSON.
+`SnapshotDate` is `time.Time` — pgx scans `DATE` columns into `time.Time` correctly. The handler formats it as `"2006-01-02"` before returning JSON.
 
 ### Storage
 
@@ -97,7 +99,7 @@ New method on `Postgres` in `backend/internal/storage/postgres/proficiency.go`:
 func (p *Postgres) GetProficiencyHistory(ctx context.Context, userID uuid.UUID) ([]models.ProficiencySnapshot, error)
 ```
 
-SQL: select `topic`, `stage`, `score`, `snapshot_date::text AS snapshot_date` from `proficiency_score_snapshots` where `user_id = $1` and `snapshot_date >= CURRENT_DATE - 30`, ordered by `(topic, stage, snapshot_date ASC)`. The `::text` cast ensures pgx scans the DATE value directly into the `string` field without needing `time.Time`.
+SQL: select `topic`, `stage`, `score`, `snapshot_date` from `proficiency_score_snapshots` where `user_id = $1` and `snapshot_date >= CURRENT_DATE - 30`, ordered by `(topic, stage, snapshot_date ASC)`.
 
 ### Storage interface
 
@@ -118,7 +120,8 @@ func (hs *HandlerService) GetProficiencyHistory(c *fiber.Ctx) error
 
 - Gets `userID` via `xcontext.GetUserId(c)`
 - Calls `hs.storage.GetProficiencyHistory(ctx, userID)`
-- Returns `{ "history": [...] }`
+- Maps each snapshot's `SnapshotDate` to `"2006-01-02"` format via `t.Format("2006-01-02")`
+- Returns `{ "history": [...] }` where `snapshot_date` is an ISO date string
 
 ### Route
 
