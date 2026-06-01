@@ -1,5 +1,6 @@
 -- backend/db/schema.sql
 CREATE EXTENSION IF NOT EXISTS pgcrypto;
+CREATE EXTENSION IF NOT EXISTS pg_cron;
 
 CREATE TABLE IF NOT EXISTS problems (
   id          UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -48,4 +49,11 @@ CREATE TABLE IF NOT EXISTS proficiency_sessions (
   stage        TEXT NOT NULL,
   session_date DATE NOT NULL DEFAULT CURRENT_DATE,
   PRIMARY KEY (user_id, problem_id, topic, stage, session_date)
+);
+
+-- delete rows older than 30 days at 3am UTC daily
+SELECT cron.schedule('cleanup-proficiency-sessions', '0 3 * * *',
+  'DELETE FROM proficiency_sessions WHERE session_date < CURRENT_DATE - 30')
+WHERE NOT EXISTS (
+  SELECT 1 FROM cron.job WHERE jobname = 'cleanup-proficiency-sessions'
 );
