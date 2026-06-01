@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import type { TopicProficiency } from '../types'
 import { getProficiency } from '../api'
 import { cn } from '../lib/utils'
+import { Button } from './ui/button'
 
 const stageLabel: Record<string, string> = {
   edge_cases:  'Edge Cases',
@@ -11,7 +12,7 @@ const stageLabel: Record<string, string> = {
   tc_sc:       'Time & Space',
 }
 
-export function StatsPage() {
+export function StatsPage({ onSmartPractice }: { onSmartPractice?: () => void }) {
   const [proficiencies, setProficiencies] = useState<TopicProficiency[]>([])
   const [loading, setLoading] = useState(true)
   const [fetchError, setFetchError] = useState(false)
@@ -49,7 +50,12 @@ export function StatsPage() {
     return (
       <div className="flex-1 overflow-y-auto">
         <div className="max-w-2xl mx-auto px-6 py-8">
-          <h2 className="text-xl font-semibold mb-2">Topic Proficiency</h2>
+          <div className="flex items-center justify-between mb-2">
+            <h2 className="text-xl font-semibold">Topic Proficiency</h2>
+            {onSmartPractice && (
+              <Button size="sm" onClick={onSmartPractice}>Practice Weakest Topics</Button>
+            )}
+          </div>
           <p className="text-sm text-muted-foreground">Complete a practice session to see your scores.</p>
         </div>
       </div>
@@ -74,7 +80,12 @@ export function StatsPage() {
   return (
     <div className="flex-1 overflow-y-auto">
       <div className="max-w-2xl mx-auto px-6 py-8">
-        <h2 className="text-xl font-semibold mb-6">Topic Proficiency</h2>
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-xl font-semibold">Topic Proficiency</h2>
+          {onSmartPractice && (
+            <Button size="sm" onClick={onSmartPractice}>Practice Weakest Topics</Button>
+          )}
+        </div>
         <div className="flex flex-col gap-4">
           {topics.map(({ topic, rows }) => (
             <div key={topic} className="rounded-md border border-border bg-muted p-4">

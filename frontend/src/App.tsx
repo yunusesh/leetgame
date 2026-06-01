@@ -452,7 +452,7 @@ export default function App() {
             showSave={!!session}
           />
         : view === 'stats'
-        ? <StatsPage />
+        ? <StatsPage onSmartPractice={session ? () => { void loadSmartPracticeProblem(); setView('practice') } : undefined} />
         : practiceView()
       }
     </div>
