@@ -117,12 +117,14 @@ func (hs *HandlerService) runSessionEvaluation(userID uuid.UUID, problem models.
 		return
 	}
 
-	learningRates := map[string]float64{
-		"Easy": 0.1, "Medium": 0.2, "Hard": 0.3,
+	type difficultyParams struct{ scale, floor float64 }
+	params := map[string]difficultyParams{
+		"Easy": {0.15, 0.03},
+		"Hard": {0.35, 0.07},
 	}
-	lr, ok := learningRates[problem.Difficulty]
+	dp, ok := params[problem.Difficulty]
 	if !ok {
-		lr = 0.2
+		dp = difficultyParams{0.25, 0.05} // Medium + unknown
 	}
 
 	var updated int
@@ -135,7 +137,7 @@ func (hs *HandlerService) runSessionEvaluation(userID uuid.UUID, problem models.
 			)
 			continue
 		}
-		if err := hs.storage.UpsertTopicProficiency(ctx, userID, score.Topic, score.Stage, score.Score, lr); err != nil {
+		if err := hs.storage.UpsertTopicProficiency(ctx, userID, score.Topic, score.Stage, score.Score, dp.scale, dp.floor); err != nil {
 			hs.logger.Error("failed to upsert topic proficiency",
 				"error", err,
 				"topic", score.Topic,

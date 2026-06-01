@@ -33,6 +33,6 @@ type Storage interface {
 	GetSavedProblems(ctx context.Context, userID uuid.UUID) ([]models.Problem, error)
 
 	// topic proficiency
-	UpsertTopicProficiency(ctx context.Context, userID uuid.UUID, topic, stage string, sessionScore, learningRate float64) error
+	UpsertTopicProficiency(ctx context.Context, userID uuid.UUID, topic, stage string, sessionScore, scale, floor float64) error
 	GetTopicProficiencies(ctx context.Context, userID uuid.UUID) ([]models.TopicProficiency, error)
 }
