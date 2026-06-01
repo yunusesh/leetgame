@@ -92,6 +92,8 @@ export default function App() {
   const [streamingMessage, setStreamingMessage] = useState('')
   const [streak, setStreak] = useState<number | null>(null)
   const [activeStages, setActiveStages] = useState<ActiveStage[]>(DEFAULT_STAGES)
+  const [sessionActiveStages, setSessionActiveStages] = useState<ActiveStage[]>(DEFAULT_STAGES)
+  const [stageBannerDismissed, setStageBannerDismissed] = useState(false)
   const [sessionStack, setSessionStack] = useState<PracticeSnapshot[]>([])
   const playlistEntryDepthRef = useRef<number>(0)
   const streamAbortRef = useRef<AbortController | null>(null)
@@ -100,6 +102,8 @@ export default function App() {
     setHistory([])
     setStage(activeStages[0])
     setStreamingMessage('')
+    setSessionActiveStages(activeStages)
+    setStageBannerDismissed(false)
   }
 
   const pushSnapshot = () => {
@@ -123,6 +127,7 @@ export default function App() {
 
   const handleStagesChange = (stages: ActiveStage[]) => {
     setActiveStages(stages)
+    setStageBannerDismissed(false)
     if (session) {
       updateSettings(stages).catch(() => {})
     } else {
@@ -317,7 +322,7 @@ export default function App() {
 
     try {
       let accumulated = ''
-      for await (const event of streamChat(problem.id, stage, activeStages, history, message, controller.signal)) {
+      for await (const event of streamChat(problem.id, stage, sessionActiveStages, history, message, controller.signal)) {
         if (event.type === 'token') {
           accumulated += event.content
           setStreamingMessage(accumulated)
@@ -357,12 +362,36 @@ export default function App() {
     const canGoBack = problemSource === 'search'
       ? sessionStack.length > playlistEntryDepthRef.current
       : sessionStack.length > 0
+    const stagesChanged = !stageBannerDismissed &&
+      stage !== 'complete' &&
+      JSON.stringify(activeStages) !== JSON.stringify(sessionActiveStages)
     const exitPlaylist = () => {
       playlistEntryDepthRef.current = 0
       setSessionStack([])
       void loadRandomProblem()
     }
     return (
+      <div className="flex flex-col flex-1 overflow-hidden min-h-0">
+      {stagesChanged && (
+        <div className="flex items-center justify-between gap-2 px-4 py-2 bg-amber-50 dark:bg-amber-950/40 border-b border-amber-200 dark:border-amber-800 text-sm text-amber-900 dark:text-amber-200 shrink-0">
+          <span>Stage settings changed.</span>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => { setHistory([]); setStage(activeStages[0]); setStreamingMessage(''); setSessionActiveStages(activeStages); setStageBannerDismissed(false) }}
+              className="font-medium underline underline-offset-2 hover:opacity-80 transition-opacity"
+            >
+              Restart with new stages
+            </button>
+            <button
+              onClick={() => setStageBannerDismissed(true)}
+              className="opacity-60 hover:opacity-100 transition-opacity"
+              aria-label="Dismiss"
+            >
+              ×
+            </button>
+          </div>
+        </div>
+      )}
       <div className="flex flex-col md:flex-row flex-1 overflow-hidden min-h-0">
         <ProblemView
           key={problem.id}
@@ -384,6 +413,7 @@ export default function App() {
           onRandom={stage === 'complete' && problemSource === 'search' ? () => void loadRandomNextProblem() : undefined}
           onBack={stage === 'complete' && canGoBack ? goBack : undefined}
         />
+      </div>
       </div>
     )
   }

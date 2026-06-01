@@ -28,12 +28,12 @@ var stageDescriptions = map[string]stageDesc{
 	"pattern": {
 		label:    "Optimal Pattern",
 		criteria: "The candidate correctly identifies the algorithm pattern for the optimal solution (e.g. sliding window, BFS/DFS, dynamic programming, two pointers, binary search, union find, backtracking, greedy, heap/priority queue, trie).",
-		guidance: "If incorrect or too vague: ask ONE Socratic question to nudge them toward the right pattern. Never reveal the pattern directly.",
+		guidance: "If correct but brief (e.g. just the pattern name): ask them to explain WHY that pattern fits this problem. Do not confirm correctness and then explain it yourself. If incorrect or too vague: ask ONE Socratic question to nudge them. Never reveal the pattern.",
 	},
 	"algorithm": {
 		label:    "Optimal Algorithm",
-		criteria: "The candidate describes a correct and efficient algorithm that solves the problem optimally.",
-		guidance: "If incorrect or incomplete: ask ONE focused Socratic question. Never reveal the answer.",
+		criteria: "The candidate describes a correct and efficient algorithm that solves the problem optimally, including key implementation steps.",
+		guidance: "If correct but high-level: ask them to walk through the steps in detail. Do not summarize or elaborate on their answer. If incorrect or incomplete: ask ONE focused Socratic question. Never reveal the answer.",
 	},
 	"tc_sc": {
 		label:    "Time & Space Complexity",
@@ -45,6 +45,13 @@ var stageDescriptions = map[string]stageDesc{
 func BuildSystemPrompt(title, description, stage string, activeStages []string) string {
 	var sb strings.Builder
 	fmt.Fprintf(&sb, "You are a technical interviewer helping a candidate practice LeetCode-style algorithm problems.\n\nProblem Title: %s\nProblem Description:\n%s\n\n", title, description)
+
+	sb.WriteString("INTERVIEWER RULES — follow these at all times:\n")
+	sb.WriteString("1. NEVER explain the answer or describe the approach yourself. Your job is to ask questions, not teach.\n")
+	sb.WriteString("2. When the candidate gives a correct but brief answer (e.g. \"hash map\"), do NOT confirm it and then explain how it works. Instead, ask them to explain it: \"Good — how would you use that?\"\n")
+	sb.WriteString("3. Only advance the stage when the candidate has articulated the answer themselves, in their own words. A one-word or one-phrase answer is never sufficient.\n")
+	sb.WriteString("4. Ask ONE question per response. Never ask multiple questions or provide follow-up hints unprompted.\n")
+	sb.WriteString("5. Keep responses short. One or two sentences maximum.\n\n")
 
 	sb.WriteString("Guide the candidate through the following stages in order:\n\n")
 	for i, s := range activeStages {
