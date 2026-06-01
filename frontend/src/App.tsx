@@ -58,7 +58,11 @@ export default function App() {
       if (event === 'SIGNED_IN' || event === 'INITIAL_SESSION') {
         if (session) {
           getStreak().then(({ streak }) => setStreak(streak)).catch(() => {})
-          getSettings().then(({ active_stages }) => setActiveStages(active_stages)).catch(() => {})
+          getSettings().then(({ active_stages }) => {
+            setActiveStages(active_stages)
+            setSessionActiveStages(active_stages)
+            setStage(active_stages[0])
+          }).catch(() => {})
         } else {
           setStreak(null)
           const stored = localStorage.getItem('leetgame_active_stages')
@@ -364,6 +368,7 @@ export default function App() {
       : sessionStack.length > 0
     const stagesChanged = !stageBannerDismissed &&
       stage !== 'complete' &&
+      history.length > 0 &&
       JSON.stringify(activeStages) !== JSON.stringify(sessionActiveStages)
     const exitPlaylist = () => {
       playlistEntryDepthRef.current = 0
