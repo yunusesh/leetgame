@@ -160,3 +160,16 @@ func TestChatRequest_Validate_all_five_stages_valid(t *testing.T) {
 	}
 	assert.Empty(t, req.Validate())
 }
+
+func TestChatRequest_Validate_HintAndAnswerMutuallyExclusive(t *testing.T) {
+	req := types.ChatRequest{
+		ProblemID:       uuid.New(),
+		Stage:           "pattern",
+		ActiveStages:    []string{"pattern"},
+		Message:         "hello",
+		HintRequested:   true,
+		AnswerRequested: true,
+	}
+	errs := req.Validate()
+	assert.Contains(t, errs, "hint_requested")
+}
