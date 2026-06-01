@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"errors"
 	"math/rand"
 	"net/http"
 	"strings"
@@ -80,9 +81,14 @@ func (hs *HandlerService) GetSmartPracticeProblem(c *fiber.Ctx) error {
 	if stagesParam == "" {
 		return xerrors.BadRequestError("active_stages is required")
 	}
-	activeStages := strings.Split(stagesParam, ",")
-	for i, s := range activeStages {
-		activeStages[i] = strings.TrimSpace(s)
+	var activeStages []string
+	for _, s := range strings.Split(stagesParam, ",") {
+		if t := strings.TrimSpace(s); t != "" {
+			activeStages = append(activeStages, t)
+		}
+	}
+	if len(activeStages) == 0 {
+		return xerrors.BadRequestError("active_stages must contain at least one non-empty value")
 	}
 
 	allTags, err := hs.storage.GetProblemTags(c.Context())
@@ -96,12 +102,24 @@ func (hs *HandlerService) GetSmartPracticeProblem(c *fiber.Ctx) error {
 	}
 
 	weights := computeTopicWeights(proficiencies, allTags, activeStages)
+	if len(weights) == 0 {
+		problem, err := hs.storage.GetRandomProblem(c.Context())
+		if err != nil {
+			return err
+		}
+		return c.Status(http.StatusOK).JSON(problem)
+	}
 	sampledTopic := sampleTopic(weights)
 
 	problem, err := hs.storage.GetRandomProblemFiltered(c.Context(), "", "", []string{sampledTopic}, "or", "")
 	if err != nil {
-		problem, err = hs.storage.GetRandomProblem(c.Context())
-		if err != nil {
+		var httpErr xerrors.HTTPError
+		if errors.As(err, &httpErr) && httpErr.StatusCode == http.StatusNotFound {
+			problem, err = hs.storage.GetRandomProblem(c.Context())
+			if err != nil {
+				return err
+			}
+		} else {
 			return err
 		}
 	}
