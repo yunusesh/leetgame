@@ -116,9 +116,10 @@ export async function* streamChat(
   }
 }
 
-export async function getSmartPracticeProblem(activeStages: ActiveStage[]): Promise<Problem> {
+export async function getSmartPracticeProblem(activeStages: ActiveStage[], activeTopics: string[]): Promise<Problem> {
   const params = new URLSearchParams()
   params.set('active_stages', activeStages.join(','))
+  if (activeTopics.length) params.set('active_topics', activeTopics.join(','))
   const res = await fetch(`${API_URL}/api/problems/smart?${params.toString()}`, {
     headers: await authHeaders(),
   })
@@ -143,7 +144,7 @@ export async function recordStreak(): Promise<{ streak: number }> {
   return res.json()
 }
 
-export async function getSettings(): Promise<{ active_stages: ActiveStage[]; hide_title: boolean }> {
+export async function getSettings(): Promise<{ active_stages: ActiveStage[]; hide_title: boolean; active_topics: string[] }> {
   const res = await fetch(`${API_URL}/api/settings`, {
     headers: await authHeaders(),
   })
@@ -151,11 +152,11 @@ export async function getSettings(): Promise<{ active_stages: ActiveStage[]; hid
   return res.json()
 }
 
-export async function updateSettings(activeStages: ActiveStage[], hideTitle: boolean): Promise<void> {
+export async function updateSettings(activeStages: ActiveStage[], hideTitle: boolean, activeTopics: string[]): Promise<void> {
   const res = await fetch(`${API_URL}/api/settings`, {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json', ...(await authHeaders()) },
-    body: JSON.stringify({ active_stages: activeStages, hide_title: hideTitle }),
+    body: JSON.stringify({ active_stages: activeStages, hide_title: hideTitle, active_topics: activeTopics }),
   })
   if (!res.ok) throw new Error(`Failed to update settings: ${res.status}`)
 }

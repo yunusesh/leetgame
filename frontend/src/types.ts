@@ -72,3 +72,13 @@ export const defaultSearchState: SearchState = {
   total: 0,
   hasSearched: false,
 }
+
+export const NEETCODE_TOPICS: string[] = [
+  'Array', 'Hash Table', 'Two Pointers', 'Sliding Window',
+  'Stack', 'Binary Search', 'Linked List',
+  'Tree', 'Binary Tree', 'Binary Search Tree',
+  'Trie', 'Heap (Priority Queue)', 'Backtracking',
+  'Graph', 'Depth-First Search', 'Breadth-First Search', 'Union Find',
+  'Dynamic Programming', 'Greedy', 'Intervals', 'Math', 'Bit Manipulation',
+  'Matrix',
+]
