@@ -1,8 +1,50 @@
 import { useEffect, useState } from 'react'
-import type { TopicProficiency, ProblemTag } from '../types'
-import { getProficiency, getProblemTags } from '../api'
+import type { TopicProficiency, ProblemTag, ProficiencySnapshot } from '../types'
+import { getProficiency, getProblemTags, getProficiencyHistory } from '../api'
 import { cn } from '../lib/utils'
 import { Button } from './ui/button'
+import { ChartContainer, ChartTooltip, ChartTooltipContent } from './ui/chart'
+import { LineChart, Line, XAxis, YAxis, CartesianGrid } from 'recharts'
+
+const STAGES = ['edge_cases', 'brute_force', 'pattern', 'algorithm', 'tc_sc'] as const
+
+const chartConfig = {
+  edge_cases:  { label: 'Edge Cases',   color: 'hsl(var(--chart-1))' },
+  brute_force: { label: 'Brute Force',  color: 'hsl(var(--chart-2))' },
+  pattern:     { label: 'Pattern',      color: 'hsl(var(--chart-3))' },
+  algorithm:   { label: 'Algorithm',    color: 'hsl(var(--chart-4))' },
+  tc_sc:       { label: 'Time & Space', color: 'hsl(var(--chart-5))' },
+  overall:     { label: 'Overall',      color: 'hsl(var(--foreground))' },
+} as const
+
+interface ChartPoint {
+  date: string
+  edge_cases?: number
+  brute_force?: number
+  pattern?: number
+  algorithm?: number
+  tc_sc?: number
+  overall: number
+}
+
+function buildChartData(history: ProficiencySnapshot[], topic: string): ChartPoint[] {
+  const topicHistory = history.filter(s => s.topic === topic)
+  const byDate = new Map<string, Partial<Record<string, number>>>()
+  for (const s of topicHistory) {
+    const existing = byDate.get(s.snapshot_date) ?? {}
+    existing[s.stage] = Math.round(s.score * 100)
+    byDate.set(s.snapshot_date, existing)
+  }
+  return Array.from(byDate.entries())
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([date, stages]) => {
+      const values = Object.values(stages) as number[]
+      const overall = values.length > 0
+        ? Math.round(values.reduce((a, b) => a + b, 0) / values.length)
+        : 0
+      return { date, ...stages, overall } as ChartPoint
+    })
+}
 
 const stageLabel: Record<string, string> = {
   edge_cases:  'Edge Cases',
@@ -26,17 +68,21 @@ export function StatsPage({
   const [loading, setLoading] = useState(true)
   const [fetchError, setFetchError] = useState(false)
   const [topicPickerOpen, setTopicPickerOpen] = useState(false)
+  const [history, setHistory] = useState<ProficiencySnapshot[]>([])
+  const [expandedTopic, setExpandedTopic] = useState<string | null>(null)
 
   useEffect(() => {
     const controller = new AbortController()
     Promise.all([
       getProficiency(controller.signal),
       getProblemTags(controller.signal),
+      getProficiencyHistory(controller.signal),
     ])
-      .then(([prof, tags]) => {
+      .then(([prof, tags, hist]) => {
         if (!controller.signal.aborted) {
           setProficiencies(prof)
           setAllTags(tags)
+          setHistory(hist)
           setFetchError(false)
         }
       })
@@ -157,33 +203,89 @@ export function StatsPage({
         </div>
         {topicPicker}
         <div className="flex flex-col gap-4">
-          {topics.map(({ topic, rows }) => (
-            <div key={topic} className="rounded-md border border-border bg-muted p-4">
-              <p className="text-sm font-semibold mb-3">{topic}</p>
-              <div className="flex flex-col gap-2">
-                {rows.map(row => (
-                  <div key={row.stage} className="flex items-center gap-3">
-                    <span className="text-xs text-muted-foreground w-24 shrink-0">
-                      {stageLabel[row.stage] ?? row.stage}
-                    </span>
-                    <div className="flex-1 h-2 rounded-full bg-border overflow-hidden">
-                      <div
-                        className={cn(
-                          "h-full rounded-full transition-all",
-                          row.score >= 0.7 ? "bg-green-500" :
-                          row.score >= 0.4 ? "bg-yellow-500" : "bg-red-500"
-                        )}
-                        style={{ width: `${Math.round(row.score * 100)}%` }}
-                      />
+          {topics.map(({ topic, rows }) => {
+            const isExpanded = expandedTopic === topic
+            const chartData = buildChartData(history, topic)
+            return (
+              <div key={topic} className="rounded-md border border-border bg-muted p-4">
+                <div className="flex items-center justify-between mb-3">
+                  <p className="text-sm font-semibold">{topic}</p>
+                  <button
+                    onClick={() => setExpandedTopic(isExpanded ? null : topic)}
+                    aria-expanded={isExpanded}
+                    className="text-xs text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    {isExpanded ? '▾ Hide trend' : '▸ Show trend'}
+                  </button>
+                </div>
+                <div className="flex flex-col gap-2">
+                  {rows.map(row => (
+                    <div key={row.stage} className="flex items-center gap-3">
+                      <span className="text-xs text-muted-foreground w-24 shrink-0">
+                        {stageLabel[row.stage] ?? row.stage}
+                      </span>
+                      <div className="flex-1 h-2 rounded-full bg-border overflow-hidden">
+                        <div
+                          className={cn(
+                            "h-full rounded-full transition-all",
+                            row.score >= 0.7 ? "bg-green-500" :
+                            row.score >= 0.4 ? "bg-yellow-500" : "bg-red-500"
+                          )}
+                          style={{ width: `${Math.round(row.score * 100)}%` }}
+                        />
+                      </div>
+                      <span className="text-xs text-muted-foreground w-8 text-right shrink-0">
+                        {Math.round(row.score * 100)}%
+                      </span>
                     </div>
-                    <span className="text-xs text-muted-foreground w-8 text-right shrink-0">
-                      {Math.round(row.score * 100)}%
-                    </span>
+                  ))}
+                </div>
+                {isExpanded && (
+                  <div className="mt-4">
+                    {chartData.length === 0 ? (
+                      <p className="text-xs text-muted-foreground">Practice more sessions to see your trend.</p>
+                    ) : (
+                      <ChartContainer config={chartConfig} className="h-48 w-full">
+                        <LineChart data={chartData}>
+                          <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
+                          <XAxis
+                            dataKey="date"
+                            tick={{ fontSize: 10 }}
+                            tickFormatter={d => {
+                              const date = new Date(d + 'T00:00:00')
+                              return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+                            }}
+                          />
+                          <YAxis domain={[0, 100]} tick={{ fontSize: 10 }} tickFormatter={v => `${v}%`} />
+                          <ChartTooltip content={<ChartTooltipContent />} />
+                          {STAGES.map(stage => (
+                            <Line
+                              key={stage}
+                              type="monotone"
+                              dataKey={stage}
+                              stroke={chartConfig[stage].color}
+                              strokeWidth={1.5}
+                              dot={false}
+                              connectNulls
+                            />
+                          ))}
+                          <Line
+                            type="monotone"
+                            dataKey="overall"
+                            stroke={chartConfig.overall.color}
+                            strokeWidth={2}
+                            dot={false}
+                            strokeDasharray="4 2"
+                            connectNulls
+                          />
+                        </LineChart>
+                      </ChartContainer>
+                    )}
                   </div>
-                ))}
+                )}
               </div>
-            </div>
-          ))}
+            )
+          })}
         </div>
       </div>
     </div>
