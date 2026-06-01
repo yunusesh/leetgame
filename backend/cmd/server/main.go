@@ -51,6 +51,11 @@ func main() {
 		llmClient = claude.New(settings.LLM.APIKey, settings.LLM.Model)
 	}
 
+	var evaluator llm.Evaluator
+	if ac, ok := llmClient.(*claude.AnthropicClient); ok {
+		evaluator = ac
+	}
+
 	var kf jwt.Keyfunc
 	if settings.Auth.SupabaseURL != "" {
 		jwks, err := middleware.NewKeyfunc(settings.Auth.SupabaseURL)
@@ -68,6 +73,7 @@ func main() {
 			Level: utils.MustParseSlogLevel(settings.Server.LogLevel),
 		})),
 		LLMClient:      llmClient,
+		Evaluator:      evaluator,
 		AllowedOrigins: settings.Server.AllowedOrigins,
 		Keyfunc:        kf,
 	})

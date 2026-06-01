@@ -20,6 +20,7 @@ type Config struct {
 	Storage        storage.Storage
 	Logger         *slog.Logger
 	LLMClient      llm.Client
+	Evaluator      llm.Evaluator
 	AllowedOrigins string
 	Keyfunc        jwt.Keyfunc
 }
@@ -42,6 +43,7 @@ func New(cfg *Config) *fiber.App {
 		Storage:   cfg.Storage,
 		Logger:    cfg.Logger,
 		LLMClient: cfg.LLMClient,
+		Evaluator: cfg.Evaluator,
 		Keyfunc:   cfg.Keyfunc,
 	})
 	service.RegisterRoutes(app)
