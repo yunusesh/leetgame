@@ -1,26 +1,34 @@
 import { useState, useEffect } from 'react'
 
+const UNAUTH_TOUR_KEY = 'leetgame_tour_dismissed'
+
 export function useTour(isAuth: boolean, tourDone: boolean, persistTourDone: () => void) {
-  // For unauth users, showBanner is pure React state (resets every page load).
-  // For auth users, showBanner is derived from tourDone (persisted in backend settings).
   const [showBanner, setShowBanner] = useState(false)
 
   useEffect(() => {
     if (isAuth) {
       setShowBanner(!tourDone)
     } else {
-      setShowBanner(true)
+      setShowBanner(localStorage.getItem(UNAUTH_TOUR_KEY) !== 'true')
     }
   }, [isAuth, tourDone])
 
   const dismiss = () => {
     setShowBanner(false)
-    if (isAuth) persistTourDone()
+    if (isAuth) {
+      persistTourDone()
+    } else {
+      localStorage.setItem(UNAUTH_TOUR_KEY, 'true')
+    }
   }
 
   const markDone = () => {
     setShowBanner(false)
-    if (isAuth) persistTourDone()
+    if (isAuth) {
+      persistTourDone()
+    } else {
+      localStorage.setItem(UNAUTH_TOUR_KEY, 'true')
+    }
   }
 
   return { showBanner, dismiss, markDone }
