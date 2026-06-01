@@ -5,6 +5,7 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 
 	"leetgame/internal/claude"
 	"leetgame/internal/llm"
@@ -13,6 +14,7 @@ import (
 	"leetgame/internal/server"
 	"leetgame/internal/settings"
 	"leetgame/internal/storage/postgres"
+	"leetgame/internal/storage/processcache"
 	"leetgame/internal/utils"
 
 	"github.com/golang-jwt/jwt/v5"
@@ -67,8 +69,10 @@ func main() {
 		kf = jwks.Keyfunc
 	}
 
+	store := processcache.New(pg, time.Hour)
+
 	app := server.New(&server.Config{
-		Storage: pg,
+		Storage: store,
 		Logger: slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{
 			Level: utils.MustParseSlogLevel(settings.Server.LogLevel),
 		})),
