@@ -23,7 +23,8 @@ CREATE TABLE IF NOT EXISTS user_settings (
   user_id       UUID    PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
   active_stages TEXT[]  NOT NULL DEFAULT '{pattern,algorithm,tc_sc}',
   hide_title    BOOLEAN NOT NULL DEFAULT TRUE,
-  active_topics TEXT[]  NOT NULL DEFAULT '{}'
+  active_topics TEXT[]  NOT NULL DEFAULT '{}',
+  tour_done     BOOLEAN NOT NULL DEFAULT FALSE
 );
 
 CREATE TABLE IF NOT EXISTS saved_problems (

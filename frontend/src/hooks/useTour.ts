@@ -1,35 +1,26 @@
 import { useState, useEffect } from 'react'
 
-function storageKey(userId: string) {
-  return `leetgame_tour_done_${userId}`
-}
-
-export function useTour(userId: string | null) {
+export function useTour(isAuth: boolean, tourDone: boolean, persistTourDone: () => void) {
+  // For unauth users, showBanner is pure React state (resets every page load).
+  // For auth users, showBanner is derived from tourDone (persisted in backend settings).
   const [showBanner, setShowBanner] = useState(false)
 
   useEffect(() => {
-    if (userId) {
-      // auth user: check localStorage — if not done, show banner
-      const done = localStorage.getItem(storageKey(userId)) === 'true'
-      setShowBanner(!done)
+    if (isAuth) {
+      setShowBanner(!tourDone)
     } else {
-      // unauth: show every session (no persistence)
       setShowBanner(true)
     }
-  }, [userId])
+  }, [isAuth, tourDone])
 
   const dismiss = () => {
     setShowBanner(false)
-    if (userId) {
-      localStorage.setItem(storageKey(userId), 'true')
-    }
+    if (isAuth) persistTourDone()
   }
 
   const markDone = () => {
     setShowBanner(false)
-    if (userId) {
-      localStorage.setItem(storageKey(userId), 'true')
-    }
+    if (isAuth) persistTourDone()
   }
 
   return { showBanner, dismiss, markDone }

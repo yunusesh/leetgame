@@ -7,4 +7,5 @@ type UserSettings struct {
 	ActiveStages []string  `json:"active_stages" db:"active_stages"`
 	HideTitle    bool      `json:"hide_title"    db:"hide_title"`
 	ActiveTopics []string  `json:"active_topics" db:"active_topics"`
+	TourDone     bool      `json:"tour_done"     db:"tour_done"`
 }

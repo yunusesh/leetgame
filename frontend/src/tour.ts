@@ -2,7 +2,16 @@ import { driver } from 'driver.js'
 import 'driver.js/dist/driver.css'
 
 export function startTour(onDone: () => void, isAuth = false) {
-  const authSteps = isAuth ? [
+  const authOnlySteps = isAuth ? [
+    {
+      element: '[data-tour="overflow-menu"]',
+      popover: {
+        title: 'Smart Practice',
+        description: 'Use the ··· menu to start Smart Practice — the app picks the problem topic based on your weakest proficiency areas.',
+        side: 'bottom' as const,
+        align: 'end' as const,
+      },
+    },
     {
       element: '[data-tour="nav-stats"]',
       popover: {
@@ -43,15 +52,6 @@ export function startTour(onDone: () => void, isAuth = false) {
         },
       },
       {
-        element: '[data-tour="overflow-menu"]',
-        popover: {
-          title: 'Smart Practice',
-          description: 'Use the ··· menu to start Smart Practice — the app picks the problem topic based on your weakest proficiency areas.',
-          side: 'bottom',
-          align: 'end',
-        },
-      },
-      {
         element: '[data-tour="nav-search"]',
         popover: {
           title: 'Search & filter',
@@ -60,7 +60,7 @@ export function startTour(onDone: () => void, isAuth = false) {
           align: 'start',
         },
       },
-      ...authSteps,
+      ...authOnlySteps,
     ],
   })
 

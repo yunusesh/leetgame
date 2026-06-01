@@ -32,7 +32,7 @@ func resolveActiveTopics(stored []string) []string {
 }
 
 func (p *Postgres) GetUserSettings(ctx context.Context, userID uuid.UUID) (models.UserSettings, error) {
-	const sql = `SELECT user_id, active_stages, hide_title, active_topics FROM user_settings WHERE user_id = $1`
+	const sql = `SELECT user_id, active_stages, hide_title, active_topics, tour_done FROM user_settings WHERE user_id = $1`
 	return utils.Retry(ctx, func(ctx context.Context) (models.UserSettings, error) {
 		row, err := p.Pool.Query(ctx, sql, userID)
 		if err != nil {
@@ -45,6 +45,7 @@ func (p *Postgres) GetUserSettings(ctx context.Context, userID uuid.UUID) (model
 				ActiveStages: defaultActiveStages,
 				HideTitle:    true,
 				ActiveTopics: defaultActiveTopics,
+				TourDone:     false,
 			}, nil
 		}
 		if err != nil {
@@ -55,17 +56,18 @@ func (p *Postgres) GetUserSettings(ctx context.Context, userID uuid.UUID) (model
 	})
 }
 
-func (p *Postgres) UpsertUserSettings(ctx context.Context, userID uuid.UUID, activeStages []string, hideTitle bool, activeTopics []string) error {
+func (p *Postgres) UpsertUserSettings(ctx context.Context, userID uuid.UUID, activeStages []string, hideTitle bool, activeTopics []string, tourDone bool) error {
 	const sql = `
-		INSERT INTO user_settings (user_id, active_stages, hide_title, active_topics)
-		VALUES ($1, $2, $3, $4)
+		INSERT INTO user_settings (user_id, active_stages, hide_title, active_topics, tour_done)
+		VALUES ($1, $2, $3, $4, $5)
 		ON CONFLICT (user_id) DO UPDATE
 		SET active_stages = EXCLUDED.active_stages,
 		    hide_title    = EXCLUDED.hide_title,
-		    active_topics = EXCLUDED.active_topics
+		    active_topics = EXCLUDED.active_topics,
+		    tour_done     = EXCLUDED.tour_done
 	`
 	_, err := utils.Retry(ctx, func(ctx context.Context) (struct{}, error) {
-		_, err := p.Pool.Exec(ctx, sql, userID, activeStages, hideTitle, activeTopics)
+		_, err := p.Pool.Exec(ctx, sql, userID, activeStages, hideTitle, activeTopics, tourDone)
 		return struct{}{}, err
 	})
 	return err
