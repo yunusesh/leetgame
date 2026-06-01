@@ -55,7 +55,7 @@ func (p *Postgres) GetProficiencyHistory(ctx context.Context, userID uuid.UUID) 
 		SELECT topic, stage, score, snapshot_date
 		FROM proficiency_score_snapshots
 		WHERE user_id = $1
-		  AND snapshot_date >= CURRENT_DATE - 30
+		  AND snapshot_date >= CURRENT_DATE - INTERVAL '30 days'
 		ORDER BY topic, stage, snapshot_date ASC`
 
 	return utils.Retry(ctx, func(ctx context.Context) ([]models.ProficiencySnapshot, error) {
