@@ -2,6 +2,8 @@ package processcache
 
 import (
 	"context"
+	"sync"
+	"sync/atomic"
 	"testing"
 	"time"
 
@@ -15,11 +17,11 @@ import (
 // Only GetAllProblems is implemented; all other methods panic if called.
 type stubStorage struct {
 	problems  []models.Problem
-	callCount int
+	callCount atomic.Int32
 }
 
 func (s *stubStorage) GetAllProblems(_ context.Context) ([]models.Problem, error) {
-	s.callCount++
+	s.callCount.Add(1)
 	return s.problems, nil
 }
 
@@ -307,8 +309,8 @@ func TestCacheHit_LoadsOnce(t *testing.T) {
 		}
 	}
 
-	if stub.callCount != 1 {
-		t.Errorf("GetAllProblems called %d times, want 1", stub.callCount)
+	if stub.callCount.Load() != 1 {
+		t.Errorf("GetAllProblems called %d times, want 1", stub.callCount.Load())
 	}
 }
 
@@ -319,12 +321,83 @@ func TestCacheExpiry_ReloadsAfterTTL(t *testing.T) {
 	if _, err := c.GetRandomProblem(context.Background()); err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	time.Sleep(5 * time.Millisecond)
+	if stub.callCount.Load() != 1 {
+		t.Errorf("want 1 load after initial call, got %d", stub.callCount.Load())
+	}
+
+	time.Sleep(5 * time.Millisecond) // expire TTL
+
+	// stale-while-revalidate: second call returns stale data immediately
+	// and triggers an async reload
+	if _, err := c.GetRandomProblem(context.Background()); err != nil {
+		t.Fatalf("unexpected error on stale read: %v", err)
+	}
+
+	// wait for the async reload goroutine to finish (up to 100ms)
+	deadline := time.Now().Add(100 * time.Millisecond)
+	for time.Now().Before(deadline) {
+		if stub.callCount.Load() == 2 {
+			break
+		}
+		time.Sleep(time.Millisecond)
+	}
+	if stub.callCount.Load() != 2 {
+		t.Errorf("GetAllProblems called %d times after expiry, want 2", stub.callCount.Load())
+	}
+}
+
+func TestCacheExpiry_ServesStaleDataImmediately(t *testing.T) {
+	stub := &stubStorage{problems: testProblems}
+	c := New(stub, time.Millisecond)
+
 	if _, err := c.GetRandomProblem(context.Background()); err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
 
-	if stub.callCount != 2 {
-		t.Errorf("GetAllProblems called %d times after expiry, want 2", stub.callCount)
+	time.Sleep(5 * time.Millisecond) // expire TTL
+
+	p, err := c.GetRandomProblem(context.Background())
+	if err != nil {
+		t.Fatalf("expected stale data, got error: %v", err)
+	}
+	if p.Id == uuid.Nil {
+		t.Error("stale read returned zero-value problem")
+	}
+}
+
+func TestConcurrentExpiry_OnlyOneReload(t *testing.T) {
+	stub := &stubStorage{problems: testProblems}
+	c := New(stub, time.Millisecond)
+
+	if _, err := c.GetRandomProblem(context.Background()); err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	time.Sleep(5 * time.Millisecond) // expire TTL
+
+	// 10 concurrent requests after TTL — all should get stale data,
+	// only one background reload should be started
+	var wg sync.WaitGroup
+	for range 10 {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			if _, err := c.GetRandomProblem(context.Background()); err != nil {
+				t.Errorf("unexpected error: %v", err)
+			}
+		}()
+	}
+	wg.Wait()
+
+	// wait for async reload
+	deadline := time.Now().Add(100 * time.Millisecond)
+	for time.Now().Before(deadline) {
+		if stub.callCount.Load() >= 2 {
+			break
+		}
+		time.Sleep(time.Millisecond)
+	}
+	if stub.callCount.Load() != 2 {
+		t.Errorf("want exactly 2 loads (initial + 1 reload), got %d", stub.callCount.Load())
 	}
 }
