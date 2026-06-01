@@ -40,3 +40,12 @@ CREATE TABLE IF NOT EXISTS topic_proficiency (
   updated_at    TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   PRIMARY KEY (user_id, topic, stage)
 );
+
+CREATE TABLE IF NOT EXISTS proficiency_sessions (
+  user_id      UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  problem_id   UUID NOT NULL REFERENCES problems(id)   ON DELETE CASCADE,
+  topic        TEXT NOT NULL,
+  stage        TEXT NOT NULL,
+  session_date DATE NOT NULL DEFAULT CURRENT_DATE,
+  PRIMARY KEY (user_id, problem_id, topic, stage, session_date)
+);
