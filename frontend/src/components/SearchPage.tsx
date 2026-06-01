@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import type { Problem, ProblemTag, SearchState } from '../types'
-import { getProblemTags, searchProblems } from '../api'
+import { getProblemTags } from '../api'
+import { SEARCH_PAGE_SIZE } from '../hooks/useSearch'
 import { cn } from '../lib/utils'
 import { Button } from './ui/button'
 import { Input } from './ui/input'
@@ -22,12 +23,10 @@ const difficultyActiveClass: Record<Difficulty, string> = {
   Hard: 'border-hard text-hard bg-hard/10',
 }
 
-const pageSize = 12
 const tagMatchModes = [
   { value: 'and', label: 'Match all' },
   { value: 'or', label: 'Match any' },
 ] as const
-export const problemSearchPageSize = pageSize
 
 function SearchResultSkeleton() {
   return (
@@ -61,23 +60,17 @@ interface Props {
   onSelectProblem: (p: Problem, context: SearchSelectionContext) => void
   searchState: SearchState
   onSearchStateChange: (s: SearchState) => void
+  loading: boolean
+  error: string | null
 }
 
-export function SearchPage({ onSelectProblem, searchState, onSearchStateChange }: Props) {
+export function SearchPage({ onSelectProblem, searchState, onSearchStateChange, loading, error }: Props) {
   const [tagQuery, setTagQuery] = useState('')
   const [availableTags, setAvailableTags] = useState<ProblemTag[]>([])
-  const [loading, setLoading] = useState(false)
   const [tagsLoading, setTagsLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
   const [tagsError, setTagsError] = useState<string | null>(null)
-  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-  const abortRef = useRef<AbortController | null>(null)
 
   const { q, difficulty, tags, tagMatch, results, page, total, hasSearched } = searchState
-
-  // Use a ref to access current searchState inside effects without stale closure
-  const searchStateRef = useRef(searchState)
-  searchStateRef.current = searchState
 
   const setQ = (v: string) => onSearchStateChange({ ...searchState, q: v, page: 1 })
   const setDifficulty = (v: string) => onSearchStateChange({ ...searchState, difficulty: v, page: 1 })
@@ -108,32 +101,6 @@ export function SearchPage({ onSelectProblem, searchState, onSearchStateChange }
     return () => controller.abort()
   }, [])
 
-  useEffect(() => {
-    if (debounceRef.current) clearTimeout(debounceRef.current)
-    debounceRef.current = setTimeout(async () => {
-      abortRef.current?.abort()
-      const controller = new AbortController()
-      abortRef.current = controller
-      setLoading(true)
-      setError(null)
-      try {
-        const { q: sq, difficulty: sd, tags: st, tagMatch: sm, page: sp } = searchStateRef.current
-        const res = await searchProblems(sq, sd, st, sm, sp, pageSize, controller.signal)
-        onSearchStateChange({ ...searchStateRef.current, results: res.problems, total: res.total, hasSearched: true })
-      } catch (err) {
-        if (err instanceof Error && err.name !== 'AbortError') {
-          setError('Search failed. Is the backend running?')
-        }
-      } finally {
-        if (!controller.signal.aborted) setLoading(false)
-      }
-    }, 300)
-    return () => {
-      if (debounceRef.current) clearTimeout(debounceRef.current)
-      abortRef.current?.abort()
-    }
-  }, [q, difficulty, tags, tagMatch, page]) // eslint-disable-line react-hooks/exhaustive-deps
-
   const addTag = (tag: string) => {
     if (!tags.includes(tag)) setTags([...tags, tag])
     setTagQuery('')
@@ -144,9 +111,9 @@ export function SearchPage({ onSelectProblem, searchState, onSearchStateChange }
     !tags.includes(tag.name) &&
     tag.name.toLowerCase().includes(tagQuery.toLowerCase())
   )).slice(0, 12)
-  const totalPages = Math.max(1, Math.ceil(total / pageSize))
-  const showingFrom = total === 0 ? 0 : (page - 1) * pageSize + 1
-  const showingTo = Math.min(page * pageSize, total)
+  const totalPages = Math.max(1, Math.ceil(total / SEARCH_PAGE_SIZE))
+  const showingFrom = total === 0 ? 0 : (page - 1) * SEARCH_PAGE_SIZE + 1
+  const showingTo = Math.min(page * SEARCH_PAGE_SIZE, total)
 
   const skeletonList = (
     <div>
@@ -286,7 +253,7 @@ export function SearchPage({ onSelectProblem, searchState, onSearchStateChange }
             tags,
             tagMatch,
             page,
-            pageSize,
+            pageSize: SEARCH_PAGE_SIZE,
             results,
             selectedIndex: results.findIndex(result => result.id === p.id),
           })}
