@@ -10,17 +10,24 @@ import (
 	"github.com/jackc/pgx/v5"
 )
 
-func (p *Postgres) UpsertTopicProficiency(ctx context.Context, userID uuid.UUID, topic, stage string, sessionScore, scale, floor float64) error {
+func (p *Postgres) UpsertTopicProficiency(ctx context.Context, userID uuid.UUID, problemID uuid.UUID, topic, stage string, sessionScore, scale, floor float64) error {
 	const q = `
+		WITH dedup AS (
+			INSERT INTO proficiency_sessions (user_id, problem_id, topic, stage, session_date)
+			VALUES ($1, $7, $2, $3, CURRENT_DATE)
+			ON CONFLICT (user_id, problem_id, topic, stage, session_date) DO NOTHING
+			RETURNING 1
+		)
 		INSERT INTO topic_proficiency (user_id, topic, stage, score, session_count, updated_at)
-		VALUES ($1, $2, $3, $4, 1, NOW())
+		SELECT $1, $2, $3, $4, 1, NOW()
+		FROM dedup
 		ON CONFLICT (user_id, topic, stage) DO UPDATE
 		SET score         = topic_proficiency.score + GREATEST($5, $6 / sqrt(topic_proficiency.session_count::float + 1)) * ($4 - topic_proficiency.score),
 		    session_count = topic_proficiency.session_count + 1,
 		    updated_at    = NOW()`
 
 	_, err := utils.Retry(ctx, func(ctx context.Context) (struct{}, error) {
-		_, err := p.Pool.Exec(ctx, q, userID, topic, stage, sessionScore, floor, scale)
+		_, err := p.Pool.Exec(ctx, q, userID, topic, stage, sessionScore, floor, scale, problemID)
 		return struct{}{}, err
 	})
 	return err
