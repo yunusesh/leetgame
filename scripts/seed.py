@@ -30,6 +30,8 @@ try:
             topic_tags = ast.literal_eval(raw_tags) if isinstance(raw_tags, str) else list(raw_tags)
         except Exception:
             topic_tags = []
+        raw_id      = row.get("question_id")
+        leetcode_id = int(raw_id) if raw_id is not None else None
 
         if not slug or not title or not description or not difficulty:
             skipped += 1
@@ -37,11 +39,11 @@ try:
 
         cur.execute(
             """
-            INSERT INTO problems (id, slug, title, description, difficulty, topic_tags)
-            VALUES (%s, %s, %s, %s, %s, %s)
+            INSERT INTO problems (id, slug, title, description, difficulty, topic_tags, leetcode_id)
+            VALUES (%s, %s, %s, %s, %s, %s, %s)
             ON CONFLICT (slug) DO NOTHING
             """,
-            (str(uuid.uuid4()), slug, title, description, difficulty, topic_tags),
+            (str(uuid.uuid4()), slug, title, description, difficulty, topic_tags, leetcode_id),
         )
         if cur.rowcount > 0:
             inserted += 1
