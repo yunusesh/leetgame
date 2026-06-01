@@ -403,6 +403,7 @@ export default function App() {
           hideTitle={hideTitle}
           isSaved={isSaved(problem.id)}
           onToggleSave={session ? () => { isSaved(problem.id) ? void unsave(problem.id) : void save(problem) } : undefined}
+          onSmartPractice={session ? () => void loadSmartPracticeProblem() : undefined}
         />
         <ChatView
           history={history}

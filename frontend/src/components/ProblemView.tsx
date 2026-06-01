@@ -27,12 +27,14 @@ export function ProblemView({
   hideTitle = true,
   isSaved = false,
   onToggleSave,
+  onSmartPractice,
 }: {
   problem: Problem
   onSkip: () => void
   onRandom: () => void
   onBack?: () => void
   onExitPlaylist?: () => void
+  onSmartPractice?: () => void
   playlistSummary?: SearchPlaylistSummary | null
   hideTitle?: boolean
   isSaved?: boolean
@@ -59,7 +61,7 @@ export function ProblemView({
     return () => document.removeEventListener('mousedown', handle)
   }, [overflowOpen])
 
-  const hasOverflow = !!(onRandom || onExitPlaylist)
+  const hasOverflow = !!(onRandom || onExitPlaylist || onSmartPractice)
 
   return (
     <div className={cn(
@@ -168,6 +170,14 @@ export function ProblemView({
               </Button>
               {overflowOpen && (
                 <div className="absolute right-0 top-full mt-1 z-20 min-w-[160px] rounded-md border border-border bg-background shadow-md py-1">
+                  {onSmartPractice && (
+                    <button
+                      onClick={() => { onSmartPractice(); setOverflowOpen(false) }}
+                      className="w-full text-left px-3 py-2 text-sm hover:bg-muted transition-colors"
+                    >
+                      Smart Practice
+                    </button>
+                  )}
                   {onRandom && (
                     <button
                       onClick={() => { onRandom(); setOverflowOpen(false) }}
