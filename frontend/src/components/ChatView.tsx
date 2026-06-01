@@ -92,7 +92,7 @@ export function ChatView({ history, stage, sessionActiveStages, loading, error, 
   }
 
   return (
-    <div className="flex-1 flex flex-col min-h-0 md:w-1/2">
+    <div data-tour="chat-panel" className="flex-1 flex flex-col min-h-0 md:w-1/2">
       <div className={cn(
         "px-5 py-3 border-b border-border text-sm font-semibold",
         stage === 'complete'

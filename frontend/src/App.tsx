@@ -12,6 +12,9 @@ import { ChatView } from './components/ChatView'
 import { EndOfSetView } from './components/EndOfSetView'
 import { SearchPage, type SearchSelectionContext } from './components/SearchPage'
 import { StatsPage } from './components/StatsPage'
+import { TourBanner } from './components/TourBanner'
+import { useTour } from './hooks/useTour'
+import { startTour } from './tour'
 
 type ProblemSource = 'random' | 'search' | 'smart'
 
@@ -51,6 +54,15 @@ function getPlaylistSummary(searchPlaylist: SearchPlaylist | null) {
 
 export default function App() {
   const { session, authLoading, streak, activeStages, hideTitle, activeTopics, settingsReady, persistStages, persistHideTitle, persistTopics, recordAndUpdateStreak } = useAuth()
+  const userId = session?.user.id ?? null
+  const { showBanner, dismiss: dismissTour, markDone: markTourDone } = useTour(userId)
+
+  const handleStartTour = () => {
+    if (view !== 'practice') setView('practice')
+    setTimeout(() => {
+      startTour(markTourDone, !!session)
+    }, view !== 'practice' ? 100 : 0)
+  }
 
   const [view, setView] = useState<View>('practice')
   const [problem, setProblem] = useState<Problem | null>(null)
@@ -445,6 +457,9 @@ export default function App() {
         hideTitle={hideTitle}
         onHideTitleChange={handleHideTitleChange}
       />
+      {showBanner && (
+        <TourBanner onStart={handleStartTour} onDismiss={dismissTour} />
+      )}
       {view === 'search'
         ? <SearchPage
             onSelectProblem={selectProblem}

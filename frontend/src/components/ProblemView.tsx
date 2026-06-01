@@ -66,7 +66,7 @@ export function ProblemView({
   const hasOverflow = !!(onRandom || onExitPlaylist || onSmartPractice)
 
   return (
-    <div className={cn(
+    <div data-tour="problem-panel" className={cn(
       "border-b md:border-b-0 md:border-r border-border md:w-1/2 md:overflow-y-auto",
       problemOpen ? "flex-1 overflow-y-auto" : "shrink-0"
     )}>
@@ -172,7 +172,7 @@ export function ProblemView({
             Next →
           </Button>
           {hasOverflow && (
-            <div className="relative shrink-0" ref={overflowRef}>
+            <div data-tour="overflow-menu" className="relative shrink-0" ref={overflowRef}>
               <Button
                 variant="ghost"
                 size="sm"

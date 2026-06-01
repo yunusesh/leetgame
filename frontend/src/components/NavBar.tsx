@@ -34,6 +34,7 @@ export function NavBar({ view, onNavigate, session, authLoading, streak, activeS
       {(['practice', 'search'] as const).map(v => (
         <Button
           key={v}
+          data-tour={`nav-${v}`}
           variant={view === v ? 'secondary' : 'ghost'}
           size="sm"
           onClick={() => onNavigate(v)}
@@ -43,6 +44,7 @@ export function NavBar({ view, onNavigate, session, authLoading, streak, activeS
       ))}
       {session && (
         <Button
+          data-tour="nav-stats"
           variant={view === 'stats' ? 'secondary' : 'ghost'}
           size="sm"
           onClick={() => onNavigate('stats')}
@@ -75,7 +77,7 @@ export function NavBar({ view, onNavigate, session, authLoading, streak, activeS
         {authLoading ? null : session ? (
           <>
             {streak !== null && streak >= 1 && (
-              <span className="text-sm font-medium">🔥 {streak}</span>
+              <span data-tour="streak" className="text-sm font-medium">🔥 {streak}</span>
             )}
             {session.user.user_metadata?.avatar_url && (
               <img
