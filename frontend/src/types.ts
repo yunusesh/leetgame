@@ -24,6 +24,7 @@ export interface ProblemTag {
 export interface ChatMessage {
   role: 'user' | 'assistant'
   content: string
+  marker?: 'hint' | 'answer'
 }
 
 export type ActiveStage = 'edge_cases' | 'brute_force' | 'pattern' | 'algorithm' | 'tc_sc'
