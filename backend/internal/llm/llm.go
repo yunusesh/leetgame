@@ -85,6 +85,7 @@ func BuildSystemPrompt(title, description, stage string, activeStages []string, 
 type ChatMessage struct {
 	Role    string `json:"role"`
 	Content string `json:"content"`
+	Marker  string `json:"marker,omitempty"` // "hint" | "answer" | ""
 }
 
 type EvaluateResponse struct {

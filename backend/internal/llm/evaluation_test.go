@@ -59,6 +59,30 @@ func TestBuildEvaluationPrompt(t *testing.T) {
 	}
 }
 
+func TestBuildEvaluationPrompt_MarkerInjectedIntoHistory(t *testing.T) {
+	problem := models.Problem{
+		Id:        uuid.MustParse("00000000-0000-0000-0000-000000000001"),
+		Title:     "Two Sum",
+		TopicTags: []string{"Array"},
+	}
+	history := []ChatMessage{
+		{Role: "user", Content: "I think hash map", Marker: "hint"},
+		{Role: "assistant", Content: "Good, explain why"},
+		{Role: "user", Content: "To get O(n)", Marker: "answer"},
+	}
+	prompt := BuildEvaluationPrompt(problem, []string{"pattern"}, history)
+
+	if !strings.Contains(prompt, "[USER REQUESTED HINT]\nI think hash map") {
+		t.Error("expected hint marker injected before hint message content")
+	}
+	if !strings.Contains(prompt, "[USER REQUESTED ANSWER]\nTo get O(n)") {
+		t.Error("expected answer marker injected before answer message content")
+	}
+	if !strings.Contains(prompt, "assistant: Good, explain why") {
+		t.Error("expected assistant message without marker")
+	}
+}
+
 func TestBuildEvaluationPrompt_EmptyHistory(t *testing.T) {
 	problem := models.Problem{
 		Id:        uuid.MustParse("00000000-0000-0000-0000-000000000001"),

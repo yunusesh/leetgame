@@ -32,7 +32,13 @@ func BuildEvaluationPrompt(problem models.Problem, activeStages []string, histor
 
 	sb.WriteString("Full conversation (note: 'assistant' turns are interviewer coaching prompts, not candidate answers — only score the candidate's own words in 'user' turns):\n")
 	for _, msg := range history {
-		fmt.Fprintf(&sb, "%s: %s\n", msg.Role, msg.Content)
+		content := msg.Content
+		if msg.Marker == "hint" {
+			content = "[USER REQUESTED HINT]\n" + content
+		} else if msg.Marker == "answer" {
+			content = "[USER REQUESTED ANSWER]\n" + content
+		}
+		fmt.Fprintf(&sb, "%s: %s\n", msg.Role, content)
 	}
 
 	sb.WriteString("\nScore the candidate's demonstrated understanding for each (topic, stage) pair that was actually tested.")

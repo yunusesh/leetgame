@@ -46,16 +46,18 @@ func (hs *HandlerService) Chat(c *fiber.Ctx) error {
 	evalProblem := problem
 	evalProblem.TopicTags = append([]string(nil), problem.TopicTags...)
 	evalActiveStages := append([]string(nil), req.ActiveStages...)
-	// baseHistory = prior turns + user's current message; assistant reply appended after streaming
-	baseHistory := make([]llm.ChatMessage, 0, len(history)+1)
-	baseHistory = append(baseHistory, history...)
-	userContent := req.Message
+	// baseHistory for the evaluator — preserves Marker fields from prior turns
+	var currentMarker string
 	if req.HintRequested {
-		userContent = "[USER REQUESTED HINT]\n" + userContent
+		currentMarker = "hint"
 	} else if req.AnswerRequested {
-		userContent = "[USER REQUESTED ANSWER]\n" + userContent
+		currentMarker = "answer"
 	}
-	baseHistory = append(baseHistory, llm.ChatMessage{Role: "user", Content: userContent})
+	baseHistory := make([]llm.ChatMessage, 0, len(req.History)+1)
+	for _, h := range req.History {
+		baseHistory = append(baseHistory, llm.ChatMessage{Role: h.Role, Content: h.Content, Marker: h.Marker})
+	}
+	baseHistory = append(baseHistory, llm.ChatMessage{Role: "user", Content: req.Message, Marker: currentMarker})
 
 	c.Set("Content-Type", "text/event-stream")
 	c.Set("Cache-Control", "no-cache")

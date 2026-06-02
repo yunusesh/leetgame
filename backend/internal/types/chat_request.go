@@ -11,6 +11,7 @@ import (
 type HistoryMessage struct {
 	Role    string `json:"role"`
 	Content string `json:"content"`
+	Marker  string `json:"marker,omitempty"`
 }
 
 type ChatRequest struct {
@@ -36,6 +37,13 @@ func (r ChatRequest) Validate() map[string]string {
 
 	if strings.TrimSpace(r.Message) == "" {
 		errs["message"] = "required"
+	}
+
+	validMarkers := map[string]bool{"": true, "hint": true, "answer": true}
+	for i, msg := range r.History {
+		if !validMarkers[msg.Marker] {
+			errs[fmt.Sprintf("history[%d].marker", i)] = "must be 'hint', 'answer', or omitted"
+		}
 	}
 
 	if len(r.ActiveStages) == 0 {
