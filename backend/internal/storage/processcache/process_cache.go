@@ -266,7 +266,7 @@ func (c *CachedStorage) UpsertPracticeDay(ctx context.Context, userID uuid.UUID)
 	return c.inner.UpsertPracticeDay(ctx, userID)
 }
 
-func (c *CachedStorage) GetStreak(ctx context.Context, userID uuid.UUID) (int, error) {
+func (c *CachedStorage) GetStreak(ctx context.Context, userID uuid.UUID) (types.StreakInfo, error) {
 	return c.inner.GetStreak(ctx, userID)
 }
 

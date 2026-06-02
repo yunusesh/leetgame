@@ -17,15 +17,12 @@ func (hs *HandlerService) RecordStreak(c *fiber.Ctx) error {
 		return err
 	}
 
-	streak, err := hs.storage.GetStreak(c.Context(), uid)
+	info, err := hs.storage.GetStreak(c.Context(), uid)
 	if err != nil {
 		return err
 	}
 
-	type response struct {
-		Streak int `json:"streak"`
-	}
-	return c.JSON(response{Streak: streak})
+	return c.JSON(info)
 }
 
 func (hs *HandlerService) GetStreak(c *fiber.Ctx) error {
@@ -34,13 +31,10 @@ func (hs *HandlerService) GetStreak(c *fiber.Ctx) error {
 		return xerrors.UnauthorizedError()
 	}
 
-	streak, err := hs.storage.GetStreak(c.Context(), uid)
+	info, err := hs.storage.GetStreak(c.Context(), uid)
 	if err != nil {
 		return err
 	}
 
-	type response struct {
-		Streak int `json:"streak"`
-	}
-	return c.JSON(response{Streak: streak})
+	return c.JSON(info)
 }
