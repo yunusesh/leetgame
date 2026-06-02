@@ -53,7 +53,7 @@ function getPlaylistSummary(searchPlaylist: SearchPlaylist | null) {
 }
 
 export default function App() {
-  const { session, authLoading, streak, activeStages, hideTitle, activeTopics, tourDone, settingsReady, persistStages, persistHideTitle, persistTopics, persistTourDone, recordAndUpdateStreak } = useAuth()
+  const { session, authLoading, streak, streakStatus, activeStages, hideTitle, activeTopics, tourDone, settingsReady, persistStages, persistHideTitle, persistTopics, persistTourDone, recordAndUpdateStreak } = useAuth()
   const { showBanner, dismiss: dismissTour, markDone: markTourDone } = useTour(!!session, settingsReady, tourDone, persistTourDone)
 
   const handleStartTour = () => {
@@ -457,6 +457,7 @@ export default function App() {
         session={session}
         authLoading={authLoading}
         streak={streak}
+        streakStatus={streakStatus}
         activeStages={activeStages}
         onStagesChange={handleStagesChange}
         hideTitle={hideTitle}

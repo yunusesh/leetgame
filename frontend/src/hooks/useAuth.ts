@@ -9,6 +9,13 @@ export function useAuth() {
   const [session, setSession] = useState<Session | null>(null)
   const [authLoading, setAuthLoading] = useState(true)
   const [streak, setStreak] = useState<number | null>(null)
+  const [lastPracticedAt, setLastPracticedAt] = useState<string | null>(null)
+  const ms = lastPracticedAt === null ? Infinity : Date.now() - new Date(lastPracticedAt).getTime()
+  const streakStatus: 'solid' | 'hollow' | 'none' | null =
+    lastPracticedAt === null ? null
+    : ms < 864e5  ? 'solid'
+    : ms < 1728e5 ? 'hollow'
+    : 'none'
   const [activeStages, setActiveStages] = useState<ActiveStage[]>(DEFAULT_STAGES)
   const [hideTitle, setHideTitle] = useState(true)
   const [activeTopics, setActiveTopics] = useState<string[]>(NEETCODE_TOPICS)
@@ -21,7 +28,10 @@ export function useAuth() {
       setAuthLoading(false)
       if (event === 'SIGNED_IN' || event === 'INITIAL_SESSION') {
         if (session) {
-          getStreak().then(({ streak }) => setStreak(streak)).catch(() => {})
+          getStreak().then(({ streak, last_practiced_at }) => {
+            setStreak(streak)
+            setLastPracticedAt(last_practiced_at)
+          }).catch(() => {})
           getSettings()
             .then(({ active_stages, hide_title, active_topics, tour_done }) => {
               setActiveStages(active_stages)
@@ -33,11 +43,13 @@ export function useAuth() {
             .finally(() => setSettingsReady(true))
         } else {
           setStreak(null)
+          setLastPracticedAt(null)
           applyLocalSettings()
           setSettingsReady(true)
         }
       } else if (event === 'SIGNED_OUT') {
         setStreak(null)
+        setLastPracticedAt(null)
         setActiveTopics(NEETCODE_TOPICS)
         applyLocalSettings()
         setSettingsReady(true)
@@ -95,13 +107,17 @@ export function useAuth() {
   }
 
   const recordAndUpdateStreak = () => {
-    recordStreak().then(({ streak }) => setStreak(streak)).catch(() => {})
+    recordStreak().then(({ streak, last_practiced_at }) => {
+      setStreak(streak)
+      setLastPracticedAt(last_practiced_at)
+    }).catch(() => {})
   }
 
   return {
     session,
     authLoading,
     streak,
+    streakStatus,
     activeStages,
     hideTitle,
     activeTopics,

@@ -11,6 +11,7 @@ interface Props {
   session: Session | null
   authLoading: boolean
   streak: number | null
+  streakStatus: 'solid' | 'hollow' | 'none' | null
   activeStages: ActiveStage[]
   onStagesChange: (stages: ActiveStage[]) => void
   hideTitle: boolean
@@ -18,7 +19,7 @@ interface Props {
   onTakeTour?: () => void
 }
 
-export function NavBar({ view, onNavigate, session, authLoading, streak, activeStages, onStagesChange, hideTitle, onHideTitleChange, onTakeTour }: Props) {
+export function NavBar({ view, onNavigate, session, authLoading, streak, streakStatus, activeStages, onStagesChange, hideTitle, onHideTitleChange, onTakeTour }: Props) {
   const handleSignIn = async () => {
     await supabase.auth.signInWithOAuth({
       provider: 'google',
@@ -78,8 +79,11 @@ export function NavBar({ view, onNavigate, session, authLoading, streak, activeS
         )}
         {authLoading ? null : session ? (
           <>
-            {streak !== null && streak >= 1 && (
+            {streakStatus === 'solid' && (
               <span data-tour="streak" className="text-sm font-medium">🔥 {streak}</span>
+            )}
+            {streakStatus === 'hollow' && (
+              <span data-tour="streak" className="text-sm font-medium opacity-50 grayscale">🔥 {streak}</span>
             )}
             {session.user.user_metadata?.avatar_url && (
               <img
