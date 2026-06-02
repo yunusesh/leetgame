@@ -13,10 +13,10 @@ CREATE TABLE IF NOT EXISTS problems (
   created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
-CREATE TABLE IF NOT EXISTS practice_days (
-  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
-  day     DATE NOT NULL DEFAULT CURRENT_DATE,
-  PRIMARY KEY (user_id, day)
+CREATE TABLE IF NOT EXISTS user_streaks (
+  user_id           UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
+  streak            INT         NOT NULL DEFAULT 1 CHECK (streak >= 1),
+  last_practiced_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
 CREATE TABLE IF NOT EXISTS user_settings (
