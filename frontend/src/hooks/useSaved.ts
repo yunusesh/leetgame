@@ -15,6 +15,7 @@ export function useSaved(session: Session | null): {
 
   useEffect(() => {
     if (!userId) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setSavedProblems([])
       return
     }

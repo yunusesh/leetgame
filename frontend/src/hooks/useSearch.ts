@@ -13,6 +13,7 @@ export function useSearch(
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const abortRef = useRef<AbortController | null>(null)
   const searchStateRef = useRef(searchState)
+  // eslint-disable-next-line react-hooks/refs
   searchStateRef.current = searchState
 
   const { q, difficulty, tags, tagMatch, page } = searchState

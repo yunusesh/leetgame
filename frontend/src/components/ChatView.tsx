@@ -77,6 +77,7 @@ export function ChatView({ history, stage, sessionActiveStages, loading, error, 
   useEffect(() => {
     if (!loading && queue.length > 0) {
       const [next, ...rest] = queue
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setQueue(rest)
       onSubmit(next)
     }

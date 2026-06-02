@@ -129,7 +129,7 @@ export default function App() {
       setProblemSource('random')
       setSearchPlaylist(null)
       resetPracticeState()
-    } catch (e) {
+    } catch {
       setError('Failed to load problem. Is the backend running?')
     }
   }
@@ -184,7 +184,7 @@ export default function App() {
       })
       resetPracticeState()
       setPlaylistExhausted(false)
-    } catch (e) {
+    } catch {
       setError('Failed to load the next filtered problem. Is the backend running?')
     }
   }
@@ -217,7 +217,7 @@ export default function App() {
         resetPracticeState()
         setPlaylistExhausted(false)
         return
-      } catch (e) {
+      } catch {
         setError('Failed to load a random filtered problem. Is the backend running?')
         return
       }
@@ -236,7 +236,7 @@ export default function App() {
       setProblemSource('smart')
       setSearchPlaylist(null)
       resetPracticeState()
-    } catch (e) {
+    } catch {
       setError('Failed to load smart practice problem. Is the backend running?')
     }
   }
@@ -264,11 +264,13 @@ export default function App() {
 
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     if (settingsReady && !problem) void loadRandomProblem()
   }, [settingsReady])
 
   useEffect(() => {
     if (history.length === 0) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setSessionActiveStages(activeStages)
       setStage(activeStages[0])
       setStageBannerDismissed(false)
@@ -313,7 +315,7 @@ export default function App() {
       })
       setPlaylistExhausted(false)
       resetPracticeState()
-    } catch (e) {
+    } catch {
       setError('Failed to restart the practice set. Is the backend running?')
     }
   }
@@ -426,7 +428,7 @@ export default function App() {
           playlistSummary={problemSource === 'search' ? getPlaylistSummary(searchPlaylist) : null}
           hideTitle={hideTitle}
           isSaved={isSaved(problem.id)}
-          onToggleSave={session ? () => { isSaved(problem.id) ? void unsave(problem.id) : void save(problem) } : undefined}
+          onToggleSave={session ? () => { if (isSaved(problem.id)) { void unsave(problem.id) } else { void save(problem) } } : undefined}
           onSmartPractice={session ? () => void loadSmartPracticeProblem() : undefined}
         />
         <ChatView
@@ -479,7 +481,7 @@ export default function App() {
             tagsError={tagsError}
             savedIds={savedIds}
             savedProblems={savedProblems}
-            onToggleSave={(p) => isSaved(p.id) ? void unsave(p.id) : void save(p)}
+            onToggleSave={(p) => { if (isSaved(p.id)) { void unsave(p.id) } else { void save(p) } }}
             showSave={!!session}
           />
         : view === 'stats'
@@ -488,6 +490,7 @@ export default function App() {
             activeTopics={activeTopics}
             onTopicsChange={persistTopics}
           />
+        // eslint-disable-next-line react-hooks/refs
         : practiceView()
       }
     </div>

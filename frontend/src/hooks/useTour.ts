@@ -8,6 +8,7 @@ export function useTour(isAuth: boolean, settingsReady: boolean, tourDone: boole
   useEffect(() => {
     if (isAuth) {
       // wait for settings to load before showing — avoids flash when tourDone is still false
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       if (settingsReady) setShowBanner(!tourDone)
     } else {
       setShowBanner(localStorage.getItem(UNAUTH_TOUR_KEY) !== 'true')

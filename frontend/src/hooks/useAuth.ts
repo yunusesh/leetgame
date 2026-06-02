@@ -10,6 +10,7 @@ export function useAuth() {
   const [authLoading, setAuthLoading] = useState(true)
   const [streak, setStreak] = useState<number | null>(null)
   const [lastPracticedAt, setLastPracticedAt] = useState<string | null>(null)
+  // eslint-disable-next-line react-hooks/purity
   const ms = lastPracticedAt === null ? Infinity : Date.now() - new Date(lastPracticedAt).getTime()
   const streakStatus: 'solid' | 'hollow' | 'none' | null =
     lastPracticedAt === null ? null
@@ -21,6 +22,17 @@ export function useAuth() {
   const [activeTopics, setActiveTopics] = useState<string[]>(NEETCODE_TOPICS)
   const [tourDone, setTourDone] = useState(false)
   const [settingsReady, setSettingsReady] = useState(false)
+
+  const applyLocalSettings = () => {
+    const stored = localStorage.getItem('leetgame_active_stages')
+    let stages = DEFAULT_STAGES
+    if (stored) {
+      try { stages = JSON.parse(stored) as ActiveStage[] } catch { /* use default */ }
+    }
+    const storedHideTitle = localStorage.getItem('leetgame_hide_title')
+    setActiveStages(stages)
+    setHideTitle(storedHideTitle === null ? true : storedHideTitle === 'true')
+  }
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
@@ -58,17 +70,6 @@ export function useAuth() {
 
     return () => subscription.unsubscribe()
   }, [])
-
-  function applyLocalSettings() {
-    const stored = localStorage.getItem('leetgame_active_stages')
-    let stages = DEFAULT_STAGES
-    if (stored) {
-      try { stages = JSON.parse(stored) as ActiveStage[] } catch { /* use default */ }
-    }
-    const storedHideTitle = localStorage.getItem('leetgame_hide_title')
-    setActiveStages(stages)
-    setHideTitle(storedHideTitle === null ? true : storedHideTitle === 'true')
-  }
 
   const persistStages = (stages: ActiveStage[]) => {
     setActiveStages(stages)

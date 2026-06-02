@@ -46,6 +46,7 @@ export function ProblemView({
   const [titleOpen, setTitleOpen] = useState(!hideTitle)
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setTitleOpen(!hideTitle)
   }, [hideTitle])
   const [problemOpen, setProblemOpen] = useState(true)

@@ -75,6 +75,7 @@ export function SearchPage({ onSelectProblem, searchState, onSearchStateChange, 
   const [showSaved, setShowSaved] = useState(false)
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     if (!showSave) setShowSaved(false)
   }, [showSave])
 
