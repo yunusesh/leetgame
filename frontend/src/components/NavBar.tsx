@@ -83,7 +83,7 @@ export function NavBar({ view, onNavigate, session, authLoading, streak, streakS
               <span data-tour="streak" className="text-sm font-medium">🔥 {streak}</span>
             )}
             {streakStatus === 'hollow' && (
-              <span data-tour="streak" className="text-sm font-medium opacity-50 grayscale">🔥 {streak}</span>
+              <span className="text-sm font-medium opacity-50 grayscale">🔥 {streak}</span>
             )}
             {session.user.user_metadata?.avatar_url && (
               <img
