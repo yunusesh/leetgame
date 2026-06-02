@@ -28,10 +28,12 @@ Replaces `practice_days`. One row per user; upserted on every practice completio
 
 ### Migration
 
+`MAX(day)::TIMESTAMPTZ` is cast with explicit UTC to avoid session-timezone drift:
+
 ```sql
 INSERT INTO user_streaks (user_id, streak, last_practiced_at)
 SELECT pd.user_id, s.streak,
-  (SELECT MAX(day)::TIMESTAMPTZ FROM practice_days WHERE user_id = pd.user_id)
+  TIMEZONE('UTC', (SELECT MAX(day)::TIMESTAMP FROM practice_days WHERE user_id = pd.user_id))
 FROM (SELECT DISTINCT user_id FROM practice_days) pd
 CROSS JOIN LATERAL (
   WITH ranked AS (
@@ -51,14 +53,14 @@ DROP TABLE practice_days;
 
 ### Upsert SQL (`UpsertPracticeDay`)
 
-Single statement handles all cases. Day boundary uses explicit UTC to avoid session-timezone drift:
+Single statement handles all cases. Both sides of the day-boundary comparison use `DATE(... AT TIME ZONE 'UTC')` to ensure consistency regardless of DB session timezone:
 
 ```sql
 INSERT INTO user_streaks (user_id, streak, last_practiced_at)
 VALUES ($1, 1, NOW())
 ON CONFLICT (user_id) DO UPDATE SET
   streak = CASE
-    WHEN DATE(user_streaks.last_practiced_at AT TIME ZONE 'UTC') = CURRENT_DATE
+    WHEN DATE(user_streaks.last_practiced_at AT TIME ZONE 'UTC') = DATE(NOW() AT TIME ZONE 'UTC')
       THEN user_streaks.streak
     WHEN NOW() - user_streaks.last_practiced_at <= INTERVAL '48 hours'
       THEN user_streaks.streak + 1
@@ -69,15 +71,17 @@ ON CONFLICT (user_id) DO UPDATE SET
 
 ### GetStreak
 
-Reads one row, scans into `(streak int, lastPracticedAt time.Time)`. Returns zero-value `StreakInfo{}` (not an error) on `pgx.ErrNoRows`.
+Reads one row with two manual `.Scan` targets (`&streak`, `&lastPracticedAt`). On `pgx.ErrNoRows` (user has never practiced), returns `StreakInfo{Streak: 0, LastPracticedAt: nil}` — `LastPracticedAt` is a pointer (`*time.Time`) so it serializes as `null` in JSON rather than the Go zero-time sentinel `"0001-01-01T00:00:00Z"`. The frontend null guard handles this correctly.
 
 ### New type: `types.StreakInfo`
+
+Manual scanning is used (not `pgx.RowToStructByName`), so no `db` tags are needed:
 
 ```go
 // types/streak_info.go
 type StreakInfo struct {
-    Streak          int       `json:"streak"`
-    LastPracticedAt time.Time `json:"last_practiced_at"`
+    Streak          int        `json:"streak"`
+    LastPracticedAt *time.Time `json:"last_practiced_at"`
 }
 ```
 
@@ -88,6 +92,8 @@ Both `GET /api/streak` and `POST /api/streak` return:
 ```json
 { "streak": 7, "last_practiced_at": "2026-06-02T10:30:00Z" }
 ```
+
+For a user who has never practiced: `{ "streak": 0, "last_practiced_at": null }`.
 
 Status (`solid`/`hollow`/`none`) is not computed server-side — it is a display concern owned by the frontend.
 
@@ -108,18 +114,28 @@ Status (`solid`/`hollow`/`none`) is not computed server-side — it is a display
 ### `api.ts`
 
 ```ts
-getStreak(): Promise<{ streak: number; last_practiced_at: string }>
-recordStreak(): Promise<{ streak: number; last_practiced_at: string }>
+getStreak(): Promise<{ streak: number; last_practiced_at: string | null }>
+recordStreak(): Promise<{ streak: number; last_practiced_at: string | null }>
 ```
 
 ### `useAuth.ts`
 
-Add `lastPracticedAt: string | null` state. Both `getStreak` and `recordStreak` `.then()` callbacks set both `streak` and `lastPracticedAt`. Compute `streakStatus` with null guard:
+Add `lastPracticedAt: string | null` state (initial value `null`). Reset to `null` on sign-out and in the unauthenticated branch of `INITIAL_SESSION`. Both `getStreak` and `recordStreak` `.then()` callbacks set **both** `streak` and `lastPracticedAt`:
 
 ```ts
-const streakStatus: 'solid' | 'hollow' | 'none' | null = lastPracticedAt === null
-  ? null
-  : ms < 864e5 ? 'solid'
+getStreak().then(({ streak, last_practiced_at }) => {
+  setStreak(streak)
+  setLastPracticedAt(last_practiced_at)
+}).catch(() => {})
+```
+
+Compute `streakStatus` with explicit `ms` definition and null guard:
+
+```ts
+const ms = lastPracticedAt === null ? Infinity : Date.now() - new Date(lastPracticedAt).getTime()
+const streakStatus: 'solid' | 'hollow' | 'none' | null =
+  lastPracticedAt === null ? null
+  : ms < 864e5  ? 'solid'
   : ms < 1728e5 ? 'hollow'
   : 'none'
 ```
@@ -130,17 +146,24 @@ Expose `streakStatus` alongside `streak` from the hook.
 
 Updated props: `streak: number | null`, `streakStatus: 'solid' | 'hollow' | 'none' | null`.
 
+Preserve `data-tour="streak"` on the solid variant for the product tour:
+
 ```tsx
-{streakStatus === 'solid' && <span className="text-sm font-medium">🔥 {streak}</span>}
-{streakStatus === 'hollow' && <span className="text-sm font-medium opacity-50 grayscale">🔥 {streak}</span>}
+{streakStatus === 'solid' && (
+  <span data-tour="streak" className="text-sm font-medium">🔥 {streak}</span>
+)}
+{streakStatus === 'hollow' && (
+  <span data-tour="streak" className="text-sm font-medium opacity-50 grayscale">🔥 {streak}</span>
+)}
 ```
 
 ### `App.tsx`
 
-Pass both `streak` and `streakStatus` to `NavBar`.
+Destructure `streakStatus` from `useAuth` and pass both `streak` and `streakStatus` to `NavBar`.
 
 ## Out of Scope
 
 - Per-user timezone support
-- Streak freeze / grace period items
+- Stale `streakStatus` when tab wakes from sleep (would need a `setInterval` recomputation)
+- Streak freeze / grace period
 - Streak history or longest-streak tracking
