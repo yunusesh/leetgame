@@ -84,6 +84,10 @@ func (hs *HandlerService) Chat(c *fiber.Ctx) error {
 			return
 		}
 
+		if req.AnswerRequested {
+			result.Stage = nextStage(req.Stage, req.ActiveStages)
+		}
+
 		done, _ := json.Marshal(map[string]string{"stage": result.Stage, "message": result.Message})
 		fmt.Fprintf(w, "event: done\ndata: %s\n\n", done) //nolint:errcheck
 		w.Flush()                                          //nolint:errcheck
@@ -160,4 +164,13 @@ func (hs *HandlerService) runSessionEvaluation(userID uuid.UUID, problem models.
 		"topics_updated", updated,
 		"scores", eval.Scores,
 	)
+}
+
+func nextStage(current string, activeStages []string) string {
+	for i, s := range activeStages {
+		if s == current && i+1 < len(activeStages) {
+			return activeStages[i+1]
+		}
+	}
+	return "complete"
 }
