@@ -15,6 +15,7 @@
 **Task 1:**
 - Modify: `backend/internal/handlers/chat.go` — add `nextStage` helper; override `result.Stage` when `answer_requested`
 - Create: `backend/internal/handlers/chat_test.go` — unit tests for `nextStage`
+- Modify: `backend/internal/llm/llm.go` — remove the now-dead "set stage to next stage" clause from the `answerRequested` system prompt instruction
 
 **Task 2:**
 - Modify: `backend/internal/llm/llm.go` — add `Marker string` field to `ChatMessage`
@@ -154,11 +155,37 @@ cd /Users/aaronkim/projects/leetgame/backend && go build ./...
 
 Expected: no output.
 
-- [ ] **Step 7: Commit**
+- [ ] **Step 7: Remove the dead stage-advancement clause from `BuildSystemPrompt`**
+
+In `backend/internal/llm/llm.go`, the `answerRequested` branch currently reads:
+
+```go
+} else if answerRequested {
+    sb.WriteString("\n\nThe user has clicked 'Give me the answer'. Reveal the correct answer for the current stage clearly and completely. Then set stage to the next stage (or \"complete\" if this is the last stage) in your JSON response.")
+}
+```
+
+The server now overrides `result.Stage` after `Evaluate` returns, so the "Then set stage to..." clause is dead — the LLM's returned stage is ignored for `answer_requested` turns. Remove it to prevent confusion:
+
+```go
+} else if answerRequested {
+    sb.WriteString("\n\nThe user has clicked 'Give me the answer'. Reveal the correct answer for the current stage clearly and completely.")
+}
+```
+
+- [ ] **Step 8: Build and run tests**
+
+```bash
+cd /Users/aaronkim/projects/leetgame/backend && go build ./... && go test ./... 2>&1 | tail -20
+```
+
+Expected: clean build, all tests PASS. The existing `TestBuildSystemPrompt_answer_requested` checks for `"Reveal the correct answer"` which is still present — it should still pass.
+
+- [ ] **Step 9: Commit**
 
 ```bash
 cd /Users/aaronkim/projects/leetgame/backend
-git add internal/handlers/chat.go internal/handlers/chat_test.go
+git add internal/handlers/chat.go internal/handlers/chat_test.go internal/llm/llm.go
 git commit -m "feat: server-side stage advancement for give-me-the-answer button"
 ```
 
@@ -284,7 +311,20 @@ type HistoryMessage struct {
 }
 ```
 
-- [ ] **Step 6: Update `chat.go` — use `Marker` field, preserve markers in `baseHistory`**
+- [ ] **Step 6: Add `Marker` validation to `ChatRequest.Validate()` and `HistoryMessage`**
+
+In `backend/internal/types/chat_request.go`, add a whitelist check to `Validate()`. The valid marker values are `""`, `"hint"`, and `"answer"`. Add this block just before the stage validation section:
+
+```go
+validMarkers := map[string]bool{"": true, "hint": true, "answer": true}
+for i, msg := range r.History {
+    if !validMarkers[msg.Marker] {
+        errs[fmt.Sprintf("history[%d].marker", i)] = "must be 'hint', 'answer', or omitted"
+    }
+}
+```
+
+- [ ] **Step 7: Update `chat.go` — use `Marker` field, preserve markers in `baseHistory`**
 
 In `backend/internal/handlers/chat.go`, replace the entire `history` and `baseHistory` construction block. Find this section (around lines 34–58):
 
@@ -334,7 +374,7 @@ baseHistory = append(baseHistory, llm.ChatMessage{Role: "user", Content: req.Mes
 
 The key difference: `baseHistory` is now built from `req.History` (not `history`) so it preserves each message's `Marker`. The current turn's marker is set from the request flags. Content is always clean — no more inline prefix.
 
-- [ ] **Step 7: Build and run all backend tests**
+- [ ] **Step 8: Build and run all backend tests**
 
 ```bash
 cd /Users/aaronkim/projects/leetgame/backend && go build ./... && go test ./... 2>&1 | tail -20
@@ -342,7 +382,7 @@ cd /Users/aaronkim/projects/leetgame/backend && go build ./... && go test ./... 
 
 Expected: clean build, all tests PASS.
 
-- [ ] **Step 8: Add `marker` to `ChatMessage` in `frontend/src/types.ts`**
+- [ ] **Step 9: Add `marker` to `ChatMessage` in `frontend/src/types.ts`**
 
 Update `ChatMessage` from:
 
@@ -363,7 +403,7 @@ export interface ChatMessage {
 }
 ```
 
-- [ ] **Step 9: Update `App.tsx` — set `marker` field instead of content prefix**
+- [ ] **Step 10: Update `App.tsx` — set `marker` field instead of content prefix**
 
 In `frontend/src/App.tsx`, find `handleSubmit` and replace the `markedContent` / `userMsg` construction:
 
@@ -385,7 +425,7 @@ const userMsg: ChatMessage = {
 }
 ```
 
-- [ ] **Step 10: Update `ChatView.tsx` — remove regex strip**
+- [ ] **Step 11: Update `ChatView.tsx` — remove regex strip**
 
 In `frontend/src/components/ChatView.tsx`, find the message render line:
 
@@ -399,7 +439,7 @@ Replace with:
 {msg.content}
 ```
 
-- [ ] **Step 11: Frontend type-check**
+- [ ] **Step 12: Frontend type-check**
 
 ```bash
 cd /Users/aaronkim/projects/leetgame/frontend && npx tsc --noEmit
@@ -407,7 +447,7 @@ cd /Users/aaronkim/projects/leetgame/frontend && npx tsc --noEmit
 
 Expected: no errors.
 
-- [ ] **Step 12: Commit backend and frontend**
+- [ ] **Step 13: Commit backend and frontend**
 
 ```bash
 cd /Users/aaronkim/projects/leetgame/backend
