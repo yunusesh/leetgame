@@ -1,6 +1,8 @@
 -- One-time migration: replaces practice_days with user_streaks.
 -- Run once against the existing database before deploying the new backend.
 
+BEGIN;
+
 CREATE TABLE IF NOT EXISTS user_streaks (
   user_id           UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
   streak            INT         NOT NULL DEFAULT 1 CHECK (streak >= 1),
@@ -9,7 +11,7 @@ CREATE TABLE IF NOT EXISTS user_streaks (
 
 INSERT INTO user_streaks (user_id, streak, last_practiced_at)
 SELECT pd.user_id, s.streak,
-  TIMEZONE('UTC', (SELECT MAX(day)::TIMESTAMP FROM practice_days WHERE user_id = pd.user_id))
+  (SELECT MAX(day)::TIMESTAMPTZ FROM practice_days WHERE user_id = pd.user_id)
 FROM (SELECT DISTINCT user_id FROM practice_days) pd
 CROSS JOIN LATERAL (
   WITH ranked AS (
@@ -22,3 +24,5 @@ CROSS JOIN LATERAL (
 ON CONFLICT (user_id) DO NOTHING;
 
 DROP TABLE practice_days;
+
+COMMIT;
