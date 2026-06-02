@@ -136,8 +136,7 @@ export function ChatView({ history, stage, sessionActiveStages, loading, error, 
         )}
         {streamingMessage && (
           <div className="self-start bg-secondary text-secondary-foreground max-w-[80%] px-3.5 py-2.5 rounded-xl text-sm leading-relaxed">
-            <MarkdownMessage content={streamingMessage} />
-            <span className="animate-pulse ml-0.5">▌</span>
+            <MarkdownMessage content={streamingMessage + '▌'} />
           </div>
         )}
         {error && (
