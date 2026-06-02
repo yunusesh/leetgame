@@ -3,6 +3,16 @@ import type { ChatMessage, Stage, ActiveStage } from '../types'
 import { cn } from '../lib/utils'
 import { Button } from './ui/button'
 import { Textarea } from './ui/textarea'
+import Markdown from 'react-markdown'
+import remarkGfm from 'remark-gfm'
+
+function MarkdownMessage({ content }: { content: string }) {
+  return (
+    <div className="prose prose-sm dark:prose-invert max-w-none">
+      <Markdown remarkPlugins={[remarkGfm]}>{content}</Markdown>
+    </div>
+  )
+}
 
 const stageBannerBase: Record<ActiveStage, string> = {
   edge_cases:  'What edge cases does this problem have?',
@@ -110,13 +120,13 @@ export function ChatView({ history, stage, sessionActiveStages, loading, error, 
           <div
             key={`${i}-${msg.role}`}
             className={cn(
-              "max-w-[80%] px-3.5 py-2.5 rounded-xl text-sm leading-relaxed whitespace-pre-wrap",
+              "max-w-[80%] px-3.5 py-2.5 rounded-xl text-sm leading-relaxed",
               msg.role === 'user'
-                ? "self-end bg-primary text-primary-foreground"
+                ? "self-end bg-primary text-primary-foreground whitespace-pre-wrap"
                 : "self-start bg-secondary text-secondary-foreground"
             )}
           >
-            {msg.content}
+            {msg.role === 'user' ? msg.content : <MarkdownMessage content={msg.content} />}
           </div>
         ))}
         {loading && !streamingMessage && (
@@ -125,8 +135,8 @@ export function ChatView({ history, stage, sessionActiveStages, loading, error, 
           </div>
         )}
         {streamingMessage && (
-          <div className="self-start bg-secondary text-secondary-foreground max-w-[80%] px-3.5 py-2.5 rounded-xl text-sm leading-relaxed whitespace-pre-wrap">
-            {streamingMessage}
+          <div className="self-start bg-secondary text-secondary-foreground max-w-[80%] px-3.5 py-2.5 rounded-xl text-sm leading-relaxed">
+            <MarkdownMessage content={streamingMessage} />
             <span className="animate-pulse ml-0.5">▌</span>
           </div>
         )}
