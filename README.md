@@ -1,5 +1,7 @@
 # leetgame
 
+**Live:** https://leetgame-frontend.onrender.com/
+
 Practice LeetCode problems by describing your algorithm in plain English. An AI evaluates your approach, guides you with Socratic questions if you're wrong, then checks your time/space complexity once you get it right.
 
 ## Prerequisites
