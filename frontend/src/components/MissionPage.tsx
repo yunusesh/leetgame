@@ -9,8 +9,11 @@ export function MissionPage() {
 
         <section className="mb-8">
           <h2 className="text-lg font-semibold mb-3">LeetCode tests whether you can implement. This tests whether you understand.</h2>
+          <p className="text-sm leading-relaxed mb-3">
+            A verbal walkthrough takes roughly half the time of a full implementation — no debugging, no test cases, no environment to set up. Lower commitment means you can fit a problem into a lunch break or a commute instead of blocking out an hour at a desk.
+          </p>
           <p className="text-sm leading-relaxed">
-            Coding up a full solution takes 30–45 minutes. A verbal explanation takes 3–5. That 10x speed difference means more reps per session, more problems seen, and more pattern intuition built. leetgame isn't a replacement for LeetCode — it's what you do after you've put in the reps and want to make sure you actually understand what you practiced.
+            leetgame isn't a replacement for LeetCode. It's a complement — useful when you're preparing for an interview and want to drill recall and articulation, and just as useful for staying sharp after, when you want to keep the patterns fresh without the overhead of a full coding session.
           </p>
         </section>
 
