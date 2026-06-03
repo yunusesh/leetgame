@@ -3,6 +3,8 @@ import type { Problem } from '../types'
 import { cn } from '../lib/utils'
 import { Button } from './ui/button'
 import { Badge } from './ui/badge'
+import Markdown from 'react-markdown'
+import remarkGfm from 'remark-gfm'
 
 const difficultyColor: Record<string, string> = {
   Easy: 'text-easy',
@@ -230,8 +232,8 @@ export function ProblemView({
           )}
         </div>
 
-        <div className="leading-[1.7] text-[15px] whitespace-pre-wrap">
-          {problem.description}
+        <div className="prose prose-sm dark:prose-invert max-w-none text-[15px] [--tw-prose-body:var(--secondary-foreground)] [--tw-prose-headings:var(--secondary-foreground)] [--tw-prose-bold:var(--secondary-foreground)] [--tw-prose-code:var(--secondary-foreground)] [--tw-prose-bullets:var(--secondary-foreground)] [--tw-prose-counters:var(--secondary-foreground)]">
+          <Markdown remarkPlugins={[remarkGfm]}>{problem.description}</Markdown>
         </div>
       </div>
     </div>
