@@ -1,5 +1,6 @@
 import type { Session } from '@supabase/supabase-js'
 import type { ActiveStage, View } from '../types'
+import type { Theme } from '../hooks/useTheme'
 import { supabase } from '../lib/supabase'
 import { Button } from './ui/button'
 import { Popover, PopoverTrigger, PopoverContent } from './ui/popover'
@@ -17,9 +18,11 @@ interface Props {
   hideTitle: boolean
   onHideTitleChange: (value: boolean) => void
   onTakeTour?: () => void
+  theme: Theme
+  onThemeChange: (t: Theme) => void
 }
 
-export function NavBar({ view, onNavigate, session, authLoading, streak, streakStatus, activeStages, onStagesChange, hideTitle, onHideTitleChange, onTakeTour }: Props) {
+export function NavBar({ view, onNavigate, session, authLoading, streak, streakStatus, activeStages, onStagesChange, hideTitle, onHideTitleChange, onTakeTour, theme, onThemeChange }: Props) {
   const handleSignIn = async () => {
     await supabase.auth.signInWithOAuth({
       provider: 'google',
@@ -80,6 +83,8 @@ export function NavBar({ view, onNavigate, session, authLoading, streak, streakS
                 hideTitle={hideTitle}
                 onHideTitleChange={onHideTitleChange}
                 onTakeTour={onTakeTour}
+                theme={theme}
+                onThemeChange={onThemeChange}
               />
             </PopoverContent>
           </Popover>
