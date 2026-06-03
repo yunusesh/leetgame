@@ -44,6 +44,13 @@ export function NavBar({ view, onNavigate, session, authLoading, streak, streakS
           {v.charAt(0).toUpperCase() + v.slice(1)}
         </Button>
       ))}
+      <Button
+        variant={view === 'mission' ? 'secondary' : 'ghost'}
+        size="sm"
+        onClick={() => onNavigate('mission')}
+      >
+        Mission
+      </Button>
       {session && (
         <Button
           data-tour="nav-stats"

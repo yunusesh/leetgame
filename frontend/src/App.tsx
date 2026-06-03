@@ -12,6 +12,7 @@ import { ChatView } from './components/ChatView'
 import { EndOfSetView } from './components/EndOfSetView'
 import { SearchPage, type SearchSelectionContext } from './components/SearchPage'
 import { StatsPage } from './components/StatsPage'
+import { MissionPage } from './components/MissionPage'
 import { TourBanner } from './components/TourBanner'
 import { useTour } from './hooks/useTour'
 import { startTour } from './tour'
@@ -490,6 +491,8 @@ export default function App() {
             activeTopics={activeTopics}
             onTopicsChange={persistTopics}
           />
+        : view === 'mission'
+        ? <MissionPage />
         // eslint-disable-next-line react-hooks/refs
         : practiceView()
       }
