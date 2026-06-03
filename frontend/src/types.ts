@@ -37,7 +37,7 @@ export const CANONICAL_STAGES: ActiveStage[] = [
 
 export const DEFAULT_STAGES: ActiveStage[] = ['pattern', 'algorithm', 'tc_sc']
 
-export type View = 'practice' | 'search' | 'stats'
+export type View = 'practice' | 'search' | 'stats' | 'mission'
 
 export interface TopicProficiency {
   user_id: string
