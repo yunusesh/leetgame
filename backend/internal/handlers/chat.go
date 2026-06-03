@@ -42,7 +42,7 @@ func (hs *HandlerService) Chat(c *fiber.Ctx) error {
 
 	// Extract evaluation inputs before the stream writer — fasthttp recycles c after handler returns
 	evalUID, _ := xcontext.GetUserID(c)
-	evalEnabled := hs.evaluator != nil && evalUID != uuid.Nil
+	evalEnabled := evalUID != uuid.Nil
 	evalProblem := problem
 	evalProblem.TopicTags = append([]string(nil), problem.TopicTags...)
 	evalActiveStages := append([]string(nil), req.ActiveStages...)
@@ -118,7 +118,7 @@ func (hs *HandlerService) runSessionEvaluation(userID uuid.UUID, problem models.
 		"active_stages", activeStages,
 	)
 
-	eval, err := hs.evaluator.EvaluateSession(ctx, problem, activeStages, history)
+	eval, err := hs.llmClient.EvaluateSession(ctx, problem, activeStages, history)
 	if err != nil {
 		hs.logger.Error("session evaluation failed",
 			"error", err,

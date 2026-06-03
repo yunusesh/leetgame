@@ -1,7 +1,6 @@
 package llm
 
 import (
-	"context"
 	"fmt"
 	"strings"
 
@@ -16,10 +15,6 @@ type TopicScore struct {
 
 type SessionEvaluation struct {
 	Scores []TopicScore `json:"scores"`
-}
-
-type Evaluator interface {
-	EvaluateSession(ctx context.Context, problem models.Problem, activeStages []string, history []ChatMessage) (SessionEvaluation, error)
 }
 
 func BuildEvaluationPrompt(problem models.Problem, activeStages []string, history []ChatMessage) string {
