@@ -6,10 +6,11 @@ import { Textarea } from './ui/textarea'
 import Markdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 
-function MarkdownMessage({ content }: { content: string }) {
+function MarkdownMessage({ content, cursor = false }: { content: string; cursor?: boolean }) {
   return (
     <div className="prose prose-sm dark:prose-invert max-w-none">
       <Markdown remarkPlugins={[remarkGfm]}>{content}</Markdown>
+      {cursor && <span className="animate-pulse ml-0.5">▌</span>}
     </div>
   )
 }
@@ -136,7 +137,7 @@ export function ChatView({ history, stage, sessionActiveStages, loading, error, 
         )}
         {streamingMessage && (
           <div className="self-start bg-secondary text-secondary-foreground max-w-[80%] px-3.5 py-2.5 rounded-xl text-sm leading-relaxed">
-            <MarkdownMessage content={streamingMessage + '▌'} />
+            <MarkdownMessage content={streamingMessage} cursor />
           </div>
         )}
         {error && (
