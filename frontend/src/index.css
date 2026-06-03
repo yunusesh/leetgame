@@ -48,6 +48,8 @@
   --border: #2e303a;
   --input: #2e303a;
   --ring: #c084fc;
+  --prose-bold: #ffffff;
+  --code-bg: #2a2d3e;
 }
 
 @media (prefers-color-scheme: dark) {
