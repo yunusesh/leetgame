@@ -216,3 +216,87 @@ func TestEvaluate_code_fence_wrapped_response(t *testing.T) {
 	assert.Equal(t, "Hello world", result.Message)
 	assert.Equal(t, "algorithm", result.Stage)
 }
+
+func makeOllamaEvalServer(content string) *httptest.Server {
+	return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		resp, _ := json.Marshal(map[string]any{
+			"message": map[string]string{"role": "assistant", "content": content},
+			"done":    true,
+		})
+		w.Header().Set("Content-Type", "application/json")
+		w.Write(resp)
+	}))
+}
+
+func TestEvaluateSession_returns_scores(t *testing.T) {
+	content := `{"scores": [{"topic": "Dynamic Programming", "stage": "pattern", "score": 0.8}]}`
+	srv := makeOllamaEvalServer(content)
+	defer srv.Close()
+
+	client := ollama.New(srv.URL, "test-model", "")
+	problem := models.Problem{Id: uuid.New(), Title: "Two Sum", Description: "find two numbers", TopicTags: []string{"Dynamic Programming"}}
+	history := []llm.ChatMessage{{Role: "user", Content: "I'd use DP here"}}
+
+	eval, err := client.EvaluateSession(context.Background(), problem, []string{"pattern"}, history)
+	require.NoError(t, err)
+	require.Len(t, eval.Scores, 1)
+	assert.Equal(t, "Dynamic Programming", eval.Scores[0].Topic)
+	assert.Equal(t, "pattern", eval.Scores[0].Stage)
+	assert.Equal(t, 0.8, eval.Scores[0].Score)
+}
+
+func TestEvaluateSession_strips_code_fence(t *testing.T) {
+	content := "```json\n{\"scores\": [{\"topic\": \"Arrays\", \"stage\": \"algorithm\", \"score\": 0.6}]}\n```"
+	srv := makeOllamaEvalServer(content)
+	defer srv.Close()
+
+	client := ollama.New(srv.URL, "test-model", "")
+	problem := models.Problem{Id: uuid.New(), Title: "Two Sum", Description: "find two numbers", TopicTags: []string{"Arrays"}}
+
+	eval, err := client.EvaluateSession(context.Background(), problem, []string{"algorithm"}, nil)
+	require.NoError(t, err)
+	require.Len(t, eval.Scores, 1)
+	assert.Equal(t, 0.6, eval.Scores[0].Score)
+}
+
+func TestEvaluateSession_api_error(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte("internal server error"))
+	}))
+	defer srv.Close()
+
+	client := ollama.New(srv.URL, "test-model", "")
+	problem := models.Problem{Id: uuid.New(), Title: "Two Sum", Description: "find"}
+
+	_, err := client.EvaluateSession(context.Background(), problem, []string{"pattern"}, nil)
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "500")
+}
+
+func TestEvaluateSession_sends_prompt_to_api(t *testing.T) {
+	var capturedBody []byte
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		capturedBody, _ = io.ReadAll(r.Body)
+		content := `{"scores": [{"topic": "Arrays", "stage": "pattern", "score": 0.4}]}`
+		resp, _ := json.Marshal(map[string]any{
+			"message": map[string]string{"role": "assistant", "content": content},
+			"done":    true,
+		})
+		w.Header().Set("Content-Type", "application/json")
+		w.Write(resp)
+	}))
+	defer srv.Close()
+
+	client := ollama.New(srv.URL, "test-model", "")
+	problem := models.Problem{Id: uuid.New(), Title: "Two Sum", Description: "find two numbers", TopicTags: []string{"Arrays"}}
+	history := []llm.ChatMessage{{Role: "user", Content: "two pointers"}}
+
+	_, err := client.EvaluateSession(context.Background(), problem, []string{"pattern"}, history)
+	require.NoError(t, err)
+
+	body := string(capturedBody)
+	assert.Contains(t, body, "Two Sum", "request must include problem title")
+	assert.Contains(t, body, "two pointers", "request must include conversation history")
+	assert.Contains(t, body, `"stream":false`, "request must be non-streaming")
+}
