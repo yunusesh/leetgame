@@ -3,9 +3,15 @@ export function MissionPage() {
     <div className="flex-1 overflow-y-auto">
       <div className="max-w-2xl mx-auto px-6 py-8">
         <h1 className="text-2xl font-bold mb-2">Why I built leetgame</h1>
-        <p className="text-muted-foreground mb-8">
+        <p className="text-muted-foreground mb-6">
           A different way to practice algorithms — no IDE, no typing, just thinking out loud.
         </p>
+
+        <ul className="text-sm text-muted-foreground space-y-1 mb-8 list-none">
+          <li>— Articulation and understanding are what interviews actually test</li>
+          <li>— Pattern recognition is a skill you can drill separately</li>
+          <li>— Practice should fit into your life, not require ideal conditions</li>
+        </ul>
 
         <section className="mb-8">
           <h2 className="text-lg font-semibold mb-3">Interviews test articulation, not just code</h2>
