@@ -196,3 +196,23 @@ func TestEvaluate_prefix_and_content_in_single_token(t *testing.T) {
 	assert.Equal(t, "Hello world", result.Message)
 	assert.Equal(t, "algorithm", result.Stage)
 }
+
+func TestEvaluate_code_fence_wrapped_response(t *testing.T) {
+	// Local models often wrap their JSON in a code fence — extractor must handle it
+	tokens := []string{"```json\n", `{"message": "Hello world", "stage": "algorithm"}`, "\n```"}
+	srv := makeOllamaServer(tokens)
+	defer srv.Close()
+
+	client := ollama.New(srv.URL, "test-model", "")
+	problem := models.Problem{Id: uuid.New(), Title: "Two Sum", Description: "find two numbers"}
+
+	var received []string
+	result, err := client.Evaluate(context.Background(), problem, "algorithm", []string{"pattern", "algorithm", "tc_sc"}, nil, "use a hash map", false, false, func(tok string) {
+		received = append(received, tok)
+	})
+
+	require.NoError(t, err)
+	assert.Equal(t, "Hello world", strings.Join(received, ""), "streamed tokens must be clean message content, not raw JSON")
+	assert.Equal(t, "Hello world", result.Message)
+	assert.Equal(t, "algorithm", result.Stage)
+}

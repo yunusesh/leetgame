@@ -115,16 +115,19 @@ func (c *OllamaClient) Evaluate(ctx context.Context, problem models.Problem, sta
 		return llm.EvaluateResponse{}, fmt.Errorf("error reading ollama stream: %w", err)
 	}
 
+	text := strings.TrimSpace(fullText.String())
+	text = stripCodeFence(text)
+
 	var evalResp llm.EvaluateResponse
-	if err := json.Unmarshal([]byte(fullText.String()), &evalResp); err != nil {
-		return llm.EvaluateResponse{Message: fullText.String(), Stage: stage}, nil
+	if err := json.Unmarshal([]byte(text), &evalResp); err != nil {
+		return llm.EvaluateResponse{Message: text, Stage: stage}, nil
 	}
 	validStages := map[string]bool{"complete": true}
 	for _, s := range activeStages {
 		validStages[s] = true
 	}
 	if !validStages[evalResp.Stage] {
-		return llm.EvaluateResponse{Message: fullText.String(), Stage: stage}, nil
+		return llm.EvaluateResponse{Message: text, Stage: stage}, nil
 	}
 
 	return evalResp, nil
@@ -154,9 +157,16 @@ func (e *extractor) add(tok string) {
 		return
 	}
 	if e.state == stateBefore {
-		if strings.HasPrefix(e.accumulated, msgPrefix) {
+		// skip leading code fence (```json\n or ```\n) before looking for JSON prefix
+		content := e.accumulated
+		if strings.HasPrefix(content, "```") {
+			if idx := strings.Index(content, "\n"); idx >= 0 {
+				content = content[idx+1:]
+			}
+		}
+		if strings.HasPrefix(content, msgPrefix) {
 			e.state = stateMessage
-			after := e.accumulated[len(msgPrefix):]
+			after := content[len(msgPrefix):]
 			if after != "" {
 				e.forward(after)
 			}
@@ -164,6 +174,19 @@ func (e *extractor) add(tok string) {
 		return
 	}
 	e.forward(tok)
+}
+
+func stripCodeFence(s string) string {
+	if !strings.HasPrefix(s, "```") {
+		return s
+	}
+	if idx := strings.Index(s, "\n"); idx >= 0 {
+		s = s[idx+1:]
+	}
+	if idx := strings.LastIndex(s, "```"); idx >= 0 {
+		s = strings.TrimSpace(s[:idx])
+	}
+	return s
 }
 
 // forward sends tok through the trailing buffer.
