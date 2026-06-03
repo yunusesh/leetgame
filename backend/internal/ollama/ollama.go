@@ -182,6 +182,10 @@ func stripCodeFence(s string) string {
 	}
 	if idx := strings.Index(s, "\n"); idx >= 0 {
 		s = s[idx+1:]
+	} else {
+		// fence with no newline — strip the opening marker directly
+		s = strings.TrimPrefix(s, "```json")
+		s = strings.TrimPrefix(s, "```")
 	}
 	if idx := strings.LastIndex(s, "```"); idx >= 0 {
 		s = strings.TrimSpace(s[:idx])
