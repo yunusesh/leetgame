@@ -32,8 +32,11 @@ export function MissionPage() {
           <p className="text-sm leading-relaxed mb-3">
             A coding environment needs a laptop, a quiet space, and a chunk of uninterrupted time. That's a high bar. Most days the conditions are never quite right, so you don't practice.
           </p>
-          <p className="text-sm leading-relaxed">
+          <p className="text-sm leading-relaxed mb-3">
             leetgame works on your phone, takes a few minutes per problem, and fits into dead time — a commute, a lunch break, five minutes between meetings. Lower friction means you actually practice instead of waiting for the perfect conditions that never come.
+          </p>
+          <p className="text-sm leading-relaxed">
+            No account required to start. Just open it and practice. If you do sign in, you get streaks, proficiency tracking, and smart practice that targets your weak spots — but the core experience is open to anyone.
           </p>
         </section>
       </div>
