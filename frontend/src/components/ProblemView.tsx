@@ -232,7 +232,7 @@ export function ProblemView({
           )}
         </div>
 
-        <div className="prose prose-sm dark:prose-invert max-w-none text-[15px] [--tw-prose-body:var(--secondary-foreground)] [--tw-prose-headings:var(--secondary-foreground)] [--tw-prose-bold:var(--secondary-foreground)] [--tw-prose-code:var(--secondary-foreground)] [--tw-prose-bullets:var(--secondary-foreground)] [--tw-prose-counters:var(--secondary-foreground)] [&_code::before]:content-none [&_code::after]:content-none">
+        <div className="prose prose-sm dark:prose-invert max-w-none text-[15px] [--tw-prose-body:var(--secondary-foreground)] [--tw-prose-headings:var(--secondary-foreground)] [--tw-prose-bold:var(--secondary-foreground)] [--tw-prose-code:var(--secondary-foreground)] [--tw-prose-bullets:var(--secondary-foreground)] [--tw-prose-counters:var(--secondary-foreground)] [&_code::before]:content-none [&_code::after]:content-none [&_:not(pre)>code]:bg-muted [&_:not(pre)>code]:rounded [&_:not(pre)>code]:px-1 [&_:not(pre)>code]:py-0.5">
           <Markdown remarkPlugins={[remarkGfm]}>{problem.description}</Markdown>
         </div>
       </div>
