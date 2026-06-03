@@ -69,14 +69,14 @@ func BuildSystemPrompt(title, description, stage string, activeStages []string, 
 
 	fmt.Fprintf(&sb, "The current stage is: %q\n\n", stage)
 
-	sb.WriteString("CRITICAL: Your entire response must be ONLY the following JSON object — no explanation, no markdown, no text before or after, no code fences:\n")
+	sb.WriteString("CRITICAL: Your entire response must be ONLY the following JSON object — no explanation, no text before or after, no code fences wrapping the JSON:\n")
 	sb.WriteString(`{"message": "<your response to the candidate>", "stage": "<stage_id>"}`)
-	sb.WriteString("\n\nAny response that is not pure JSON will be rejected. Do not write anything except the JSON object.")
+	sb.WriteString("\n\nThe \"message\" value is displayed in a markdown renderer, so you MAY use markdown formatting (bold, bullet lists, inline code, code blocks) inside the message string when it aids clarity. Any response that is not pure JSON will be rejected. Do not write anything except the JSON object.")
 
 	if hintRequested {
 		sb.WriteString("\n\nThe user has clicked 'Give me a hint'. Give a targeted hint that moves them toward the answer without fully revealing it. One sentence maximum.")
 	} else if answerRequested {
-		sb.WriteString("\n\nThe user has clicked 'Give me the answer'. Reveal the correct answer for the current stage clearly and completely.")
+		sb.WriteString("\n\nThe user has clicked 'Give me the answer'. Reveal the correct answer for the current stage clearly and completely. Use markdown formatting — bullet points, bold, and inline code — to make the answer easy to read.")
 	}
 
 	return sb.String()
