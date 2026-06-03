@@ -57,7 +57,6 @@ function getPlaylistSummary(searchPlaylist: SearchPlaylist | null) {
 export default function App() {
   const { session, authLoading, streak, streakStatus, activeStages, hideTitle, activeTopics, tourDone, settingsReady, persistStages, persistHideTitle, persistTopics, persistTourDone, recordAndUpdateStreak } = useAuth()
   const { showBanner, dismiss: dismissTour, markDone: markTourDone } = useTour(!!session, settingsReady, tourDone, persistTourDone)
-  const { theme, setTheme } = useTheme()
 
   const handleStartTour = () => {
     if (view !== 'practice') setView('practice')
@@ -83,6 +82,7 @@ export default function App() {
   const { loading: searchLoading, error: searchError } = useSearch(searchState, setSearchState)
   const { availableTags, tagsLoading, tagsError } = useTags()
   const { savedProblems, savedIds, save, unsave, isSaved } = useSaved(session)
+  const { theme, setTheme } = useTheme()
   const playlistEntryDepthRef = useRef<number>(0)
   const streamAbortRef = useRef<AbortController | null>(null)
 
