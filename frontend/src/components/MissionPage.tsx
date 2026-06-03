@@ -2,28 +2,28 @@ export function MissionPage() {
   return (
     <div className="flex-1 overflow-y-auto">
       <div className="max-w-2xl mx-auto px-6 py-8">
-        <h1 className="text-2xl font-bold mb-2">leetgame — mission</h1>
+        <h1 className="text-2xl font-bold mb-2">Why I built leetgame</h1>
         <p className="text-muted-foreground mb-8">
-          A verbal pattern recognition drill for people preparing for coding interviews.
+          A verbal pattern recognition drill for people preparing for coding interviews — no IDE, no typing, just thinking out loud.
         </p>
 
         <section className="mb-8">
           <h2 className="text-lg font-semibold mb-3">LeetCode tests whether you can implement. This tests whether you understand.</h2>
           <p className="text-sm leading-relaxed mb-3">
-            Coding up a full solution takes 30–45 minutes. A verbal explanation takes 3–5. That 10x speed difference means more reps per session — and more reps means better recall and better pattern transfer.
+            In a real interview, you're expected to talk through your thinking — explain the approach, justify the tradeoffs, describe the complexity. That's a different skill from implementing an algorithm, and most people don't practice it explicitly.
           </p>
           <p className="text-sm leading-relaxed">
-            leetgame is not a replacement for LeetCode. It's a complement to it — for people who have already done the problems and want to drill recall and articulation before an interview.
+            Coding up a full solution takes 30–45 minutes. A verbal explanation takes 3–5. That 10x speed difference means more reps per session, more problems seen, and more pattern intuition built. leetgame isn't a replacement for LeetCode — it's what you do after you've put in the reps and want to make sure you actually understand what you practiced.
           </p>
         </section>
 
         <section className="mb-8">
           <h2 className="text-lg font-semibold mb-3">The gap interviews expose</h2>
           <p className="text-sm leading-relaxed mb-3">
-            Most people can recognize a solution when they see it. Fewer can explain <em>why</em> sliding window applies, <em>why</em> the complexity is O(n), <em>why</em> a greedy approach is correct. That gap is what interviews probe.
+            Most people can recognize a solution when they see it. Fewer can explain <em>why</em> sliding window applies, <em>why</em> the complexity is O(n), <em>why</em> a greedy approach is correct. That gap is what interviews probe — and what most practice methods don't address.
           </p>
           <p className="text-sm leading-relaxed">
-            Forced articulation is the mechanic. Explaining something out loud — to an LLM that pushes back when your reasoning is incomplete — is a different kind of practice than typing code. It's the kind that closes the gap.
+            leetgame drills pattern recognition and articulation in isolation — see the problem, name the pattern, explain why it fits, walk through the algorithm. An AI evaluates your reasoning and pushes back when it's incomplete. Explaining something clearly forces you to actually understand it, and that understanding is exactly what interviewers are looking for.
           </p>
         </section>
 
