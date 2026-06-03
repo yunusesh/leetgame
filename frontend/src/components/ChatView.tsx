@@ -8,7 +8,7 @@ import remarkGfm from 'remark-gfm'
 
 function MarkdownMessage({ content, cursor = false }: { content: string; cursor?: boolean }) {
   return (
-    <div className="prose prose-sm max-w-none [--tw-prose-body:var(--secondary-foreground)] [--tw-prose-headings:var(--secondary-foreground)] [--tw-prose-bold:var(--secondary-foreground)] [--tw-prose-code:var(--secondary-foreground)] [--tw-prose-bullets:var(--secondary-foreground)] [--tw-prose-counters:var(--secondary-foreground)]">
+    <div className="prose prose-sm max-w-none [--tw-prose-body:var(--secondary-foreground)] [--tw-prose-headings:var(--secondary-foreground)] [--tw-prose-bold:var(--prose-bold,var(--secondary-foreground))] [--tw-prose-code:var(--secondary-foreground)] [--tw-prose-bullets:var(--secondary-foreground)] [--tw-prose-counters:var(--secondary-foreground)] [&_code::before]:content-none [&_code::after]:content-none [&_:not(pre)>code]:bg-[var(--code-bg)] [&_:not(pre)>code]:rounded [&_:not(pre)>code]:px-1 [&_:not(pre)>code]:py-0.5">
       <Markdown remarkPlugins={[remarkGfm]}>{content}</Markdown>
       {cursor && <span className="animate-pulse ml-0.5">▌</span>}
     </div>

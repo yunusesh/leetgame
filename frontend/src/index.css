@@ -25,6 +25,7 @@
   --input: #e5e4e7;
   --ring: #aa3bff;
   --radius: 0.75rem;
+  --code-bg: #eaecf4;
 }
 
 .dark {
@@ -70,6 +71,8 @@
     --border: #2e303a;
     --input: #2e303a;
     --ring: #c084fc;
+    --prose-bold: #ffffff;
+    --code-bg: #2a2d3e;
   }
 }
 
