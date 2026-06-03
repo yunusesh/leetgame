@@ -8,12 +8,12 @@ export function MissionPage() {
         </p>
 
         <section className="mb-8">
-          <h2 className="text-lg font-semibold mb-3">Writing code is a crutch</h2>
+          <h2 className="text-lg font-semibold mb-3">Interviews test articulation, not just code</h2>
           <p className="text-sm leading-relaxed mb-3">
-            When you practice by writing code, you can get away with half-understanding the problem. You type something, run it, tweak it, and eventually it passes. But you never had to fully articulate what you were doing or why. That gap doesn't show up until an interview, when someone asks you to explain your approach and you realize you can't.
+            In a real interview, you're expected to talk through your thinking — explain the approach, justify the tradeoffs, describe the complexity. That's a different skill from implementing an algorithm, and most people don't practice it explicitly.
           </p>
           <p className="text-sm leading-relaxed">
-            leetgame removes the crutch. There's no code to write — just a problem and a prompt to describe your approach in plain English. If you can explain it clearly, you understand it. If you can't, you don't. It's a harder test, and a more honest one.
+            leetgame is built around that skill. There's no code to write — just a problem and a prompt to describe your approach in plain English. Explaining something clearly forces you to actually understand it, and that understanding is exactly what interviewers are looking for.
           </p>
         </section>
 
