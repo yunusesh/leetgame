@@ -13,16 +13,17 @@ function readStored(): Theme {
 }
 
 function applyTheme(theme: Theme) {
-  const cl = document.documentElement.classList
+  const classList = document.documentElement.classList
   if (theme === 'dark') {
-    cl.add('dark')
-    cl.remove('light')
+    classList.add('dark')
+    classList.remove('light')
   } else if (theme === 'light') {
-    cl.add('light')
-    cl.remove('dark')
+    classList.add('light')
+    classList.remove('dark')
   } else {
-    cl.remove('dark')
-    cl.remove('light')
+    // 'system': remove both classes so the CSS @media (prefers-color-scheme) takes over
+    classList.remove('dark')
+    classList.remove('light')
   }
 }
 
