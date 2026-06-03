@@ -9,9 +9,6 @@ export function MissionPage() {
 
         <section className="mb-8">
           <h2 className="text-lg font-semibold mb-3">LeetCode tests whether you can implement. This tests whether you understand.</h2>
-          <p className="text-sm leading-relaxed mb-3">
-            In a real interview, you're expected to talk through your thinking — explain the approach, justify the tradeoffs, describe the complexity. That's a different skill from implementing an algorithm, and most people don't practice it explicitly.
-          </p>
           <p className="text-sm leading-relaxed">
             Coding up a full solution takes 30–45 minutes. A verbal explanation takes 3–5. That 10x speed difference means more reps per session, more problems seen, and more pattern intuition built. leetgame isn't a replacement for LeetCode — it's what you do after you've put in the reps and want to make sure you actually understand what you practiced.
           </p>
