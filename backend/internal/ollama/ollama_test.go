@@ -274,6 +274,18 @@ func TestEvaluateSession_api_error(t *testing.T) {
 	assert.Contains(t, err.Error(), "500")
 }
 
+func TestEvaluateSession_empty_content_returns_error(t *testing.T) {
+	srv := makeOllamaEvalServer("")
+	defer srv.Close()
+
+	client := ollama.New(srv.URL, "test-model", "")
+	problem := models.Problem{Id: uuid.New(), Title: "Two Sum", Description: "find"}
+
+	_, err := client.EvaluateSession(context.Background(), problem, []string{"pattern"}, nil)
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "empty content")
+}
+
 func TestEvaluateSession_sends_prompt_to_api(t *testing.T) {
 	var capturedBody []byte
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

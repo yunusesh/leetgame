@@ -61,6 +61,10 @@ func (c *OllamaClient) EvaluateSession(ctx context.Context, problem models.Probl
 	text := strings.TrimSpace(apiResp.Message.Content)
 	text = stripCodeFence(text)
 
+	if text == "" {
+		return llm.SessionEvaluation{}, fmt.Errorf("empty content in ollama evaluation response")
+	}
+
 	var eval llm.SessionEvaluation
 	if err := json.Unmarshal([]byte(text), &eval); err != nil {
 		return llm.SessionEvaluation{}, fmt.Errorf("failed to parse evaluation JSON %q: %w", text, err)
