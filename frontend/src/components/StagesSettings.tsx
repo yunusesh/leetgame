@@ -1,5 +1,6 @@
 import type { ActiveStage } from '../types'
 import { CANONICAL_STAGES } from '../types'
+import type { Theme } from '../hooks/useTheme'
 import { Checkbox } from './ui/checkbox'
 
 const STAGE_META: Record<ActiveStage, { label: string; description: string }> = {
@@ -16,9 +17,11 @@ interface Props {
   hideTitle: boolean
   onHideTitleChange: (value: boolean) => void
   onTakeTour?: () => void
+  theme: Theme
+  onThemeChange: (t: Theme) => void
 }
 
-export function StagesSettings({ activeStages, onChange, hideTitle, onHideTitleChange, onTakeTour }: Props) {
+export function StagesSettings({ activeStages, onChange, hideTitle, onHideTitleChange, onTakeTour, theme, onThemeChange }: Props) {
   const toggle = (stage: ActiveStage) => {
     const isActive = activeStages.includes(stage)
     if (isActive && activeStages.length === 1) return
@@ -33,6 +36,24 @@ export function StagesSettings({ activeStages, onChange, hideTitle, onHideTitleC
       <p className="px-3 pb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
         Display
       </p>
+      <div className="px-3 py-2 flex items-center justify-between">
+        <span className="text-sm font-medium">Theme</span>
+        <div className="flex rounded-md border border-border overflow-hidden text-xs">
+          {(['system', 'light', 'dark'] as const).map(t => (
+            <button
+              key={t}
+              onClick={() => onThemeChange(t)}
+              className={`px-2.5 py-1 capitalize transition-colors ${
+                theme === t
+                  ? 'bg-muted text-foreground font-medium'
+                  : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
+              }`}
+            >
+              {t}
+            </button>
+          ))}
+        </div>
+      </div>
       <button
         onClick={() => onHideTitleChange(!hideTitle)}
         className="w-full flex items-center gap-3 px-3 py-2 text-left hover:bg-muted cursor-pointer transition-colors"
