@@ -42,6 +42,8 @@ export function StagesSettings({ activeStages, onChange, hideTitle, onHideTitleC
           {(['system', 'light', 'dark'] as const).map(t => (
             <button
               key={t}
+              type="button"
+              aria-pressed={theme === t}
               onClick={() => onThemeChange(t)}
               className={`px-2.5 py-1 capitalize transition-colors ${
                 theme === t
