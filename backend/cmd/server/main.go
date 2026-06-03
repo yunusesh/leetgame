@@ -54,8 +54,8 @@ func main() {
 	}
 
 	var evaluator llm.Evaluator
-	if ac, ok := llmClient.(*claude.AnthropicClient); ok {
-		evaluator = ac
+	if ev, ok := llmClient.(llm.Evaluator); ok {
+		evaluator = ev
 	}
 
 	var kf jwt.Keyfunc
