@@ -68,7 +68,7 @@ func (c *AnthropicClient) EvaluateSession(ctx context.Context, problem models.Pr
 	if text == "" {
 		return llm.SessionEvaluation{}, fmt.Errorf("no text content block in claude evaluation response")
 	}
-	text = stripCodeFence(text)
+	text = llm.StripCodeFence(text)
 
 	var eval llm.SessionEvaluation
 	if err := json.Unmarshal([]byte(text), &eval); err != nil {

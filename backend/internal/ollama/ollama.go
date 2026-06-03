@@ -15,11 +15,6 @@ import (
 	"leetgame/internal/models"
 )
 
-const (
-	msgPrefix = `{"message": "`
-	endMarker = `", "stage"`
-)
-
 type OllamaClient struct {
 	baseURL    string
 	model      string
@@ -78,7 +73,7 @@ func (c *OllamaClient) Evaluate(ctx context.Context, problem models.Problem, sta
 	}
 
 	var fullText strings.Builder
-	ex := &extractor{onToken: onToken}
+	ex := llm.NewExtractor(onToken)
 
 	scanner := bufio.NewScanner(resp.Body)
 	scanner.Buffer(make([]byte, 0, 64*1024), 1*1024*1024)
@@ -103,20 +98,17 @@ func (c *OllamaClient) Evaluate(ctx context.Context, problem models.Problem, sta
 			continue
 		}
 		fullText.WriteString(tok)
-		ex.add(tok)
+		ex.Add(tok)
 	}
 
-	if ex.state == stateMessage && ex.pending != "" && ex.onToken != nil && ctx.Err() == nil {
-		ex.onToken(ex.pending)
-		ex.pending = ""
-	}
+	ex.Flush(ctx)
 
 	if err := scanner.Err(); err != nil {
 		return llm.EvaluateResponse{}, fmt.Errorf("error reading ollama stream: %w", err)
 	}
 
 	text := strings.TrimSpace(fullText.String())
-	text = stripCodeFence(text)
+	text = llm.StripCodeFence(text)
 
 	var evalResp llm.EvaluateResponse
 	if err := json.Unmarshal([]byte(text), &evalResp); err != nil {
@@ -133,86 +125,3 @@ func (c *OllamaClient) Evaluate(ctx context.Context, problem models.Problem, sta
 	return evalResp, nil
 }
 
-// extractor pulls the clean message value out of a streaming JSON response.
-// The LLM emits {"message": "CONTENT", "stage": "VALUE"} token by token.
-// It calls onToken only with characters that belong to CONTENT.
-type extractor struct {
-	accumulated string
-	pending     string // trailing buffer to detect end marker before forwarding
-	state       extractState
-	onToken     func(string)
-}
-
-type extractState int
-
-const (
-	stateBefore  extractState = iota // waiting to see the message prefix
-	stateMessage                     // inside the message value, forwarding tokens
-	stateAfter                       // past the message value, discarding
-)
-
-func (e *extractor) add(tok string) {
-	e.accumulated += tok
-	if e.state == stateAfter {
-		return
-	}
-	if e.state == stateBefore {
-		// skip leading code fence (```json\n or ```\n) before looking for JSON prefix
-		content := e.accumulated
-		if strings.HasPrefix(content, "```") {
-			if idx := strings.Index(content, "\n"); idx >= 0 {
-				content = content[idx+1:]
-			}
-		}
-		if strings.HasPrefix(content, msgPrefix) {
-			e.state = stateMessage
-			after := content[len(msgPrefix):]
-			if after != "" {
-				e.forward(after)
-			}
-		}
-		return
-	}
-	e.forward(tok)
-}
-
-func stripCodeFence(s string) string {
-	if !strings.HasPrefix(s, "```") {
-		return s
-	}
-	if idx := strings.Index(s, "\n"); idx >= 0 {
-		s = s[idx+1:]
-	} else {
-		// fence with no newline — strip the opening marker directly
-		s = strings.TrimPrefix(s, "```json")
-		s = strings.TrimPrefix(s, "```")
-	}
-	if idx := strings.LastIndex(s, "```"); idx >= 0 {
-		s = strings.TrimSpace(s[:idx])
-	}
-	return s
-}
-
-// forward sends tok through the trailing buffer.
-// It keeps the last len(endMarker)-1 bytes buffered so the end marker
-// is always detected before any part of it is forwarded to onToken.
-func (e *extractor) forward(tok string) {
-	combined := e.pending + tok
-	if idx := strings.Index(combined, endMarker); idx >= 0 {
-		if e.onToken != nil && idx > 0 {
-			e.onToken(combined[:idx])
-		}
-		e.state = stateAfter
-		e.pending = ""
-		return
-	}
-	safeLen := len(combined) - len(endMarker) + 1
-	if safeLen > 0 {
-		if e.onToken != nil {
-			e.onToken(combined[:safeLen])
-		}
-		e.pending = combined[safeLen:]
-	} else {
-		e.pending = combined
-	}
-}

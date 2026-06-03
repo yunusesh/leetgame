@@ -59,7 +59,7 @@ func (c *OllamaClient) EvaluateSession(ctx context.Context, problem models.Probl
 	}
 
 	text := strings.TrimSpace(apiResp.Message.Content)
-	text = stripCodeFence(text)
+	text = llm.StripCodeFence(text)
 
 	if text == "" {
 		return llm.SessionEvaluation{}, fmt.Errorf("empty content in ollama evaluation response")
