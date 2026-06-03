@@ -44,13 +44,6 @@ export function NavBar({ view, onNavigate, session, authLoading, streak, streakS
           {v.charAt(0).toUpperCase() + v.slice(1)}
         </Button>
       ))}
-      <Button
-        variant={view === 'mission' ? 'secondary' : 'ghost'}
-        size="sm"
-        onClick={() => onNavigate('mission')}
-      >
-        Mission
-      </Button>
       {session && (
         <Button
           data-tour="nav-stats"
@@ -61,6 +54,13 @@ export function NavBar({ view, onNavigate, session, authLoading, streak, streakS
           Stats
         </Button>
       )}
+      <Button
+        variant={view === 'mission' ? 'secondary' : 'ghost'}
+        size="sm"
+        onClick={() => onNavigate('mission')}
+      >
+        Mission
+      </Button>
 
       <div className="ml-auto flex items-center gap-2">
         {!authLoading && (
