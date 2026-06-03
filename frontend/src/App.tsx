@@ -3,6 +3,7 @@ import type { Problem, ChatMessage, Stage, ActiveStage, SearchState, View } from
 import { defaultSearchState } from './types'
 import { getRandomProblem, getRandomProblemFiltered, searchProblems, streamChat, getSmartPracticeProblem } from './api'
 import { useAuth } from './hooks/useAuth'
+import { useTheme } from './hooks/useTheme'
 import { useSearch } from './hooks/useSearch'
 import { useTags } from './hooks/useTags'
 import { useSaved } from './hooks/useSaved'
@@ -56,6 +57,7 @@ function getPlaylistSummary(searchPlaylist: SearchPlaylist | null) {
 export default function App() {
   const { session, authLoading, streak, streakStatus, activeStages, hideTitle, activeTopics, tourDone, settingsReady, persistStages, persistHideTitle, persistTopics, persistTourDone, recordAndUpdateStreak } = useAuth()
   const { showBanner, dismiss: dismissTour, markDone: markTourDone } = useTour(!!session, settingsReady, tourDone, persistTourDone)
+  const { theme, setTheme } = useTheme()
 
   const handleStartTour = () => {
     if (view !== 'practice') setView('practice')
@@ -466,6 +468,8 @@ export default function App() {
         hideTitle={hideTitle}
         onHideTitleChange={handleHideTitleChange}
         onTakeTour={handleStartTour}
+        theme={theme}
+        onThemeChange={setTheme}
       />
       {showBanner && (
         <TourBanner onStart={handleStartTour} onDismiss={dismissTour} />
