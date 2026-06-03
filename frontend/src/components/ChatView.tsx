@@ -8,7 +8,7 @@ import remarkGfm from 'remark-gfm'
 
 function MarkdownMessage({ content, cursor = false }: { content: string; cursor?: boolean }) {
   return (
-    <div className="prose prose-sm dark:prose-invert max-w-none">
+    <div className="prose prose-sm max-w-none [--tw-prose-body:var(--secondary-foreground)] [--tw-prose-headings:var(--secondary-foreground)] [--tw-prose-bold:var(--secondary-foreground)] [--tw-prose-code:var(--secondary-foreground)] [--tw-prose-bullets:var(--secondary-foreground)] [--tw-prose-counters:var(--secondary-foreground)]">
       <Markdown remarkPlugins={[remarkGfm]}>{content}</Markdown>
       {cursor && <span className="animate-pulse ml-0.5">▌</span>}
     </div>
