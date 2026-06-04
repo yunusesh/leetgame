@@ -37,6 +37,14 @@ func TestSessionCompletedEvent_JSONRoundtrip(t *testing.T) {
 	data, err := json.Marshal(event)
 	require.NoError(t, err)
 
+	// Verify json tag names are correct
+	var raw map[string]any
+	require.NoError(t, json.Unmarshal(data, &raw))
+	assert.Contains(t, raw, "user_id")
+	assert.Contains(t, raw, "problem")
+	assert.Contains(t, raw, "active_stages")
+	assert.Contains(t, raw, "history")
+
 	var got kafka.SessionCompletedEvent
 	require.NoError(t, json.Unmarshal(data, &got))
 
