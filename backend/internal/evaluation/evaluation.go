@@ -25,6 +25,7 @@ func RunSession(ctx context.Context, store storage.Storage, llmClient llm.Client
 			"error", err,
 			"user_id", userID,
 			"problem_id", problem.Id,
+			"problem_title", problem.Title,
 		)
 	}
 }
@@ -57,7 +58,7 @@ func RunSessionWithError(ctx context.Context, store storage.Storage, llmClient l
 	var updated int
 	for _, score := range eval.Scores {
 		if score.Score < 0 || score.Score > 1 {
-			logger.Warn("skipping out-of-range score",
+			logger.Warn("skipping out-of-range score from LLM",
 				"topic", score.Topic,
 				"stage", score.Stage,
 				"score", score.Score,
