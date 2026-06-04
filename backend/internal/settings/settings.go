@@ -8,6 +8,7 @@ type Settings struct {
 	Log     Log     `envPrefix:"LOG_"`
 	LLM     LLM     `envPrefix:"LLM_"`
 	Auth    Auth    `envPrefix:"AUTH_"`
+	Kafka   Kafka   `envPrefix:"KAFKA_"`
 }
 
 func Load() (Settings, error) {
