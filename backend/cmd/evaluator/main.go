@@ -78,6 +78,7 @@ func main() {
 
 	if err := consumer.Run(ctx); err != nil {
 		slog.Error("consumer error", "error", err)
+		pg.Close()
 		os.Exit(1)
 	}
 
