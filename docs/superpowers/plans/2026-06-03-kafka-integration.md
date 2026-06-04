@@ -1113,7 +1113,7 @@ func (c *Consumer) Run(ctx context.Context) error {
 	}
 }
 
-func (c *Consumer) process(ctx context.Context, msg kafka.Message) {
+func (c *Consumer) process(ctx context.Context, msg kafkago.Message) {
 	var event SessionCompletedEvent
 	if err := json.Unmarshal(msg.Value, &event); err != nil {
 		c.logger.Error("failed to deserialize event, skipping", "error", err, "offset", msg.Offset)
