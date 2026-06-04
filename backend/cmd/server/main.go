@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"log/slog"
 	"os"
 	"os/signal"
@@ -8,8 +9,11 @@ import (
 	"time"
 
 	"leetgame/internal/claude"
+	"leetgame/internal/evaluation"
+	"leetgame/internal/kafka"
 	"leetgame/internal/llm"
 	"leetgame/internal/middleware"
+	"leetgame/internal/models"
 	"leetgame/internal/ollama"
 	"leetgame/internal/server"
 	"leetgame/internal/settings"
@@ -18,6 +22,7 @@ import (
 	"leetgame/internal/utils"
 
 	"github.com/golang-jwt/jwt/v5"
+	"github.com/google/uuid"
 	"github.com/joho/godotenv"
 )
 
@@ -66,6 +71,30 @@ func main() {
 
 	store := processcache.New(pg, time.Hour)
 
+	var dispatcher evaluation.EvaluationDispatcher
+	if settings.Kafka.BrokerURL != "" {
+		producer, err := kafka.NewProducer(
+			settings.Kafka.BrokerURL,
+			settings.Kafka.Topic,
+			settings.Kafka.SASLUser,
+			settings.Kafka.SASLPassword,
+			settings.Kafka.TLS,
+		)
+		if err != nil {
+			slog.Error("failed to create kafka producer", "error", err)
+			os.Exit(1)
+		}
+		defer producer.Close()
+		fallback := func(ctx context.Context, userID uuid.UUID, problem models.Problem, activeStages []string, history []llm.ChatMessage) {
+			evaluation.RunSession(ctx, store, llmClient, slog.Default(), userID, problem, activeStages, history)
+		}
+		dispatcher = evaluation.NewKafkaDispatcher(producer, fallback, slog.Default())
+		slog.Info("kafka dispatcher enabled", "broker", settings.Kafka.BrokerURL, "topic", settings.Kafka.Topic)
+	} else {
+		dispatcher = evaluation.NewGoroutineDispatcher(store, llmClient, slog.Default())
+		slog.Info("goroutine dispatcher enabled (kafka not configured)")
+	}
+
 	app := server.New(&server.Config{
 		Storage: store,
 		Logger: slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{
@@ -74,6 +103,7 @@ func main() {
 		LLMClient:      llmClient,
 		AllowedOrigins: settings.Server.AllowedOrigins,
 		Keyfunc:        kf,
+		Dispatcher:     dispatcher,
 	})
 
 	go func() {
