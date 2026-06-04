@@ -121,3 +121,29 @@ func TestConsumer_HandlerAlwaysFails_CommitsAfterMaxRetries(t *testing.T) {
 	assert.Len(t, r.commits, 1)             // still committed after max retries
 	assert.Equal(t, maxRetries, callCount)   // retried maxRetries times
 }
+
+func TestConsumer_FetchError_ReturnsError(t *testing.T) {
+	fetchErr := errors.New("broker connection lost")
+	r := &errorReader{err: fetchErr}
+	c := newConsumer(r, func(_ context.Context, _ SessionCompletedEvent) error {
+		return nil
+	}, slog.Default())
+
+	err := c.Run(context.Background())
+	assert.ErrorIs(t, err, fetchErr)
+}
+
+// errorReader always returns an error from FetchMessage.
+type errorReader struct {
+	err     error
+	commits []kafkago.Message
+}
+
+func (e *errorReader) FetchMessage(_ context.Context) (kafkago.Message, error) {
+	return kafkago.Message{}, e.err
+}
+func (e *errorReader) CommitMessages(_ context.Context, msgs ...kafkago.Message) error {
+	e.commits = append(e.commits, msgs...)
+	return nil
+}
+func (e *errorReader) Close() error { return nil }

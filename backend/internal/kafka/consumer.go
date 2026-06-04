@@ -95,6 +95,8 @@ func (c *Consumer) process(ctx context.Context, msg kafkago.Message) {
 }
 
 func (c *Consumer) commit(ctx context.Context, msg kafkago.Message) {
+	// Commit failure is logged but not returned — the consumer continues processing.
+	// The message will be redelivered on restart, which may cause double-processing.
 	if err := c.reader.CommitMessages(ctx, msg); err != nil {
 		c.logger.Error("failed to commit offset", "error", err)
 	}
